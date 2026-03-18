@@ -1,0 +1,152 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+model User {
+  id            Int        @id @default(autoincrement())
+  email         String     @unique
+  password      String?    // null for OAuth users
+  googleId      String?    @unique
+  firstName     String?    // null until updated in profile
+  lastName      String?    // null until updated in profile
+  height        Int?       // Stored in centimeters
+  isAdmin       Boolean    @default(false)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime?  @updatedAt
+  
+  workoutPlans  WorkoutPlan[]
+  workoutLogs   WorkoutLog[]
+  nutritionLogs NutritionLog[]
+
+  @@map("users")
+}
+
+model Exercise {
+  id               String   @id // e.g., "Alternate_Incline_Dumbbell_Curl"
+  name             String
+  force            String? // pull, push, static
+  level            String? // beginner, intermediate, expert
+  mechanic         String? // isolation, compound
+  equipment        String?
+  primaryMuscles   String[]
+  secondaryMuscles String[]
+  instructions     String[]
+  category         String?
+  images           String[]
+  createdAt        DateTime @default(now())
+
+  workoutDayExercises WorkoutDayExercise[]
+  exerciseLogs        ExerciseLog[]
+
+  @@map("exercises")
+}
+
+// A named workout plan, e.g. "PPL", "Bro Split", "My Custom Split"
+model WorkoutPlan {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  name      String
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+
+  workoutDays WorkoutDay[]
+
+  @@map("workout_plans")
+}
+
+// A single day within a plan, e.g. "Push", "Pull", "Legs"
+model WorkoutDay {
+  id            Int         @id @default(autoincrement())
+  name          String
+  order         Int // order within the plan
+  workoutPlanId Int
+  workoutPlan   WorkoutPlan @relation(fields: [workoutPlanId], references: [id])
+
+  exercises   WorkoutDayExercise[]
+  workoutLogs WorkoutLog[]
+
+  @@map("workout_days")
+}
+
+// Exercises assigned to a workout day template
+model WorkoutDayExercise {
+  id           Int        @id @default(autoincrement())
+  order        Int
+  workoutDayId Int
+  exerciseId   String
+  workoutDay   WorkoutDay @relation(fields: [workoutDayId], references: [id])
+  exercise     Exercise   @relation(fields: [exerciseId], references: [id])
+
+  @@map("workout_day_exercises")
+}
+
+// A recorded workout session
+model WorkoutLog {
+  id           Int         @id @default(autoincrement())
+  date         DateTime    @default(now())
+  userId       Int
+  workoutDayId Int? // nullable — user may log an ad-hoc session
+  user         User        @relation(fields: [userId], references: [id])
+  workoutDay   WorkoutDay? @relation(fields: [workoutDayId], references: [id])
+
+  exerciseLogs ExerciseLog[]
+
+  @@map("workout_logs")
+}
+
+// One exercise performed within a workout session
+model ExerciseLog {
+  id           Int        @id @default(autoincrement())
+  exerciseId   String
+  workoutLogId Int
+  notes        String?
+  exercise     Exercise   @relation(fields: [exerciseId], references: [id])
+  workoutLog   WorkoutLog @relation(fields: [workoutLogId], references: [id])
+
+  sets SetLog[]
+
+  @@map("exercise_logs")
+}
+
+// An individual set: set number, reps performed, weight used
+model SetLog {
+  id            Int         @id @default(autoincrement())
+  setNumber     Int
+  reps          Int
+  weight        Float // in lbs or kg — decide on one unit convention
+  exerciseLogId Int
+  exerciseLog   ExerciseLog @relation(fields: [exerciseLogId], references: [id])
+
+  @@map("set_logs")
+}
+
+// A daily nutrition record for a user
+model NutritionLog {
+  id     Int      @id @default(autoincrement())
+  date   DateTime @default(now())
+  userId Int
+  user   User     @relation(fields: [userId], references: [id])
+
+  meals Meal[]
+
+  @@map("nutrition_logs")
+}
+
+// An individual meal entry within a nutrition log
+model Meal {
+  id             Int          @id @default(autoincrement())
+  name           String
+  calories       Float
+  protein        Float // grams
+  carbs          Float // grams
+  fat            Float // grams
+  nutritionLogId Int
+  nutritionLog   NutritionLog @relation(fields: [nutritionLogId], references: [id])
+
+  @@map("meals")
+}
