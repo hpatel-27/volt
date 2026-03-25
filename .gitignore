@@ -4,4 +4,8 @@ node_modules
 generated
 migrations
 
+# Claude
+.claude
+
+# Environment variables
 .env
