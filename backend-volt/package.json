@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "tsx watch --env-file=.env src/server.ts",
     "start": "nodemon -L server.js",
-    "seed:exercises": "node scripts/exercises.js"
+    "seed:exercises": "tsx src/scripts/exercises.js"
   },
   "keywords": [],
   "author": "",
