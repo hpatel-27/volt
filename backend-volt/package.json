@@ -5,9 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon -L server.js",
+    "dev": "tsx watch --env-file=.env src/server.ts",
     "start": "nodemon -L server.js",
-    "seed:exercises": "node scripts/exercises.js"
+    "seed:exercises": "tsx src/scripts/exercises.js"
   },
   "keywords": [],
   "author": "",
@@ -21,7 +21,13 @@
   },
   "devDependencies": {
     "@prisma/client": "^7.4.2",
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.5.0",
+    "@types/pg": "^8.20.0",
     "nodemon": "^3.1.14",
-    "prisma": "^7.4.2"
+    "prisma": "^7.6.0",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.2"
   }
 }
