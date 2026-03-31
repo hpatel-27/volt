@@ -10,8 +10,6 @@ generator client {
 model User {
   id            Int        @id @default(autoincrement())
   email         String     @unique
-  password      String?    // null for OAuth users
-  googleId      String?    @unique
   firstName     String?    // null until updated in profile
   lastName      String?    // null until updated in profile
   height        Int?       // Stored in centimeters

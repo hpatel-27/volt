@@ -26,6 +26,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - React patterns (state, effects, component design, hooks)
 - Full-stack data flow (frontend → API → DB → response → UI)
 - Git workflow and project structure
+- Creating modular, reusable pieces of code
 
 ## Project Overview
 
@@ -86,7 +87,7 @@ The schema covers a complete fitness tracking domain:
 - **NutritionLog** → **Meal** — Daily nutrition tracking with macros per meal
 
 ### Important Patterns
-- Backend is CommonJS (`"type": "commonjs"`); frontend is ESM (`"type": "module"`)
+- Backend is ESM (`"type": "module"`); frontend is ESM (`"type": "module"`)
 - Prisma generated client lives in `backend-volt/generated/prisma/` — import from there, not `@prisma/client`
 - Both `prisma/schema.prisma` and `prisma.config.ts` are used (dual config setup)
 - `migrations/` and `generated/` are gitignored
@@ -94,6 +95,6 @@ The schema covers a complete fitness tracking domain:
 ### Environment Variables (backend-volt/.env)
 ```
 SERVER_PORT=8080
-DATABASE_URL=postgresql://volt_admin:<password>@localhost:5432/volt?schema=public
+DATABASE_URL=<neon_url>
 JWT_SECRET=<secret>
 ```
