@@ -1,6 +1,6 @@
 import express from "express";
 import { clerkClient, getAuth } from "@clerk/express";
-import { hasPermission } from "../middleware/auth.js";
+import { hasPermission } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
