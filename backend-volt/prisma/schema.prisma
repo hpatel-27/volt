@@ -9,6 +9,7 @@ generator client {
 
 model User {
   id            Int        @id @default(autoincrement())
+  clerkId       String     @unique
   email         String     @unique
   firstName     String?    // null until updated in profile
   lastName      String?    // null until updated in profile
@@ -17,6 +18,7 @@ model User {
   createdAt     DateTime   @default(now())
   updatedAt     DateTime?  @updatedAt
   
+  weights       Weight[]
   workoutPlans  WorkoutPlan[]
   workoutLogs   WorkoutLog[]
   nutritionLogs NutritionLog[]
@@ -42,6 +44,16 @@ model Exercise {
   exerciseLogs        ExerciseLog[]
 
   @@map("exercises")
+}
+
+// User's weight in pounds
+model Weight {
+  id        Int      @id @default(autoincrement())
+  date      DateTime @default(now())
+  amount    Float
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+
 }
 
 // A named workout plan, e.g. "PPL", "Bro Split", "My Custom Split"
