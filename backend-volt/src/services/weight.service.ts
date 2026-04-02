@@ -16,12 +16,12 @@ async function getAllWeights(userId: number, page: number, limit: number) {
   return { weights, total, page, limit };
 }
 
-async function createWeight(userId: number, weight: number, date: string) {
+async function createWeight(userId: number, amount: number, date: string) {
   const newWeight = await prisma.weight.create({
     data: {
       userId,
-      amount: weight,
-      date: new Date(date),
+      amount,
+      date: new Date(date).toISOString(),
     },
   });
   return newWeight;

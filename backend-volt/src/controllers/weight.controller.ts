@@ -50,19 +50,26 @@ async function getAllWeights(req: Request, res: Response) {
 async function createWeight(req: Request, res: Response) {
   try {
     const userId = req.user?.id;
-    const { weight, date } = req.body;
-    // Check if user, weight, and date are present
-    if (!userId || weight === undefined || date === undefined) {
+    const { amount, date } = req.body;
+
+    // Check if user, amount, and date are present
+    if (!userId || amount === undefined || date === undefined) {
       return res.status(400).json({ error: "Missing required parameters" });
     }
-    // Validate weight and date
-    if (typeof weight !== "number" || typeof date !== "string") {
+
+    // Validate amount and date
+    if (typeof amount !== "number" || typeof date !== "string") {
       return res
         .status(400)
-        .json({ error: "Weight must be a number and date must be a string" });
+        .json({ error: "Amount must be a number and date must be a string" });
     }
 
-    const newWeight = await weightService.createWeight(userId, weight, date);
+    // Validate date format (ISO 8601)
+    if (isNaN(Date.parse(date))) {
+      return res.status(400).json({ error: "Date must be in ISO 8601 format" });
+    }
+
+    const newWeight = await weightService.createWeight(userId, amount, date);
     res.status(201).json(newWeight);
   } catch (error: unknown) {
     if (error instanceof Error) {
