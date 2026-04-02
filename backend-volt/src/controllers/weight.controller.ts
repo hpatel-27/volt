@@ -119,6 +119,12 @@ async function updateWeight(req: Request, res: Response) {
       data["date"] = date;
     }
 
+    if (Object.keys(data).length === 0) {
+      return res
+        .status(400)
+        .json({ error: "At least one of amount or date must be provided" });
+    }
+
     const newWeight = await weightService.updateWeight(
       userId,
       weightIdNum,
