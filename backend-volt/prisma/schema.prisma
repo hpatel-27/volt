@@ -49,11 +49,13 @@ model Exercise {
 // User's weight in pounds
 model Weight {
   id        Int      @id @default(autoincrement())
-  date      DateTime @default(now())
-  amount    Float
   userId    Int
-  user      User     @relation(fields: [userId], references: [id])
+  date      DateTime @default(now())
+  amount    Float    // pounds
 
+  user      User     @relation(fields: [userId], references: [id])
+  
+  @@map("weights")
 }
 
 // A named workout plan, e.g. "PPL", "Bro Split", "My Custom Split"
