@@ -10,7 +10,20 @@ const app = express();
 const port = process.env.SERVER_PORT || 3000;
 
 app.use(express.json());
-app.use(cors());
+
+// CORS configuration
+app.use(
+  cors({
+    origin:
+      process.env.NODE_ENV === "development"
+        ? ["http://localhost:3000", "http://localhost:5173"]
+        : process.env.ALLOWED_ORIGINS?.split(",") || ["https://my-domain.com"],
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  }),
+);
+
 app.use(clerkMiddleware());
 
 app.use(API_BASE, routeIndex);
