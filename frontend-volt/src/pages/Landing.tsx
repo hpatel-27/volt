@@ -36,6 +36,14 @@ const Home = () => {
   console.log("Limit state:", limit);
   console.log("Total state:", total);
 
+  const { getToken } = useAuth();
+  async function fetchToken() {
+    const token = await getToken();
+    console.log(token);
+  }
+
+  fetchToken();
+  console.log(new Date().toISOString());
   return (
     <>
       <header>
