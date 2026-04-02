@@ -10,7 +10,7 @@ export const hasPermission = (
   const { isAuthenticated } = getAuth(req);
   // Handle if the user is not authorized
   if (!isAuthenticated) {
-    return res.status(401).json({ error: "User not authenticated." });
+    return res.status(401).json({ error: "Unauthorized." });
   }
 
   return next();
