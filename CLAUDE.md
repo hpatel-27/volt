@@ -66,21 +66,29 @@ node scripts/exercises.js  # Seed exercise database from free-exercise-db
 
 ### Stack
 - **Frontend:** React 19, Vite 7, ESM modules
-- **Backend:** Express 5, CommonJS modules, Nodemon
-- **Database:** PostgreSQL (local, `volt` db, user `volt_admin`)
+- **Backend:** Express 5, ESM modules, Nodemon
+- **Database:** PostgreSQL via Neon (cloud)
 - **ORM:** Prisma 7 with `@prisma/adapter-pg` (PostgreSQL adapter pattern)
+- **Auth:** Clerk (`@clerk/express`) — handles authentication, issues JWTs
+- **CORS:** `cors` package, configured per environment
+- **Rate limiting:** `express-rate-limit` — 100 requests per 15 minutes globally
 
 ### Key Backend Files
-- `server.js` — Express app entry point
-- `db.js` — Prisma client initialization (uses pg adapter, reads `DATABASE_URL` from `.env`)
+- `src/server.ts` — Express app entry point; registers middleware (CORS, rate limiting, Clerk) and mounts routes
+- `src/db.ts` — Prisma client initialization (uses pg adapter, reads `DATABASE_URL` from `.env`)
 - `prisma/schema.prisma` — All data models
 - `prisma.config.ts` — Prisma config; generated client outputs to `../generated/prisma/` (not `node_modules`)
-- `controllers/`, `routes/`, `services/` — Empty directories ready for API implementation
+- `src/routes/index.ts` — Route index, mounts all sub-routers under `/api/v1`
+- `src/middleware/user.middleware.ts` — Upserts user on first request using Clerk's `userId`, attaches user to `req.user`
+
+### Implemented Routes
+- `GET/POST/PATCH/DELETE /api/v1/weights` — Weight CRUD with pagination, user-scoped
 
 ### Database Schema
 The schema covers a complete fitness tracking domain:
 
-- **User** — email/password + Google OAuth (`googleId`), profile fields, `isAdmin` flag
+- **User** — Clerk auth (`clerkId`), profile fields (`firstName`, `lastName`), `isAdmin` flag
+- **Weight** — User's weight entries (`amount` in lbs, `date` as DateTime)
 - **Exercise** — Pre-seeded exercise library (string ID like `"Alternate_Incline_Dumbbell_Curl"`), includes muscles, equipment, category, instructions, images
 - **WorkoutPlan** → **WorkoutDay** → **WorkoutDayExercise** — Workout templates (e.g., PPL splits)
 - **WorkoutLog** → **ExerciseLog** → **SetLog** — Recorded workout sessions with per-set reps/weight
@@ -91,10 +99,13 @@ The schema covers a complete fitness tracking domain:
 - Prisma generated client lives in `backend-volt/generated/prisma/` — import from there, not `@prisma/client`
 - Both `prisma/schema.prisma` and `prisma.config.ts` are used (dual config setup)
 - `migrations/` and `generated/` are gitignored
+- Auth flow: Clerk middleware validates JWT → `userMiddleware` upserts user into DB → `req.user` available in controllers
+- Error handling in services uses `Prisma.PrismaClientKnownRequestError` with code `P2025` for not-found cases
 
 ### Environment Variables (backend-volt/.env)
 ```
 SERVER_PORT=8080
 DATABASE_URL=<neon_url>
-JWT_SECRET=<secret>
+CLERK_SECRET_KEY=<clerk_secret>
+ALLOWED_ORIGINS=<comma_separated_origins>   # production only
 ```
