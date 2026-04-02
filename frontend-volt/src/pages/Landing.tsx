@@ -6,23 +6,35 @@ import {
   UserButton,
   useAuth,
 } from "@clerk/clerk-react";
+import { useEffect, useState } from "react";
+import useFetch from "../hooks/useFetch";
 
 const Home = () => {
-  const { getToken } = useAuth();
-  const token = async () => await getToken();
+  const authenticatedFetch = useFetch();
+  const [weights, setWeights] = useState([]);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [total, setTotal] = useState(0);
 
-  const user = fetch("http://localhost:8080/api/v1/example/protected", {
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-  })
-    .then((res) => res.json())
-    .catch((err) => {
-      console.error("Error fetching protected data:", err);
-      return null;
-    });
-  console.log("Fetched user data:", user);
+  useEffect(() => {
+    async function fetchWeights() {
+      const response = await authenticatedFetch(
+        "http://localhost:8080/api/v1/weights?page=1&limit=10",
+      );
+      console.log("Fetched weights:", response);
+      setWeights(response.weights);
+      setPage(response.page);
+      setLimit(response.limit);
+      setTotal(response.total);
+    }
+
+    fetchWeights();
+  }, [authenticatedFetch]);
+
+  console.log("Weights state:", weights);
+  console.log("Page state:", page);
+  console.log("Limit state:", limit);
+  console.log("Total state:", total);
 
   return (
     <>
