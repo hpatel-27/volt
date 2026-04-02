@@ -47,4 +47,127 @@ async function getAllWeights(req: Request, res: Response) {
   }
 }
 
-export { getAllWeights };
+async function createWeight(req: Request, res: Response) {
+  try {
+    const userId = req.user?.id;
+    const { weight, date } = req.body;
+    // Check if user, weight, and date are present
+    if (!userId || weight === undefined || date === undefined) {
+      return res.status(400).json({ error: "Missing required parameters" });
+    }
+    // Validate weight and date
+    if (typeof weight !== "number" || typeof date !== "string") {
+      return res
+        .status(400)
+        .json({ error: "Weight must be a number and date must be a string" });
+    }
+
+    const newWeight = await weightService.createWeight(userId, weight, date);
+    res.status(201).json(newWeight);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+    } else {
+      // This case should never happen, but we want to handle it just in case
+      res.status(500).json({ error: "Unknown error was thrown." });
+    }
+  }
+}
+
+async function updateWeight(req: Request, res: Response) {
+  try {
+    const userId = req.user?.id;
+    const weightId = req.params.id;
+    const { amount, date } = req.body;
+
+    // Check if userId and weightId are present
+    if (!userId || !weightId) {
+      return res.status(400).json({ error: "Weight ID is required." });
+    }
+
+    if (weightId instanceof Array) {
+      return res
+        .status(400)
+        .json({ error: "Weight ID must be a single value" });
+    }
+
+    // Validate weightId
+    const weightIdNum = parseInt(weightId, 10);
+    if (isNaN(weightIdNum)) {
+      return res.status(400).json({ error: "Weight ID must be a number" });
+    }
+
+    // Validate weightAmount and date if they are present and add them to the data object
+    const data: { amount?: number; date?: string } = {};
+    if (amount !== undefined) {
+      if (typeof amount !== "number") {
+        return res.status(400).json({ error: "Amount must be a number" });
+      }
+      data["amount"] = amount;
+    }
+    if (date !== undefined) {
+      if (typeof date !== "string") {
+        return res.status(400).json({ error: "Date must be a string" });
+      }
+      data["date"] = date;
+    }
+
+    const newWeight = await weightService.updateWeight(
+      userId,
+      weightIdNum,
+      data,
+    );
+    res.status(200).json(newWeight);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      if (error.message.includes("not found")) {
+        res.status(404).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: error.message });
+      }
+    } else {
+      // This case should never happen, but we want to handle it just in case
+      res.status(500).json({ error: "Unknown error was thrown." });
+    }
+  }
+}
+
+async function deleteWeight(req: Request, res: Response) {
+  try {
+    const userId = req.user?.id;
+    const weightId = req.params.id;
+
+    // Check if userId and weightId are present
+    if (!userId || !weightId) {
+      return res.status(400).json({ error: "Weight ID is required." });
+    }
+
+    if (weightId instanceof Array) {
+      return res
+        .status(400)
+        .json({ error: "Weight ID must be a single value" });
+    }
+
+    // Validate weightId
+    const weightIdNum = parseInt(weightId, 10);
+    if (isNaN(weightIdNum)) {
+      return res.status(400).json({ error: "Weight ID must be a number" });
+    }
+
+    await weightService.deleteWeight(userId, weightIdNum);
+    return res.status(204).send();
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      if (error.message.includes("not found")) {
+        res.status(404).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: error.message });
+      }
+    } else {
+      // This case should never happen, but we want to handle it just in case
+      res.status(500).json({ error: "Unknown error was thrown." });
+    }
+  }
+}
+
+export { getAllWeights, createWeight, updateWeight, deleteWeight };
