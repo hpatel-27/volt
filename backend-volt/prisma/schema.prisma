@@ -10,7 +10,7 @@ generator client {
 model User {
   id            Int        @id @default(autoincrement())
   clerkId       String     @unique
-  email         String?     @unique
+  email         String?    @unique
   firstName     String?    // null until updated in profile
   lastName      String?    // null until updated in profile
   height        Int?       // Stored in centimeters
