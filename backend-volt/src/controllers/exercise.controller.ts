@@ -46,12 +46,90 @@ async function getExerciseById(req: Request, res: Response) {
 
 async function createExercise(req: Request, res: Response) {
   try {
-    // TODO(human): Parse req.body and validate it here.
-    // - id and name are required strings; return 400 if missing or wrong type
-    // - force, level, mechanic, equipment, category are optional strings
-    // - primaryMuscles, secondaryMuscles, instructions, images are optional string arrays
-    // - return 400 with a helpful error message if anything is invalid
-    // Build an `exerciseData` object from the valid fields and pass it below.
+    // Validate required String fields
+    if (!req.body.id || typeof req.body.id !== "string") {
+      return res
+        .status(400)
+        .json({ error: "Exercise ID is required and must be a string" });
+    }
+    if (!req.body.name || typeof req.body.name !== "string") {
+      return res
+        .status(400)
+        .json({ error: "Exercise name is required and must be a string" });
+    }
+
+    // Validate optional String fields
+    if (req.body.force && typeof req.body.force !== "string") {
+      return res
+        .status(400)
+        .json({ error: "Attribute force must be a string if provided" });
+    }
+
+    if (req.body.level && typeof req.body.level !== "string") {
+      return res
+        .status(400)
+        .json({ error: "Attribute level must be a string if provided" });
+    }
+
+    if (req.body.mechanic && typeof req.body.mechanic !== "string") {
+      return res
+        .status(400)
+        .json({ error: "Attribute mechanic must be a string if provided" });
+    }
+
+    if (req.body.equipment && typeof req.body.equipment !== "string") {
+      return res
+        .status(400)
+        .json({ error: "Attribute equipment must be a string if provided" });
+    }
+
+    if (req.body.category && typeof req.body.category !== "string") {
+      return res
+        .status(400)
+        .json({ error: "Attribute category must be a string if provided" });
+    }
+
+    // Validate optional String[] data
+    if (
+      req.body.primaryMuscles &&
+      (!Array.isArray(req.body.primaryMuscles) ||
+        !req.body.primaryMuscles.every((m: any) => typeof m === "string"))
+    ) {
+      return res.status(400).json({
+        error: "Attribute primaryMuscles must be an array of strings",
+      });
+    }
+
+    if (
+      req.body.secondaryMuscles &&
+      (!Array.isArray(req.body.secondaryMuscles) ||
+        !req.body.secondaryMuscles.every((m: any) => typeof m === "string"))
+    ) {
+      return res.status(400).json({
+        error: "Attribute secondaryMuscles must be an array of strings",
+      });
+    }
+
+    if (
+      req.body.instructions &&
+      (!Array.isArray(req.body.instructions) ||
+        !req.body.instructions.every((i: any) => typeof i === "string"))
+    ) {
+      return res
+        .status(400)
+        .json({ error: "Attribute instructions must be an array of strings" });
+    }
+
+    if (
+      req.body.images &&
+      (!Array.isArray(req.body.images) ||
+        !req.body.images.every((i: any) => typeof i === "string"))
+    ) {
+      return res
+        .status(400)
+        .json({ error: "Attribute images must be an array of strings" });
+    }
+
     const exerciseData: Prisma.ExerciseCreateInput = {
       id: req.body.id,
       name: req.body.name,
@@ -65,17 +143,6 @@ async function createExercise(req: Request, res: Response) {
       instructions: req.body.instructions,
       images: req.body.images,
     };
-
-    if (!exerciseData.id || typeof exerciseData.id !== "string") {
-      return res
-        .status(400)
-        .json({ error: "Exercise ID is required and must be a string" });
-    }
-    if (!exerciseData.name || typeof exerciseData.name !== "string") {
-      return res
-        .status(400)
-        .json({ error: "Exercise name is required and must be a string" });
-    }
 
     const exercise = await exerciseService.createExercise(exerciseData);
     res.status(201).json(exercise);
