@@ -97,6 +97,13 @@ async function updateWeight(req: Request, res: Response) {
       return res.status(400).json({ error: "Weight ID is required." });
     }
 
+    // Ensure that at least one of amount or date is provided
+    if (amount === undefined && date === undefined) {
+      return res
+        .status(400)
+        .json({ error: "At least one of amount or date must be provided" });
+    }
+
     // Validate weightId
     const weightIdNum = parseInt(weightId, 10);
     if (isNaN(weightIdNum)) {
@@ -104,10 +111,12 @@ async function updateWeight(req: Request, res: Response) {
     }
 
     // Validate weightAmount and date if they are present and add them to the data object
+    const weightData: Prisma.WeightUpdateInput = {};
     if (amount !== undefined) {
       if (typeof amount !== "number") {
         return res.status(400).json({ error: "Amount must be a number" });
       }
+      weightData.amount = amount;
     }
 
     if (date !== undefined) {
@@ -121,18 +130,9 @@ async function updateWeight(req: Request, res: Response) {
           .status(400)
           .json({ error: "Date must be in ISO 8601 format" });
       }
-    }
-    const isoDate = new Date(date).toISOString();
 
-    const weightData: Prisma.WeightUpdateInput = {
-      date: isoDate,
-      amount,
-    };
-
-    if (Object.keys(weightData).length === 0) {
-      return res
-        .status(400)
-        .json({ error: "At least one of amount or date must be provided" });
+      const isoDate = new Date(date).toISOString();
+      weightData.date = isoDate;
     }
 
     const newWeight = await weightService.updateWeight(
