@@ -1,4 +1,5 @@
 import { prisma } from "../db.js";
+import { Prisma } from "../generated/prisma/client.js";
 import { NotFoundError } from "../errors.js";
 
 // Get a paginated list of exercises.
@@ -54,4 +55,50 @@ async function getExerciseById(id: string) {
   }
 }
 
-export { getExercises, getExerciseById };
+async function createExercise(exerciseData: Prisma.ExerciseCreateInput) {
+  try {
+    const exercise = await prisma.exercise.create({ data: exerciseData });
+    return exercise;
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      throw new Error("An exercise with this ID already exists.");
+    } else if (error instanceof Error) {
+      throw new Error("Error creating exercise in database.");
+    } else {
+      throw new Error("Unknown error creating exercise in database.");
+    }
+  }
+}
+
+async function updateExercise(id: string, exerciseData: any) {}
+
+async function deleteExercise(id: string) {
+  try {
+    await prisma.exercise.delete({
+      where: { id },
+    });
+    return;
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2025"
+    ) {
+      throw new NotFoundError("Exercise not found.");
+    } else if (error instanceof Error) {
+      throw new Error("Error deleting exercise from database.");
+    } else {
+      throw new Error("Unknown error occurred while deleting exercise.");
+    }
+  }
+}
+
+export {
+  getExercises,
+  getExerciseById,
+  createExercise,
+  updateExercise,
+  deleteExercise,
+};
