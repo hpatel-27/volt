@@ -26,14 +26,10 @@ async function getAllWeights(userId: number, page: number, limit: number) {
   }
 }
 
-async function createWeight(userId: number, amount: number, date: string) {
+async function createWeight(weightData: Prisma.WeightUncheckedCreateInput) {
   try {
     const newWeight = await prisma.weight.create({
-      data: {
-        userId,
-        amount,
-        date,
-      },
+      data: weightData,
     });
     return newWeight;
   } catch (error: unknown) {
@@ -48,7 +44,7 @@ async function createWeight(userId: number, amount: number, date: string) {
 async function updateWeight(
   userId: number,
   weightId: number,
-  data: { amount?: number; date?: string },
+  data: Prisma.WeightUpdateInput,
 ) {
   try {
     // Update the weight entry
