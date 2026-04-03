@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import * as weightService from "../services/weight.service.js";
+import { NotFoundError } from "../errors.js";
 
 async function getAllWeights(req: Request, res: Response) {
   try {
@@ -33,16 +34,12 @@ async function getAllWeights(req: Request, res: Response) {
     // This could be an empty list of weights
     res.json(weights);
   } catch (error: unknown) {
-    if (error instanceof Error) {
-      if (error.message.includes("not found")) {
-        res.status(404).json({ error: error.message });
-      } else {
-        // Internal server error
-        res.status(500).json({ error: error.message });
-      }
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
     } else {
-      // This case should never happen, but we want to handle it just in case
-      res.status(500).json({ error: "Unknown error was thrown." });
+      res.status(500).json({ error: "Unknown error fetching weights" });
     }
   }
 }
@@ -69,7 +66,9 @@ async function createWeight(req: Request, res: Response) {
       return res.status(400).json({ error: "Date must be in ISO 8601 format" });
     }
 
-    const newWeight = await weightService.createWeight(userId, amount, date);
+    const isoDate = new Date(date).toISOString();
+
+    const newWeight = await weightService.createWeight(userId, amount, isoDate);
     res.status(201).json(newWeight);
   } catch (error: unknown) {
     if (error instanceof Error) {
@@ -88,14 +87,8 @@ async function updateWeight(req: Request, res: Response) {
     const { amount, date } = req.body;
 
     // Check if userId and weightId are present
-    if (!userId || !weightId) {
+    if (!userId || !weightId || typeof weightId !== "string") {
       return res.status(400).json({ error: "Weight ID is required." });
-    }
-
-    if (weightId instanceof Array) {
-      return res
-        .status(400)
-        .json({ error: "Weight ID must be a single value" });
     }
 
     // Validate weightId
@@ -116,7 +109,15 @@ async function updateWeight(req: Request, res: Response) {
       if (typeof date !== "string") {
         return res.status(400).json({ error: "Date must be a string" });
       }
-      data["date"] = date;
+
+      // Validate date format (ISO 8601)
+      if (isNaN(Date.parse(date))) {
+        return res
+          .status(400)
+          .json({ error: "Date must be in ISO 8601 format" });
+      }
+      const isoDate = new Date(date).toISOString();
+      data["date"] = isoDate;
     }
 
     if (Object.keys(data).length === 0) {
@@ -132,15 +133,12 @@ async function updateWeight(req: Request, res: Response) {
     );
     res.status(200).json(newWeight);
   } catch (error: unknown) {
-    if (error instanceof Error) {
-      if (error.message.includes("not found")) {
-        res.status(404).json({ error: error.message });
-      } else {
-        res.status(500).json({ error: error.message });
-      }
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
     } else {
-      // This case should never happen, but we want to handle it just in case
-      res.status(500).json({ error: "Unknown error was thrown." });
+      res.status(500).json({ error: "Unknown error fetching weights" });
     }
   }
 }
@@ -151,14 +149,8 @@ async function deleteWeight(req: Request, res: Response) {
     const weightId = req.params.id;
 
     // Check if userId and weightId are present
-    if (!userId || !weightId) {
+    if (!userId || !weightId || typeof weightId !== "string") {
       return res.status(400).json({ error: "Weight ID is required." });
-    }
-
-    if (weightId instanceof Array) {
-      return res
-        .status(400)
-        .json({ error: "Weight ID must be a single value" });
     }
 
     // Validate weightId
@@ -170,15 +162,12 @@ async function deleteWeight(req: Request, res: Response) {
     await weightService.deleteWeight(userId, weightIdNum);
     return res.status(204).send();
   } catch (error: unknown) {
-    if (error instanceof Error) {
-      if (error.message.includes("not found")) {
-        res.status(404).json({ error: error.message });
-      } else {
-        res.status(500).json({ error: error.message });
-      }
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
     } else {
-      // This case should never happen, but we want to handle it just in case
-      res.status(500).json({ error: "Unknown error was thrown." });
+      res.status(500).json({ error: "Unknown error fetching weights" });
     }
   }
 }
