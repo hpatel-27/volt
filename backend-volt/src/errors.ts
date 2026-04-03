@@ -9,4 +9,15 @@ class NotFoundError extends Error {
   }
 }
 
-export { NotFoundError };
+class DuplicateEntryError extends Error {
+  name: string;
+  statusCode: number;
+
+  constructor(message: string) {
+    super(message);
+    this.name = "DuplicateEntryError";
+    this.statusCode = 409;
+  }
+}
+
+export { NotFoundError, DuplicateEntryError };

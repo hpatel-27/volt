@@ -1,6 +1,6 @@
 import { prisma } from "../db.js";
 import { Prisma } from "../generated/prisma/client.js";
-import { NotFoundError } from "../errors.js";
+import { DuplicateEntryError, NotFoundError } from "../errors.js";
 
 // Get a paginated list of exercises.
 // This allows clients to fetch exercises in chunks, which is more efficient than fetching all exercises at once.
@@ -64,7 +64,7 @@ async function createExercise(exerciseData: Prisma.ExerciseCreateInput) {
       error instanceof Prisma.PrismaClientKnownRequestError &&
       error.code === "P2002"
     ) {
-      throw new Error("An exercise with this ID already exists.");
+      throw new DuplicateEntryError("An exercise with this ID already exists.");
     } else if (error instanceof Error) {
       throw new Error("Error creating exercise in database.");
     } else {

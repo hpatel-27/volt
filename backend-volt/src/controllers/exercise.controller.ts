@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import * as exerciseService from "../services/exercise.service.js";
 import { Prisma } from "../generated/prisma/client.js";
-import { NotFoundError } from "../errors.js";
+import { DuplicateEntryError, NotFoundError } from "../errors.js";
 
 async function getExercises(req: Request, res: Response) {
   try {
@@ -147,7 +147,9 @@ async function createExercise(req: Request, res: Response) {
     const exercise = await exerciseService.createExercise(exerciseData);
     res.status(201).json(exercise);
   } catch (error) {
-    if (error instanceof Error) {
+    if (error instanceof DuplicateEntryError) {
+      res.status(409).json({ error: error.message });
+    } else if (error instanceof Error) {
       res.status(500).json({ error: error.message });
     } else {
       res.status(500).json({ error: "Unknown error creating exercise" });
