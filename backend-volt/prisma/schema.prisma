@@ -33,10 +33,10 @@ model Exercise {
   level            String? // beginner, intermediate, expert
   mechanic         String? // isolation, compound
   equipment        String?
+  category         String?
   primaryMuscles   String[]
   secondaryMuscles String[]
   instructions     String[]
-  category         String?
   images           String[]
   createdAt        DateTime @default(now())
 
@@ -152,12 +152,12 @@ model NutritionLog {
 // An individual meal entry within a nutrition log
 model Meal {
   id             Int          @id @default(autoincrement())
+  nutritionLogId Int
   name           String
   calories       Float
   protein        Float // grams
   carbs          Float // grams
   fat            Float // grams
-  nutritionLogId Int
   nutritionLog   NutritionLog @relation(fields: [nutritionLogId], references: [id])
 
   @@map("meals")
