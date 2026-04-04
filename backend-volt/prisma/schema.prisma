@@ -140,8 +140,8 @@ model SetLog {
 // A daily nutrition record for a user
 model NutritionLog {
   id     Int      @id @default(autoincrement())
-  date   DateTime @default(now())
   userId Int
+  date   DateTime @default(now())
   user   User     @relation(fields: [userId], references: [id])
 
   meals Meal[]
