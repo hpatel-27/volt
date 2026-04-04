@@ -1,36 +1,50 @@
 import { prisma } from "../db.js";
 import { Prisma } from "../generated/prisma/client.js";
+import { NotFoundError } from "../errors.js";
+
 // Take a userId and return all the user's logged weights
 async function getAllWeights(userId: number, page: number, limit: number) {
-  // Find the weights for the user
-  const [weights, total] = await prisma.$transaction([
-    prisma.weight.findMany({
-      where: { userId },
-      skip: (page - 1) * limit,
-      take: limit,
-      orderBy: { date: "desc" },
-    }),
-    prisma.weight.count({ where: { userId } }),
-  ]);
-  // This could be an empty list of weights
-  return { weights, total, page, limit };
+  try {
+    // Find the weights for the user
+    const [weights, total] = await prisma.$transaction([
+      prisma.weight.findMany({
+        where: { userId },
+        skip: (page - 1) * limit,
+        take: limit,
+        orderBy: { date: "desc" },
+      }),
+      prisma.weight.count({ where: { userId } }),
+    ]);
+    // This could be an empty list of weights
+    return { weights, total, page, limit };
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      throw new Error("Error fetching weights from database.");
+    } else {
+      throw new Error("Unknown error fetching weights from database");
+    }
+  }
 }
 
-async function createWeight(userId: number, amount: number, date: string) {
-  const newWeight = await prisma.weight.create({
-    data: {
-      userId,
-      amount,
-      date: new Date(date).toISOString(),
-    },
-  });
-  return newWeight;
+async function createWeight(weightData: Prisma.WeightUncheckedCreateInput) {
+  try {
+    const newWeight = await prisma.weight.create({
+      data: weightData,
+    });
+    return newWeight;
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      throw new Error("Error creating weight entry in database.");
+    } else {
+      throw new Error("Unknown error creating weight entry in database");
+    }
+  }
 }
 
 async function updateWeight(
   userId: number,
   weightId: number,
-  data: { amount?: number; date?: string },
+  data: Prisma.WeightUpdateInput,
 ) {
   try {
     // Update the weight entry
@@ -45,7 +59,7 @@ async function updateWeight(
       error instanceof Prisma.PrismaClientKnownRequestError &&
       error.code === "P2025"
     ) {
-      throw new Error("Weight entry not found.");
+      throw new NotFoundError("Weight entry not found.");
     } else {
       throw new Error("Unknown error occurred while updating weight entry.");
     }
@@ -64,7 +78,7 @@ async function deleteWeight(userId: number, weightId: number) {
       error instanceof Prisma.PrismaClientKnownRequestError &&
       error.code === "P2025"
     ) {
-      throw new Error("Weight entry not found.");
+      throw new NotFoundError("Weight entry not found.");
     } else {
       throw new Error("Unknown error occurred while deleting weight entry.");
     }
