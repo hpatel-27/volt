@@ -157,7 +157,141 @@ async function createExercise(req: Request, res: Response) {
   }
 }
 
-async function updateExercise(req: Request, res: Response) {}
+async function updateExercise(req: Request, res: Response) {
+  try {
+    // Validate exercise ID
+    const exerciseId = req.params.id;
+    if (!exerciseId || typeof exerciseId !== "string") {
+      return res.status(400).json({ error: "Exercise ID is required" });
+    }
+
+    const exerciseData: Prisma.ExerciseUpdateInput = {};
+
+    // Validate potential String fields to update
+    if (req.body.name !== undefined) {
+      if (typeof req.body.name !== "string") {
+        return res
+          .status(400)
+          .json({ error: "Exercise name must be a string if provided" });
+      }
+      exerciseData.name = req.body.name;
+    }
+
+    if (req.body.force !== undefined) {
+      if (typeof req.body.force !== "string") {
+        return res
+          .status(400)
+          .json({ error: "Attribute force must be a string if provided" });
+      }
+      exerciseData.force = req.body.force;
+    }
+
+    if (req.body.level !== undefined) {
+      if (typeof req.body.level !== "string") {
+        return res
+          .status(400)
+          .json({ error: "Attribute level must be a string if provided" });
+      }
+      exerciseData.level = req.body.level;
+    }
+
+    if (req.body.mechanic !== undefined) {
+      if (typeof req.body.mechanic !== "string") {
+        return res
+          .status(400)
+          .json({ error: "Attribute mechanic must be a string if provided" });
+      }
+      exerciseData.mechanic = req.body.mechanic;
+    }
+
+    if (req.body.equipment !== undefined) {
+      if (typeof req.body.equipment !== "string") {
+        return res
+          .status(400)
+          .json({ error: "Attribute equipment must be a string if provided" });
+      }
+      exerciseData.equipment = req.body.equipment;
+    }
+
+    if (req.body.category !== undefined) {
+      if (typeof req.body.category !== "string") {
+        return res
+          .status(400)
+          .json({ error: "Attribute category must be a string if provided" });
+      }
+      exerciseData.category = req.body.category;
+    }
+
+    // Validate optional String[] data
+    if (req.body.primaryMuscles !== undefined) {
+      if (
+        !Array.isArray(req.body.primaryMuscles) ||
+        !req.body.primaryMuscles.every((m: any) => typeof m === "string")
+      ) {
+        return res.status(400).json({
+          error: "Attribute primaryMuscles must be an array of strings",
+        });
+      }
+      exerciseData.primaryMuscles = req.body.primaryMuscles;
+    }
+
+    if (req.body.secondaryMuscles !== undefined) {
+      if (
+        !Array.isArray(req.body.secondaryMuscles) ||
+        !req.body.secondaryMuscles.every((m: any) => typeof m === "string")
+      ) {
+        return res.status(400).json({
+          error: "Attribute secondaryMuscles must be an array of strings",
+        });
+      }
+      exerciseData.secondaryMuscles = req.body.secondaryMuscles;
+    }
+
+    if (req.body.instructions !== undefined) {
+      if (
+        !Array.isArray(req.body.instructions) ||
+        !req.body.instructions.every((i: any) => typeof i === "string")
+      ) {
+        return res.status(400).json({
+          error: "Attribute instructions must be an array of strings",
+        });
+      }
+      exerciseData.instructions = req.body.instructions;
+    }
+
+    if (req.body.images !== undefined) {
+      if (
+        !Array.isArray(req.body.images) ||
+        !req.body.images.every((i: any) => typeof i === "string")
+      ) {
+        return res.status(400).json({
+          error: "Attribute images must be an array of strings",
+        });
+      }
+      exerciseData.images = req.body.images;
+    }
+
+    if (Object.keys(exerciseData).length === 0) {
+      return res
+        .status(400)
+        .json({ error: "At least one field must be provided for update" });
+    }
+
+    const updatedExercise = await exerciseService.updateExercise(
+      exerciseId,
+      exerciseData,
+    );
+    return res.json(updatedExercise);
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: "Unknown error updating exercise" });
+    }
+  }
+}
 
 async function deleteExercise(req: Request, res: Response) {
   try {

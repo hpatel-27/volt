@@ -73,7 +73,29 @@ async function createExercise(exerciseData: Prisma.ExerciseCreateInput) {
   }
 }
 
-async function updateExercise(id: string, exerciseData: any) {}
+async function updateExercise(
+  id: string,
+  exerciseData: Prisma.ExerciseUpdateInput,
+) {
+  try {
+    const exercise = await prisma.exercise.update({
+      where: { id },
+      data: exerciseData,
+    });
+    return exercise;
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2025"
+    ) {
+      throw new NotFoundError("Exercise not found.");
+    } else if (error instanceof Error) {
+      throw new Error("Error deleting exercise from database.");
+    } else {
+      throw new Error("Unknown error occurred while deleting exercise.");
+    }
+  }
+}
 
 async function deleteExercise(id: string) {
   try {
