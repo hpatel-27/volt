@@ -158,7 +158,7 @@ model Meal {
   protein        Float // grams
   carbs          Float // grams
   fat            Float // grams
-  nutritionLog   NutritionLog @relation(fields: [nutritionLogId], references: [id])
+  nutritionLog   NutritionLog @relation(fields: [nutritionLogId], references: [id], onDelete: Cascade)
 
   @@map("meals")
 }
