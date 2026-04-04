@@ -145,7 +145,8 @@ model NutritionLog {
   user   User     @relation(fields: [userId], references: [id])
 
   meals Meal[]
-
+  
+  @@unique([userId, date])
   @@map("nutrition_logs")
 }
 
