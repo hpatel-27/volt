@@ -115,4 +115,90 @@ async function createNutritionLog(req: Request, res: Response) {
   }
 }
 
-export { getAllNutritionLogs, getNutritionLogById, createNutritionLog };
+async function updateNutritionLog(req: Request, res: Response) {
+  try {
+    const userId = req.user?.id;
+    const logId = req.params.id;
+    const { date } = req.body;
+
+    // Check if user, logId, and date are present
+    if (
+      !userId ||
+      !logId ||
+      !date ||
+      typeof logId !== "string" ||
+      typeof date !== "string"
+    ) {
+      return res.status(400).json({ error: "Missing required parameters" });
+    }
+
+    // Validate logId is a number
+    const parsedLogId = parseInt(logId, 10);
+    if (isNaN(parsedLogId)) {
+      return res.status(400).json({ error: "Invalid log ID" });
+    }
+
+    // Validate date format (ISO 8601)
+    if (isNaN(Date.parse(date))) {
+      return res.status(400).json({ error: "Date must be in ISO 8601 format" });
+    }
+    const isoDate = new Date(date).toISOString();
+    const logData: Prisma.NutritionLogUncheckedUpdateInput = {
+      date: isoDate,
+    };
+
+    // Update the nutrition log for the user that made the request and return it
+    const updatedLog = await nutritionService.updateNutritionLog(
+      parsedLogId,
+      userId,
+      logData,
+    );
+    return res.json(updatedLog);
+  } catch (error: unknown) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: "Unknown error updating nutrition log" });
+    }
+  }
+}
+
+async function deleteNutritionLog(req: Request, res: Response) {
+  try {
+    const userId = req.user?.id;
+    const logId = req.params.id;
+
+    // Check if user and logId are present
+    if (!userId || !logId || typeof logId !== "string") {
+      return res.status(400).json({ error: "Missing required parameters" });
+    }
+
+    // Validate logId is a number
+    const parsedLogId = parseInt(logId, 10);
+    if (isNaN(parsedLogId)) {
+      return res.status(400).json({ error: "Invalid log ID" });
+    }
+
+    // Delete the nutrition log for the user that made the request
+    await nutritionService.deleteNutritionLog(userId, parsedLogId);
+    res.status(204).send();
+  } catch (error: unknown) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: "Unknown error deleting nutrition log" });
+    }
+  }
+}
+
+export {
+  getAllNutritionLogs,
+  getNutritionLogById,
+  createNutritionLog,
+  updateNutritionLog,
+  deleteNutritionLog,
+};

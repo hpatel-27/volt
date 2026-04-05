@@ -78,4 +78,70 @@ async function createNutritionLog(
   }
 }
 
-export { getAllNutritionLogs, getNutritionLogById, createNutritionLog };
+// The date is the only field that can be updated, as meals are managed through a
+// separate set of endpoints. We use logData instead of directly taking a date
+// parameter to allow for future extensibility and to maintain consistency with
+// other update functions in our services.
+async function updateNutritionLog(
+  logId: number,
+  userId: number,
+  logData: Prisma.NutritionLogUpdateInput,
+) {
+  try {
+    // Update the log only if the user and log id match an existing log
+    const updatedLog = await prisma.nutritionLog.update({
+      where: { id: logId, userId },
+      data: logData,
+    });
+    return updatedLog;
+  } catch (error: unknown) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2025"
+    ) {
+      throw new NotFoundError("Nutrition log not found.");
+    } else if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      throw new DuplicateEntryError(
+        "Nutrition log with this date already exists.",
+      );
+    } else if (error instanceof Error) {
+      throw new Error("Error updating nutrition log in database.");
+    } else {
+      throw new Error("Unknown error updating nutrition log in database");
+    }
+  }
+}
+
+// Delete a nutrition log, this also deletes all meals associated with the log
+// due to the cascading delete behavior we set up in our Prisma schema
+// We require both the logId and userId to ensure that a user can only delete their own logs
+async function deleteNutritionLog(logId: number, userId: number) {
+  try {
+    await prisma.nutritionLog.delete({
+      where: { id: logId, userId },
+    });
+    return;
+  } catch (error: unknown) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2025"
+    ) {
+      throw new NotFoundError("Nutrition log not found.");
+    } else if (error instanceof Error) {
+      throw new Error("Error deleting nutrition log from database.");
+    } else {
+      throw new Error("Unknown error occurred while deleting nutrition log.");
+    }
+  }
+}
+
+export {
+  getAllNutritionLogs,
+  getNutritionLogById,
+  createNutritionLog,
+  updateNutritionLog,
+  deleteNutritionLog,
+};

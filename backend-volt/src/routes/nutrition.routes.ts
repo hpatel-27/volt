@@ -12,5 +12,9 @@ router.get("/", userMiddleware, nutritionController.getAllNutritionLogs);
 router.get("/:id", userMiddleware, nutritionController.getNutritionLogById);
 // Create a new nutrition log
 router.post("/", userMiddleware, nutritionController.createNutritionLog);
+// Update a nutrition log (change the recorded date)
+router.patch("/:id", userMiddleware, nutritionController.updateNutritionLog);
+// Delete a nutrition log
+router.delete("/:id", userMiddleware, nutritionController.deleteNutritionLog);
 
 export default router;
