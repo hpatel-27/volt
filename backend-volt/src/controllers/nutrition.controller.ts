@@ -182,7 +182,7 @@ async function deleteNutritionLog(req: Request, res: Response) {
     }
 
     // Delete the nutrition log for the user that made the request
-    await nutritionService.deleteNutritionLog(userId, parsedLogId);
+    await nutritionService.deleteNutritionLog(parsedLogId, userId);
     res.status(204).send();
   } catch (error: unknown) {
     if (error instanceof NotFoundError) {
