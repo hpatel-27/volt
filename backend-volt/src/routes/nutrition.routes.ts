@@ -21,6 +21,6 @@ router.patch("/:id", userMiddleware, nutritionController.updateNutritionLog);
 router.delete("/:id", userMiddleware, nutritionController.deleteNutritionLog);
 
 // Mount Meal routes
-router.use("/:logId/meals", mealRouter);
+router.use("/:logId/meals", userMiddleware, mealRouter);
 
 export default router;
