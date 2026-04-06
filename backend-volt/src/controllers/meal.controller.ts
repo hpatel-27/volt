@@ -97,29 +97,33 @@ async function createMeal(req: Request, res: Response) {
     }
 
     // Validate all the meal data
-    if (!name || typeof name !== "string" || name.length < 1) {
+    if (name === undefined || typeof name !== "string" || name.length < 1) {
       return res.status(400).json({
         error: "Name is a required parameter and cannot be an empty string.",
       });
     }
 
-    if (!calories || typeof calories !== "number" || calories < 0) {
+    if (
+      calories === undefined ||
+      typeof calories !== "number" ||
+      calories < 0
+    ) {
       return res
         .status(400)
         .json({ error: "Calories is a required parameter." });
     }
 
-    if (!protein || typeof protein !== "number" || protein < 0) {
+    if (protein === undefined || typeof protein !== "number" || protein < 0) {
       return res
         .status(400)
         .json({ error: "Protein is a required parameter." });
     }
 
-    if (!carbs || typeof carbs !== "number" || carbs < 0) {
+    if (carbs === undefined || typeof carbs !== "number" || carbs < 0) {
       return res.status(400).json({ error: "Carbs is a required parameter." });
     }
 
-    if (!fat || typeof fat !== "number" || fat < 0) {
+    if (fat === undefined || typeof fat !== "number" || fat < 0) {
       return res.status(400).json({ error: "Fat is a required parameter." });
     }
 
@@ -132,7 +136,7 @@ async function createMeal(req: Request, res: Response) {
       fat,
     };
 
-    const newMeal = await mealService.createMeal(userId, parsedLogId, mealData);
+    const newMeal = await mealService.createMeal(parsedLogId, userId, mealData);
     res.json(newMeal);
   } catch (error: unknown) {
     if (error instanceof Error) {
@@ -182,7 +186,7 @@ async function updateMeal(req: Request, res: Response) {
 
     // Validate allowed fields
     //
-    if (typeof name !== undefined) {
+    if (name !== undefined) {
       if (typeof name !== "string" || name.length < 1) {
         return res
           .status(400)
@@ -191,7 +195,7 @@ async function updateMeal(req: Request, res: Response) {
       mealData.name = name;
     }
 
-    if (typeof calories !== undefined) {
+    if (calories !== undefined) {
       if (typeof calories !== "number" || calories < 0) {
         return res.status(400).json({
           error: "Calories must be a non-negative number.",
@@ -200,7 +204,7 @@ async function updateMeal(req: Request, res: Response) {
       mealData.calories = calories;
     }
 
-    if (typeof carbs !== undefined) {
+    if (carbs !== undefined) {
       if (typeof carbs !== "number" || carbs < 0) {
         return res.status(400).json({
           error: "Carbs must be a non-negative number.",
@@ -209,7 +213,7 @@ async function updateMeal(req: Request, res: Response) {
       mealData.carbs = carbs;
     }
 
-    if (typeof protein !== undefined) {
+    if (protein !== undefined) {
       if (typeof protein !== "number" || protein < 0) {
         return res.status(400).json({
           error: "Protein must be a non-negative number.",
@@ -218,7 +222,7 @@ async function updateMeal(req: Request, res: Response) {
       mealData.protein = protein;
     }
 
-    if (typeof fat !== undefined) {
+    if (fat !== undefined) {
       if (typeof fat !== "number" || fat < 0) {
         return res.status(400).json({
           error: "Fat must be a non-negative number.",
