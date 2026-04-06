@@ -97,27 +97,29 @@ async function createMeal(req: Request, res: Response) {
     }
 
     // Validate all the meal data
-    if (!name || typeof name !== "string") {
-      return res.status(400).json({ error: "Name is a required parameter." });
+    if (!name || typeof name !== "string" || name.length < 1) {
+      return res.status(400).json({
+        error: "Name is a required parameter and cannot be an empty string.",
+      });
     }
 
-    if (!calories || typeof calories !== "number") {
+    if (!calories || typeof calories !== "number" || calories < 0) {
       return res
         .status(400)
         .json({ error: "Calories is a required parameter." });
     }
 
-    if (!protein || typeof protein !== "number") {
+    if (!protein || typeof protein !== "number" || protein < 0) {
       return res
         .status(400)
         .json({ error: "Protein is a required parameter." });
     }
 
-    if (!carbs || typeof carbs !== "number") {
+    if (!carbs || typeof carbs !== "number" || carbs < 0) {
       return res.status(400).json({ error: "Carbs is a required parameter." });
     }
 
-    if (!fat || typeof fat !== "number") {
+    if (!fat || typeof fat !== "number" || fat < 0) {
       return res.status(400).json({ error: "Fat is a required parameter." });
     }
 
@@ -150,6 +152,8 @@ async function updateMeal(req: Request, res: Response) {
     const logId = req.params.logId;
     const mealId = req.params.mealId;
 
+    const { name, calories, carbs, protein, fat } = req.body;
+
     // Check if user and logId are present
     if (
       !userId ||
@@ -174,6 +178,69 @@ async function updateMeal(req: Request, res: Response) {
     }
 
     // TODO: validate any provided data to update
+    const mealData: Prisma.MealUncheckedUpdateInput = {};
+
+    // Validate allowed fields
+    //
+    if (typeof name !== undefined) {
+      if (typeof name !== "string" || name.length < 1) {
+        return res
+          .status(400)
+          .json({ error: "Meal name cannot be an empty string." });
+      }
+      mealData.name = name;
+    }
+
+    if (typeof calories !== undefined) {
+      if (typeof calories !== "number" || calories < 0) {
+        return res.status(400).json({
+          error: "Calories must be a non-negative number.",
+        });
+      }
+      mealData.calories = calories;
+    }
+
+    if (typeof carbs !== undefined) {
+      if (typeof carbs !== "number" || carbs < 0) {
+        return res.status(400).json({
+          error: "Carbs must be a non-negative number.",
+        });
+      }
+      mealData.carbs = carbs;
+    }
+
+    if (typeof protein !== undefined) {
+      if (typeof protein !== "number" || protein < 0) {
+        return res.status(400).json({
+          error: "Protein must be a non-negative number.",
+        });
+      }
+      mealData.protein = protein;
+    }
+
+    if (typeof fat !== undefined) {
+      if (typeof fat !== "number" || fat < 0) {
+        return res.status(400).json({
+          error: "Fat must be a non-negative number.",
+        });
+      }
+      mealData.fat = fat;
+    }
+
+    // mealData has been built with the provided data
+    if (Object.keys(mealData).length === 0) {
+      return res
+        .status(400)
+        .json({ error: "No valid fields were provided to update." });
+    }
+
+    const updatedMeal = await mealService.updateMeal(
+      parsedLogId,
+      userId,
+      parsedMealId,
+      mealData,
+    );
+    res.json(updatedMeal);
   } catch (error: unknown) {
     if (error instanceof NotFoundError) {
       res.status(404).json({ error: error.message });
