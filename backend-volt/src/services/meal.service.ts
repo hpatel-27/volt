@@ -147,7 +147,7 @@ async function deleteMeal(logId: number, userId: number, mealId: number) {
     }
 
     await prisma.meal.delete({
-      where: { id: mealId },
+      where: { id: mealId, nutritionLogId: logId },
     });
     return;
   } catch (error: unknown) {
