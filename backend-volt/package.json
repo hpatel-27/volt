@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "vitest",
-    "coverage": "vitest run --coverage",
+    "test:coverage": "vitest run --coverage",
     "dev": "tsx watch --env-file=.env src/server.ts",
     "start": "nodemon -L server.js",
     "seed:exercises": "tsx src/scripts/exercises.js"
@@ -36,6 +36,7 @@
     "ts-node": "10.9.2",
     "tsx": "4.21.0",
     "typescript": "6.0.2",
-    "vitest": "4.1.2"
+    "vitest": "4.1.2",
+    "vitest-mock-extended": "4.0.0"
   }
 }
