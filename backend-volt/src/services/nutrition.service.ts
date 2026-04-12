@@ -25,7 +25,7 @@ async function getAllNutritionLogs(
     if (error instanceof Error) {
       throw new Error("Error fetching nutrition logs from database.");
     } else {
-      throw new Error("Unknown error fetching nutrition logs from database");
+      throw new Error("Unknown error fetching nutrition logs from database.");
     }
   }
 }
