@@ -50,7 +50,7 @@ async function getMealById(logId: number, userId: number, mealId: number) {
     });
 
     if (!meal) {
-      throw new NotFoundError(`Meal wit id: ${mealId} not found.`);
+      throw new NotFoundError(`Meal with id: ${mealId} not found.`);
     }
 
     return meal;
