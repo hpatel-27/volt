@@ -3,7 +3,7 @@
 vi.mock("../../../src/db.js");
 
 import type { DeepMockProxy } from "vitest-mock-extended";
-import { expect, test, describe, vi, beforeEach } from "vitest";
+import { expect, it, describe, vi, beforeEach } from "vitest";
 import { prisma } from "../../../src/db.js";
 import * as mealService from "../../../src/services/meal.service.js";
 import { Prisma } from "../../../src/generated/prisma/client.js";
@@ -15,7 +15,7 @@ describe("Meal Service getAllMeals", () => {
   // Prevent individual test context from leaking into other tests
   beforeEach(() => vi.clearAllMocks());
 
-  test("Error - Log not found or does not belong to user", async () => {
+  it("should throw error for log not found or it does not belong to the user", async () => {
     // Invalid userId and logId
     const logId = 15;
     const userId = 12;
@@ -25,7 +25,7 @@ describe("Meal Service getAllMeals", () => {
     );
   });
 
-  test("Error - Database or known error retrieving meals", async () => {
+  it("should throw a server error", async () => {
     // Create a log that the meal can be associated to
     const logId = 15;
     const userId = 12;
@@ -48,7 +48,7 @@ describe("Meal Service getAllMeals", () => {
     );
   });
 
-  test("Error - Non-error instance thrown when retrieving meals", async () => {
+  it("should throw an unknown error", async () => {
     // Create a log that the meal can be associated to
     const logId = 15;
     const userId = 12;
@@ -68,7 +68,7 @@ describe("Meal Service getAllMeals", () => {
     );
   });
 
-  test("Empty meals list for a log", async () => {
+  it("should return an empty meals list for a log", async () => {
     // Create a log that the meal can be associated to
     const logId = 15;
     const userId = 12;
@@ -87,7 +87,7 @@ describe("Meal Service getAllMeals", () => {
     expect(meals).toStrictEqual([]);
   });
 
-  test("Multiple meals in list for a log", async () => {
+  it("should return multiple meals in list for a log", async () => {
     // Create a log that the meal can be associated to
     const logId = 15;
     const userId = 12;
@@ -152,7 +152,7 @@ describe("Meal Service getMealById", () => {
   // Prevent individual test context from leaking into other tests
   beforeEach(() => vi.clearAllMocks());
 
-  test("Error - Log not found or does not belong to user", async () => {
+  it("should throw error for log not found or it does not belong to the user", async () => {
     // Invalid userId and logId
     const logId = 15;
     const userId = 12;
@@ -164,7 +164,7 @@ describe("Meal Service getMealById", () => {
     ).rejects.toThrow(`Log with id: ${logId} not found.`);
   });
 
-  test("Error - Meal with a given id not found or does not match with the logId", async () => {
+  it("should throw an error for Meal not found or does not match with the logId", async () => {
     // Create a log that the meal can be associated to
     const logId = 15;
     const userId = 12;
@@ -182,7 +182,7 @@ describe("Meal Service getMealById", () => {
     ).rejects.toThrow(`Meal with id: ${mealId} not found.`);
   });
 
-  test("Error - generic server error", async () => {
+  it("should throw a server error", async () => {
     // Create a log that the meal can be associated to
     const logId = 15;
     const userId = 12;
@@ -207,7 +207,7 @@ describe("Meal Service getMealById", () => {
     ).rejects.toThrow("Error retrieving meals for this log.");
   });
 
-  test("Error - Unknown error thrown (non-error instance)", async () => {
+  it("should throw an unknown error", async () => {
     // Create a log that the meal can be associated to
     const logId = 15;
     const userId = 12;
@@ -230,7 +230,7 @@ describe("Meal Service getMealById", () => {
     ).rejects.toThrow("Unknown error when retrieving meals for this log.");
   });
 
-  test("should return a valid meal", async () => {
+  it("should return a valid meal", async () => {
     // Create a log that the meal can be associated to
     const logId = 17;
     const userId = 11;
@@ -270,7 +270,7 @@ describe("Meal Service createMeal", () => {
   // Clear mocks between tests
   beforeEach(() => vi.clearAllMocks());
 
-  test("Error - Log not found or does not belong to user", async () => {
+  it("should throw error for log not found or it does not belong to the user", async () => {
     // Invalid userId and logId
     const logId = 15;
     const userId = 12;
@@ -289,7 +289,7 @@ describe("Meal Service createMeal", () => {
     ).rejects.toThrow("Log associated to this meal does not exist.");
   });
 
-  test("Error - Server error", async () => {
+  it("should throw a server error", async () => {
     // Setup log and meal data
     const logId = 15;
     const userId = 12;
@@ -321,7 +321,7 @@ describe("Meal Service createMeal", () => {
     ).rejects.toThrow("Error creating meal in the database.");
   });
 
-  test("Error - Unknown error", async () => {
+  it("should throw an unknown error", async () => {
     // Setup log and meal data
     const logId = 15;
     const userId = 12;
@@ -351,7 +351,7 @@ describe("Meal Service createMeal", () => {
     ).rejects.toThrow("Unknown error when creating meal.");
   });
 
-  test("Valid create meal", async () => {
+  it("should create a valid meal", async () => {
     // Setup log and meal data
     const logId = 15;
     const userId = 12;
@@ -386,7 +386,7 @@ describe("Meal Service updateMeal", () => {
   // Clear mocks before each tests to prevent leaks
   beforeEach(() => vi.clearAllMocks());
 
-  test("Error - Log does not exist for this user", async () => {
+  it("should throw error for log not found or it does not belong to the user", async () => {
     // Setup log and meal data
     const logId = 15;
     const userId = 12;
@@ -404,7 +404,7 @@ describe("Meal Service updateMeal", () => {
     ).rejects.toThrow("Log associated to this meal does not exist.");
   });
 
-  test("Error - Prisma request error", async () => {
+  it("should throw a prisma P2025 error", async () => {
     // Setup log and meal data
     const logId = 15;
     const userId = 12;
@@ -436,7 +436,7 @@ describe("Meal Service updateMeal", () => {
     ).rejects.toThrow("Meal to update not found.");
   });
 
-  test("Error - Server error", async () => {
+  it("should throw a server error", async () => {
     // Setup log and meal data
     const logId = 15;
     const userId = 12;
@@ -464,7 +464,7 @@ describe("Meal Service updateMeal", () => {
     ).rejects.toThrow("Error occurred during update to the meal.");
   });
 
-  test("Error - Unknown error", async () => {
+  it("should throw an unknown error", async () => {
     // Setup log and meal data
     const logId = 15;
     const userId = 12;
@@ -490,7 +490,7 @@ describe("Meal Service updateMeal", () => {
     ).rejects.toThrow("Unknown error occurred during the update to the meal.");
   });
 
-  test("Valid update", async () => {
+  it("should complete a valid meal update", async () => {
     // Setup log and meal data
     const logId = 15;
     const userId = 12;
@@ -535,7 +535,7 @@ describe("Meal Service updateMeal", () => {
 describe("Meal Service deleteMeal", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  test("Error - Log does not exist for this user", async () => {
+  it("should throw error for log not found or it does not belong to the user", async () => {
     const logId = 15;
     const userId = 12;
     const mealId = 1;
@@ -545,7 +545,7 @@ describe("Meal Service deleteMeal", () => {
     );
   });
 
-  test("Error - Prisma request error (meal not found)", async () => {
+  it("should throw a Prisma P2025 error", async () => {
     const logId = 15;
     const userId = 12;
     const date = new Date("2026-04-13T14:48:00.000Z");
@@ -569,7 +569,7 @@ describe("Meal Service deleteMeal", () => {
     );
   });
 
-  test("Error - Server error", async () => {
+  it("should throw a server error", async () => {
     const logId = 15;
     const userId = 12;
     const date = new Date("2026-04-13T14:48:00.000Z");
@@ -590,7 +590,7 @@ describe("Meal Service deleteMeal", () => {
     );
   });
 
-  test("Error - Unknown error", async () => {
+  it("should throw an unknown error", async () => {
     const logId = 15;
     const userId = 12;
     const date = new Date("2026-04-13T14:48:00.000Z");
@@ -609,7 +609,7 @@ describe("Meal Service deleteMeal", () => {
     );
   });
 
-  test("Valid delete", async () => {
+  it("should complete a valid meal delete", async () => {
     const logId = 15;
     const userId = 12;
     const date = new Date("2026-04-13T14:48:00.000Z");
