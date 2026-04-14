@@ -7,7 +7,6 @@ import type { Request, Response } from "express";
 import { expect, it, describe, vi, beforeEach } from "vitest";
 import { prisma } from "../../../src/db.js";
 import * as nutritionController from "../../../src/controllers/nutrition.controller.js";
-import { Prisma } from "../../../src/generated/prisma/client.js";
 
 // Mock prisma proxy, otherwise a type error exists when trying to call the mockResolved...
 const prismaMock = prisma as unknown as DeepMockProxy<typeof prisma>;
