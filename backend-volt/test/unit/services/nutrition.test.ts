@@ -91,6 +91,48 @@ describe("Nutrition Service getAllNutritionLogs", () => {
     expect(result.page).toBe(page);
     expect(result.limit).toBe(limit);
   });
+
+  test("Valid - Skip 5 Nutrition Logs", async () => {
+    const userId = 16;
+    const page = 2;
+    const limit = 5;
+
+    const firstLogId = 15;
+    const secondLogId = 18;
+    const firstDate = new Date("2026-04-13T14:48:00.000Z");
+    const secondDate = new Date("2026-04-14T14:48:00.000Z");
+
+    prismaMock.$transaction.mockResolvedValueOnce([
+      [
+        { id: firstLogId, userId, firstDate },
+        { id: secondLogId, userId, secondDate },
+      ],
+      2,
+    ]);
+
+    const result = await nutritionService.getAllNutritionLogs(
+      userId,
+      page,
+      limit,
+    );
+
+    // Validate the log data
+    expect(result.nutritionLogs.length).toBe(2);
+    expect(result.nutritionLogs).toStrictEqual([
+      { id: firstLogId, userId, firstDate },
+      { id: secondLogId, userId, secondDate },
+    ]);
+    expect(result.total).toBe(2);
+    expect(result.page).toBe(page);
+    expect(result.limit).toBe(limit);
+    // Check what the skip value resolved to with the page and limit math
+    expect(prismaMock.nutritionLog.findMany).toHaveBeenCalledWith({
+      where: { userId },
+      skip: 5,
+      take: limit,
+      orderBy: { date: "desc" },
+    });
+  });
 });
 
 describe("Nutrition Service getNutritionLogById", () => {
