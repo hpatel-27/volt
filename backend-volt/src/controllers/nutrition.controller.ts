@@ -157,6 +157,8 @@ async function updateNutritionLog(req: Request, res: Response) {
   } catch (error: unknown) {
     if (error instanceof NotFoundError) {
       res.status(404).json({ error: error.message });
+    } else if (error instanceof DuplicateEntryError) {
+      res.status(409).json({ error: error.message });
     } else if (error instanceof Error) {
       res.status(500).json({ error: error.message });
     } else {
