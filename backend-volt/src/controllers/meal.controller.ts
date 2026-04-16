@@ -181,11 +181,10 @@ async function updateMeal(req: Request, res: Response) {
       return res.status(400).json({ error: "Invalid meal ID" });
     }
 
-    // TODO: validate any provided data to update
+    // validate any provided data to update
     const mealData: Prisma.MealUncheckedUpdateInput = {};
 
     // Validate allowed fields
-    //
     if (name !== undefined) {
       if (typeof name !== "string" || name.length < 1) {
         return res
