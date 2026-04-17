@@ -139,7 +139,9 @@ async function createMeal(req: Request, res: Response) {
     const newMeal = await mealService.createMeal(parsedLogId, userId, mealData);
     res.status(201).json(newMeal);
   } catch (error: unknown) {
-    if (error instanceof Error) {
+    if (error instanceof NotFoundError) {
+      res.status(404).json({ error: error.message });
+    } else if (error instanceof Error) {
       res.status(500).json({ error: error.message });
     } else {
       res
