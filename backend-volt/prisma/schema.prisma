@@ -33,10 +33,10 @@ model Exercise {
   level            String? // beginner, intermediate, expert
   mechanic         String? // isolation, compound
   equipment        String?
+  category         String?
   primaryMuscles   String[]
   secondaryMuscles String[]
   instructions     String[]
-  category         String?
   images           String[]
   createdAt        DateTime @default(now())
 
@@ -140,25 +140,26 @@ model SetLog {
 // A daily nutrition record for a user
 model NutritionLog {
   id     Int      @id @default(autoincrement())
-  date   DateTime @default(now())
   userId Int
+  date   DateTime @default(now())
   user   User     @relation(fields: [userId], references: [id])
 
   meals Meal[]
-
+  
+  @@unique([userId, date])
   @@map("nutrition_logs")
 }
 
 // An individual meal entry within a nutrition log
 model Meal {
   id             Int          @id @default(autoincrement())
+  nutritionLogId Int
   name           String
   calories       Float
   protein        Float // grams
   carbs          Float // grams
   fat            Float // grams
-  nutritionLogId Int
-  nutritionLog   NutritionLog @relation(fields: [nutritionLogId], references: [id])
+  nutritionLog   NutritionLog @relation(fields: [nutritionLogId], references: [id], onDelete: Cascade)
 
   @@map("meals")
 }

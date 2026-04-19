@@ -109,3 +109,55 @@ DATABASE_URL=<neon_url>
 CLERK_SECRET_KEY=<clerk_secret>
 ALLOWED_ORIGINS=<comma_separated_origins>   # production only
 ```
+
+## Testing
+
+### Commands (run from `backend-volt/`)
+```bash
+npm test                 # Run all tests in watch mode
+npm run test:coverage    # Single run with coverage report
+```
+
+### Framework & Libraries
+- **Vitest** — test runner and assertion library
+- **vitest-mock-extended** — provides `DeepMockProxy<T>` for typed prisma mocks
+
+### Test Structure
+```
+backend-volt/test/
+  unit/
+    controllers/   # Controller unit tests (mock the service layer)
+    services/      # Service unit tests (mock prisma)
+  integration/
+    controllers/   # Full-stack HTTP tests (real DB)
+    services/      # Service tests against the real DB
+```
+
+### Unit Test Patterns
+
+**Service tests** — mock prisma directly:
+```ts
+vi.mock("../../../src/db.js");
+import { prisma } from "../../../src/db.js";
+const prismaMock = prisma as unknown as DeepMockProxy<typeof prisma>;
+
+prismaMock.nutritionLog.findMany.mockResolvedValueOnce([...]);
+```
+
+**Controller tests** — mock the service layer, not prisma:
+```ts
+vi.mock("../../../src/services/nutrition.service.js");
+import * as nutritionService from "../../../src/services/nutrition.service.js";
+
+vi.mocked(nutritionService.getAllNutritionLogs).mockResolvedValueOnce({ ... });
+```
+
+Mocking at the service layer is preferred for controller tests because it isolates exactly what the controller is responsible for (parameter validation, service dispatch, HTTP response mapping) without coupling the test to the service's internal DB calls.
+
+### Key Testing Conventions
+- `vi.mock(...)` calls must appear before imports — Vitest hoists them automatically
+- `vi` is a global in Vitest — no import needed for `vi.mock()`, but `vi.fn()` / `vi.mocked()` / etc. require `import { vi } from "vitest"`
+- Always call `vi.clearAllMocks()` in `beforeEach` to prevent state leaking between tests
+- Controller `mRes` mocks chain `.status().json()` — both must use `.mockReturnThis()`; add `.send()` for 204 responses
+- For `NotFoundError` and `DuplicateEntryError`, import from `src/errors.ts` — these are the custom error classes the service layer throws
+- When testing a controller success path, assert both the response payload AND (where the controller transforms data) the arguments passed to the service mock using `toHaveBeenCalledWith`
