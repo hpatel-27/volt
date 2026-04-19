@@ -975,7 +975,7 @@ describe("Meal Controller createMeal", () => {
     });
   });
 
-  it("should return 500 - service NotFoundError falls through to 500", async () => {
+  it("should return 404 - log not found", async () => {
     // createMeal controller has no NotFoundError handler, so it hits instanceof Error → 500
     const mReq = {
       user: { id: 1 },
@@ -998,7 +998,7 @@ describe("Meal Controller createMeal", () => {
     );
 
     await mealController.createMeal(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(500);
+    expect(mRes.status).toHaveBeenCalledWith(404);
     expect(mRes.json).toHaveBeenCalledWith({
       error: "Log associated to this meal does not exist.",
     });
