@@ -8,48 +8,30 @@ async function getAllNutritionLogs(
   page: number,
   limit: number,
 ) {
-  try {
-    // Find the nutrition logs for the user
-    const [nutritionLogs, total] = await prisma.$transaction([
-      prisma.nutritionLog.findMany({
-        where: { userId },
-        skip: (page - 1) * limit,
-        take: limit,
-        orderBy: { date: "desc" },
-      }),
-      prisma.nutritionLog.count({ where: { userId } }),
-    ]);
-    // An empty list of nutrition logs is still a valid response, so we return it as is
-    return { nutritionLogs, total, page, limit };
-  } catch (error: unknown) {
-    if (error instanceof Error) {
-      throw new Error("Error fetching nutrition logs from database.");
-    } else {
-      throw new Error("Unknown error fetching nutrition logs from database.");
-    }
-  }
+  // Find the nutrition logs for the user
+  const [nutritionLogs, total] = await prisma.$transaction([
+    prisma.nutritionLog.findMany({
+      where: { userId },
+      skip: (page - 1) * limit,
+      take: limit,
+      orderBy: { date: "desc" },
+    }),
+    prisma.nutritionLog.count({ where: { userId } }),
+  ]);
+  // An empty list of nutrition logs is still a valid response, so we return it as is
+  return { nutritionLogs, total, page, limit };
 }
 
 async function getNutritionLogById(userId: number, logId: number) {
-  try {
-    const nutritionLog = await prisma.nutritionLog.findUnique({
-      where: { id: logId, userId },
-    });
+  const nutritionLog = await prisma.nutritionLog.findUnique({
+    where: { id: logId, userId },
+  });
 
-    if (!nutritionLog) {
-      throw new NotFoundError("Nutrition log not found");
-    }
-
-    return nutritionLog;
-  } catch (error: unknown) {
-    if (error instanceof NotFoundError) {
-      throw error; // Re-throw NotFoundError to be handled by the controller
-    } else if (error instanceof Error) {
-      throw new Error("Error fetching nutrition log from database.");
-    } else {
-      throw new Error("Unknown error fetching nutrition log from database");
-    }
+  if (!nutritionLog) {
+    throw new NotFoundError("Nutrition log not found");
   }
+
+  return nutritionLog;
 }
 
 // Create a new nutrition log for the user, this initially only includes
@@ -69,12 +51,10 @@ async function createNutritionLog(
     ) {
       throw new DuplicateEntryError(
         "A nutrition log at this date already exists.",
+        { cause: error },
       );
-    } else if (error instanceof Error) {
-      throw new Error("Error creating nutrition log in database.");
-    } else {
-      throw new Error("Unknown error creating nutrition log in database");
     }
+    throw error;
   }
 }
 
@@ -99,19 +79,17 @@ async function updateNutritionLog(
       error instanceof Prisma.PrismaClientKnownRequestError &&
       error.code === "P2025"
     ) {
-      throw new NotFoundError("Nutrition log not found.");
+      throw new NotFoundError("Nutrition log not found.", { cause: error });
     } else if (
       error instanceof Prisma.PrismaClientKnownRequestError &&
       error.code === "P2002"
     ) {
       throw new DuplicateEntryError(
         "Nutrition log with this date already exists.",
+        { cause: error },
       );
-    } else if (error instanceof Error) {
-      throw new Error("Error updating nutrition log in database.");
-    } else {
-      throw new Error("Unknown error updating nutrition log in database");
     }
+    throw error;
   }
 }
 
@@ -129,12 +107,9 @@ async function deleteNutritionLog(logId: number, userId: number) {
       error instanceof Prisma.PrismaClientKnownRequestError &&
       error.code === "P2025"
     ) {
-      throw new NotFoundError("Nutrition log not found.");
-    } else if (error instanceof Error) {
-      throw new Error("Error deleting nutrition log from database.");
-    } else {
-      throw new Error("Unknown error occurred while deleting nutrition log.");
+      throw new NotFoundError("Nutrition log not found.", { cause: error });
     }
+    throw error;
   }
 }
 
