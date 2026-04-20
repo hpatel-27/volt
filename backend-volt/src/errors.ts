@@ -1,22 +1,16 @@
 class NotFoundError extends Error {
-  name: string;
-  statusCode: number;
-
-  constructor(message: string) {
-    super(message);
+  statusCode: number = 404;
+  constructor(message: string, options?: ErrorOptions) {
+    super(message, options);
     this.name = "NotFoundError";
-    this.statusCode = 404;
   }
 }
 
 class DuplicateEntryError extends Error {
-  name: string;
-  statusCode: number;
-
-  constructor(message: string) {
-    super(message);
+  statusCode: number = 409;
+  constructor(message: string, options?: ErrorOptions) {
+    super(message, options);
     this.name = "DuplicateEntryError";
-    this.statusCode = 409;
   }
 }
 
