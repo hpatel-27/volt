@@ -79,7 +79,7 @@ describe("Meal Controller getAllMeals", () => {
     expect(mRes.json).toHaveBeenCalledWith({ error: "Invalid log ID" });
   });
 
-  it("should return 404 - log not found", async () => {
+  it("should throw an error", async () => {
     const mReq = {
       user: { id: 1 },
       params: { logId: "5" },
@@ -93,35 +93,12 @@ describe("Meal Controller getAllMeals", () => {
       new NotFoundError("Log with id: 5 not found."),
     );
 
-    await mealController.getAllMeals(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(404);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Log with id: 5 not found.",
-    });
-  });
-
-  it("should return 500 - service throws Error", async () => {
-    const mReq = {
-      user: { id: 1 },
-      params: { logId: "5" },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    vi.mocked(mealService.getAllMeals).mockRejectedValueOnce(
-      new Error("Error retrieving meals for this log."),
+    await expect(mealController.getAllMeals(mReq, mRes)).rejects.toThrow(
+      NotFoundError,
     );
-
-    await mealController.getAllMeals(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(500);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Error retrieving meals for this log.",
-    });
   });
 
-  it("should return 500 - service throws unknown", async () => {
+  it("should throw an unknown error", async () => {
     const mReq = {
       user: { id: 1 },
       params: { logId: "5" },
@@ -135,9 +112,9 @@ describe("Meal Controller getAllMeals", () => {
       "unknown error value",
     );
 
-    await mealController.getAllMeals(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(500);
-    expect(mRes.json).toHaveBeenCalledWith({ error: "Unknown error." });
+    await expect(mealController.getAllMeals(mReq, mRes)).rejects.toThrow(
+      "unknown error value",
+    );
   });
 
   it("should return 200 - empty meals list", async () => {
@@ -311,7 +288,7 @@ describe("Meal Controller getMealById", () => {
     expect(mRes.json).toHaveBeenCalledWith({ error: "Invalid meal ID" });
   });
 
-  it("should return 404 - log not found", async () => {
+  it("should throw an error", async () => {
     const mReq = {
       user: { id: 1 },
       params: { logId: "5", mealId: "1" },
@@ -325,56 +302,12 @@ describe("Meal Controller getMealById", () => {
       new NotFoundError("Log with id: 5 not found."),
     );
 
-    await mealController.getMealById(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(404);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Log with id: 5 not found.",
-    });
-  });
-
-  it("should return 404 - meal not found", async () => {
-    const mReq = {
-      user: { id: 1 },
-      params: { logId: "5", mealId: "1" },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    vi.mocked(mealService.getMealById).mockRejectedValueOnce(
-      new NotFoundError("Meal with id: 1 not found."),
+    await expect(mealController.getMealById(mReq, mRes)).rejects.toThrow(
+      NotFoundError,
     );
-
-    await mealController.getMealById(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(404);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Meal with id: 1 not found.",
-    });
   });
 
-  it("should return 500 - service throws Error", async () => {
-    const mReq = {
-      user: { id: 1 },
-      params: { logId: "5", mealId: "1" },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    vi.mocked(mealService.getMealById).mockRejectedValueOnce(
-      new Error("Error retrieving meals for this log."),
-    );
-
-    await mealController.getMealById(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(500);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Error retrieving meals for this log.",
-    });
-  });
-
-  it("should return 500 - service throws unknown", async () => {
+  it("should throw unknown error", async () => {
     const mReq = {
       user: { id: 1 },
       params: { logId: "5", mealId: "1" },
@@ -386,9 +319,9 @@ describe("Meal Controller getMealById", () => {
 
     vi.mocked(mealService.getMealById).mockRejectedValueOnce("unknown");
 
-    await mealController.getMealById(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(500);
-    expect(mRes.json).toHaveBeenCalledWith({ error: "Unknown error." });
+    await expect(mealController.getMealById(mReq, mRes)).rejects.toThrow(
+      "unknown",
+    );
   });
 
   it("should return 200 - success", async () => {
@@ -975,7 +908,7 @@ describe("Meal Controller createMeal", () => {
     });
   });
 
-  it("should return 404 - log not found", async () => {
+  it("should throw an error", async () => {
     // createMeal controller has no NotFoundError handler, so it hits instanceof Error → 500
     const mReq = {
       user: { id: 1 },
@@ -997,42 +930,12 @@ describe("Meal Controller createMeal", () => {
       new NotFoundError("Log associated to this meal does not exist."),
     );
 
-    await mealController.createMeal(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(404);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Log associated to this meal does not exist.",
-    });
-  });
-
-  it("should return 500 - service throws Error", async () => {
-    const mReq = {
-      user: { id: 1 },
-      params: { logId: "5" },
-      body: {
-        name: "Breakfast",
-        calories: 500,
-        protein: 30,
-        carbs: 60,
-        fat: 15,
-      },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    vi.mocked(mealService.createMeal).mockRejectedValueOnce(
-      new Error("Error creating meal in the database."),
+    await expect(mealController.createMeal(mReq, mRes)).rejects.toThrow(
+      NotFoundError,
     );
-
-    await mealController.createMeal(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(500);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Error creating meal in the database.",
-    });
   });
 
-  it("should return 500 - service throws unknown", async () => {
+  it("should throw unknown error", async () => {
     const mReq = {
       user: { id: 1 },
       params: { logId: "5" },
@@ -1051,11 +954,9 @@ describe("Meal Controller createMeal", () => {
 
     vi.mocked(mealService.createMeal).mockRejectedValueOnce("unknown");
 
-    await mealController.createMeal(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(500);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Unknown error encountered when creating a meal.",
-    });
+    await expect(mealController.createMeal(mReq, mRes)).rejects.toThrow(
+      "unknown",
+    );
   });
 
   it("should return 200 - success", async () => {
@@ -1378,7 +1279,7 @@ describe("Meal Controller updateMeal", () => {
     });
   });
 
-  it("should return 404 - log not found", async () => {
+  it("should throw an error", async () => {
     const mReq = {
       user: { id: 1 },
       params: { logId: "5", mealId: "1" },
@@ -1393,55 +1294,9 @@ describe("Meal Controller updateMeal", () => {
       new NotFoundError("Log associated to this meal does not exist."),
     );
 
-    await mealController.updateMeal(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(404);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Log associated to this meal does not exist.",
-    });
-  });
-
-  it("should return 404 - meal not found", async () => {
-    const mReq = {
-      user: { id: 1 },
-      params: { logId: "5", mealId: "1" },
-      body: { name: "Updated Breakfast" },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    vi.mocked(mealService.updateMeal).mockRejectedValueOnce(
-      new NotFoundError("Meal to update not found."),
+    await expect(mealController.updateMeal(mReq, mRes)).rejects.toThrow(
+      NotFoundError,
     );
-
-    await mealController.updateMeal(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(404);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Meal to update not found.",
-    });
-  });
-
-  it("should return 500 - service throws Error", async () => {
-    const mReq = {
-      user: { id: 1 },
-      params: { logId: "5", mealId: "1" },
-      body: { name: "Updated Breakfast" },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    vi.mocked(mealService.updateMeal).mockRejectedValueOnce(
-      new Error("Error occurred during update to the meal."),
-    );
-
-    await mealController.updateMeal(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(500);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Error occurred during update to the meal.",
-    });
   });
 
   it("should return 500 - service throws unknown", async () => {
@@ -1457,11 +1312,9 @@ describe("Meal Controller updateMeal", () => {
 
     vi.mocked(mealService.updateMeal).mockRejectedValueOnce("unknown");
 
-    await mealController.updateMeal(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(500);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Unknown error occurred during meal update.",
-    });
+    await expect(mealController.updateMeal(mReq, mRes)).rejects.toThrow(
+      "unknown",
+    );
   });
 
   it("should return 200 - partial update (name only)", async () => {
@@ -1684,55 +1537,9 @@ describe("Meal Controller deleteMeal", () => {
       new NotFoundError("Log associated to this meal does not exist."),
     );
 
-    await mealController.deleteMeal(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(404);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Log associated to this meal does not exist.",
-    });
-  });
-
-  it("should return 404 - meal not found", async () => {
-    const mReq = {
-      user: { id: 1 },
-      params: { logId: "5", mealId: "1" },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-      send: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    vi.mocked(mealService.deleteMeal).mockRejectedValueOnce(
-      new NotFoundError("Meal to delete not found."),
+    await expect(mealController.deleteMeal(mReq, mRes)).rejects.toThrow(
+      NotFoundError,
     );
-
-    await mealController.deleteMeal(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(404);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Meal to delete not found.",
-    });
-  });
-
-  it("should return 500 - service throws Error", async () => {
-    const mReq = {
-      user: { id: 1 },
-      params: { logId: "5", mealId: "1" },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-      send: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    vi.mocked(mealService.deleteMeal).mockRejectedValueOnce(
-      new Error("Error occurred during delete of the meal."),
-    );
-
-    await mealController.deleteMeal(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(500);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Error occurred during delete of the meal.",
-    });
   });
 
   it("should return 500 - service throws unknown", async () => {
@@ -1748,11 +1555,9 @@ describe("Meal Controller deleteMeal", () => {
 
     vi.mocked(mealService.deleteMeal).mockRejectedValueOnce("unknown");
 
-    await mealController.deleteMeal(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(500);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Unknown error occurred during meal update.",
-    });
+    await expect(mealController.deleteMeal(mReq, mRes)).rejects.toThrow(
+      "unknown",
+    );
   });
 
   it("should return 204 - success", async () => {

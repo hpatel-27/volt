@@ -205,17 +205,15 @@ describe("Nutrition Controller getAllNutritionLogs", () => {
     } as unknown as Response;
 
     vi.mocked(nutritionService.getAllNutritionLogs).mockRejectedValueOnce(
-      new Error("Error fetching nutrition logs from database."),
+      new Error("Server error."),
     );
 
-    await nutritionController.getAllNutritionLogs(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(500);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Error fetching nutrition logs from database.",
-    });
+    await expect(
+      nutritionController.getAllNutritionLogs(mReq, mRes),
+    ).rejects.toThrow(Error);
   });
 
-  it("should return 500 - service throws unknown", async () => {
+  it("should throw unknown error", async () => {
     // When the service is mocked to throw a non-Error, the controller's own else
     // branch fires — returning its own message, not the service's.
     const mReq = {
@@ -231,11 +229,9 @@ describe("Nutrition Controller getAllNutritionLogs", () => {
       "someunknownvalue",
     );
 
-    await nutritionController.getAllNutritionLogs(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(500);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Unknown error fetching nutrition logs",
-    });
+    await expect(
+      nutritionController.getAllNutritionLogs(mReq, mRes),
+    ).rejects.toThrow("someunknownvalue");
   });
 
   it("should return 200 and return multiple nutrition logs", async () => {
@@ -343,28 +339,7 @@ describe("Nutrition Controller getNutritionLogById", () => {
     expect(mRes.json).toHaveBeenCalledWith({ error: "Invalid log ID" });
   });
 
-  it("should return 404 - log not found", async () => {
-    const mReq = {
-      user: { id: 1 },
-      params: { id: "99" },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    vi.mocked(nutritionService.getNutritionLogById).mockRejectedValueOnce(
-      new NotFoundError("Nutrition log not found"),
-    );
-
-    await nutritionController.getNutritionLogById(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(404);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Nutrition log not found",
-    });
-  });
-
-  it("should return 500 - service throws Error", async () => {
+  it("should throw error", async () => {
     const mReq = {
       user: { id: 1 },
       params: { id: "1" },
@@ -378,14 +353,12 @@ describe("Nutrition Controller getNutritionLogById", () => {
       new Error("Error fetching nutrition log from database."),
     );
 
-    await nutritionController.getNutritionLogById(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(500);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Error fetching nutrition log from database.",
-    });
+    await expect(
+      nutritionController.getNutritionLogById(mReq, mRes),
+    ).rejects.toThrow(Error);
   });
 
-  it("should return 500 - service throws unknown", async () => {
+  it("should throw unknown error", async () => {
     const mReq = {
       user: { id: 1 },
       params: { id: "1" },
@@ -399,11 +372,9 @@ describe("Nutrition Controller getNutritionLogById", () => {
       "unknown",
     );
 
-    await nutritionController.getNutritionLogById(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(500);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Unknown error fetching nutrition log",
-    });
+    await expect(
+      nutritionController.getNutritionLogById(mReq, mRes),
+    ).rejects.toThrow("unknown");
   });
 
   it("should return 200 - success", async () => {
@@ -499,28 +470,7 @@ describe("Nutrition Controller createNutritionLog", () => {
     });
   });
 
-  it("should return 409 - duplicate date", async () => {
-    const mReq = {
-      user: { id: 1 },
-      body: { date: "2026-04-15T00:00:00.000Z" },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    vi.mocked(nutritionService.createNutritionLog).mockRejectedValueOnce(
-      new DuplicateEntryError("A nutrition log at this date already exists."),
-    );
-
-    await nutritionController.createNutritionLog(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(409);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "A nutrition log at this date already exists.",
-    });
-  });
-
-  it("should return 500 - service throws Error", async () => {
+  it("should throw error", async () => {
     const mReq = {
       user: { id: 1 },
       body: { date: "2026-04-15T00:00:00.000Z" },
@@ -534,14 +484,12 @@ describe("Nutrition Controller createNutritionLog", () => {
       new Error("Error creating nutrition log in database."),
     );
 
-    await nutritionController.createNutritionLog(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(500);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Error creating nutrition log in database.",
-    });
+    await expect(
+      nutritionController.createNutritionLog(mReq, mRes),
+    ).rejects.toThrow(Error);
   });
 
-  it("should return 500 - service throws unknown", async () => {
+  it("should throw unknown error", async () => {
     const mReq = {
       user: { id: 1 },
       body: { date: "2026-04-15T00:00:00.000Z" },
@@ -552,14 +500,12 @@ describe("Nutrition Controller createNutritionLog", () => {
     } as unknown as Response;
 
     vi.mocked(nutritionService.createNutritionLog).mockRejectedValueOnce(
-      "unknown",
+      456345,
     );
 
-    await nutritionController.createNutritionLog(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(500);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Unknown error creating nutrition log",
-    });
+    await expect(
+      nutritionController.createNutritionLog(mReq, mRes),
+    ).rejects.toThrow(456345);
   });
 
   it("should return 201 - success, date is converted to ISO format before service call", async () => {
@@ -724,51 +670,7 @@ describe("Nutrition Controller updateNutritionLog", () => {
     });
   });
 
-  it("should return 404 - log not found", async () => {
-    const mReq = {
-      user: { id: 1 },
-      params: { id: "5" },
-      body: { date: "2026-04-15T00:00:00.000Z" },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    vi.mocked(nutritionService.updateNutritionLog).mockRejectedValueOnce(
-      new NotFoundError("Nutrition log not found."),
-    );
-
-    await nutritionController.updateNutritionLog(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(404);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Nutrition log not found.",
-    });
-  });
-
-  it("should return 409 - log with provided date already exists for the user", async () => {
-    const mReq = {
-      user: { id: 1 },
-      params: { id: "5" },
-      body: { date: "2026-04-16T00:00:00.000Z" },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    vi.mocked(nutritionService.updateNutritionLog).mockRejectedValueOnce(
-      new DuplicateEntryError("Nutrition log with this date already exists."),
-    );
-
-    await nutritionController.updateNutritionLog(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(409);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Nutrition log with this date already exists.",
-    });
-  });
-
-  it("should return 500 - service throws Error", async () => {
+  it("should throw error", async () => {
     const mReq = {
       user: { id: 1 },
       params: { id: "5" },
@@ -783,14 +685,12 @@ describe("Nutrition Controller updateNutritionLog", () => {
       new Error("Error updating nutrition log in database."),
     );
 
-    await nutritionController.updateNutritionLog(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(500);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Error updating nutrition log in database.",
-    });
+    await expect(
+      nutritionController.updateNutritionLog(mReq, mRes),
+    ).rejects.toThrow(Error);
   });
 
-  it("should return 500 - service throws unknown", async () => {
+  it("should throw unknown error", async () => {
     const mReq = {
       user: { id: 1 },
       params: { id: "5" },
@@ -801,15 +701,11 @@ describe("Nutrition Controller updateNutritionLog", () => {
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
 
-    vi.mocked(nutritionService.updateNutritionLog).mockRejectedValueOnce(
-      "unknown",
-    );
+    vi.mocked(nutritionService.updateNutritionLog).mockRejectedValueOnce(false);
 
-    await nutritionController.updateNutritionLog(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(500);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Unknown error updating nutrition log",
-    });
+    await expect(
+      nutritionController.updateNutritionLog(mReq, mRes),
+    ).rejects.toThrow(false);
   });
 
   it("should return 200 - success, date is converted to ISO format before service call", async () => {
@@ -916,7 +812,7 @@ describe("Nutrition Controller deleteNutritionLog", () => {
     expect(mRes.json).toHaveBeenCalledWith({ error: "Invalid log ID" });
   });
 
-  it("should return 404 - log not found", async () => {
+  it("should throw error", async () => {
     const mReq = {
       user: { id: 1 },
       params: { id: "5" },
@@ -931,36 +827,12 @@ describe("Nutrition Controller deleteNutritionLog", () => {
       new NotFoundError("Nutrition log not found."),
     );
 
-    await nutritionController.deleteNutritionLog(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(404);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Nutrition log not found.",
-    });
+    await expect(
+      nutritionController.deleteNutritionLog(mReq, mRes),
+    ).rejects.toThrow(NotFoundError);
   });
 
-  it("should return 500 - service throws Error", async () => {
-    const mReq = {
-      user: { id: 1 },
-      params: { id: "5" },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-      send: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    vi.mocked(nutritionService.deleteNutritionLog).mockRejectedValueOnce(
-      new Error("Error deleting nutrition log from database."),
-    );
-
-    await nutritionController.deleteNutritionLog(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(500);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Error deleting nutrition log from database.",
-    });
-  });
-
-  it("should return 500 - service throws unknown", async () => {
+  it("should throw unknown error", async () => {
     const mReq = {
       user: { id: 1 },
       params: { id: "5" },
@@ -975,11 +847,9 @@ describe("Nutrition Controller deleteNutritionLog", () => {
       "unknown",
     );
 
-    await nutritionController.deleteNutritionLog(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(500);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Unknown error deleting nutrition log",
-    });
+    await expect(
+      nutritionController.deleteNutritionLog(mReq, mRes),
+    ).rejects.toThrow("unknown");
   });
 
   it("should return 204 - success", async () => {
