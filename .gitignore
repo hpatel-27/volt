@@ -6,6 +6,7 @@ migrations
 
 # Claude
 .claude
+CLAUDE.md
 
 # Testing
 coverage/ 
