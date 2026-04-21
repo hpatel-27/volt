@@ -9,7 +9,7 @@ import { requireAdmin } from "../middleware/admin.middleware.js";
 router.get("/", exerciseController.getExercises);
 
 // Get a specific exercise by ID, e.g. /exercises/123
-router.get("/:id", exerciseController.getExerciseById);
+router.get("/:exerciseId", exerciseController.getExerciseById);
 
 router.post(
   "/",
@@ -19,14 +19,14 @@ router.post(
 );
 
 router.patch(
-  "/:id",
+  "/:exerciseId",
   userMiddleware,
   requireAdmin,
   exerciseController.updateExercise,
 );
 
 router.delete(
-  "/:id",
+  "/:exerciseId",
   userMiddleware,
   requireAdmin,
   exerciseController.deleteExercise,
