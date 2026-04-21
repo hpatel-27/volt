@@ -124,7 +124,7 @@ describe("getMealById", () => {
   it("throws NotFoundError when log not found", async () => {
     await expect(
       mealService.getMealById(999999, testUserId, mealId),
-    ).rejects.toThrow(new NotFoundError(`Log with id: ${999999} not found.`));
+    ).rejects.toThrow(new NotFoundError(`Meal with id: ${mealId} not found.`));
   });
 
   it("throws NotFoundError when meal not found", async () => {
@@ -204,9 +204,7 @@ describe("updateMeal", () => {
     // Fake logId and fake mealId
     await expect(
       mealService.updateMeal(999999, testUserId, 1232, mealData),
-    ).rejects.toThrow(
-      new NotFoundError("Log associated to this meal does not exist."),
-    );
+    ).rejects.toThrow(new NotFoundError("Meal not found."));
   });
 
   it("throws NotFoundError when meal to update is not found", async () => {
@@ -223,7 +221,7 @@ describe("updateMeal", () => {
 
     await expect(
       mealService.updateMeal(logId, testUserId, -2348923, { protein: 14 }),
-    ).rejects.toThrow(new NotFoundError("Meal to update not found."));
+    ).rejects.toThrow(new NotFoundError("Meal not found."));
   });
 
   it("returns an updated meal", async () => {
@@ -267,9 +265,7 @@ describe("deleteMeal", () => {
     // fake logId and fake mealId
     await expect(
       mealService.deleteMeal(999999, testUserId, 23423),
-    ).rejects.toThrow(
-      new NotFoundError("Log associated to this meal does not exist."),
-    );
+    ).rejects.toThrow(new NotFoundError("Meal not found."));
   });
 
   it("throws NotFoundError when meal to delete is not found", async () => {
@@ -286,7 +282,7 @@ describe("deleteMeal", () => {
 
     await expect(
       mealService.deleteMeal(logId, testUserId, -2348923),
-    ).rejects.toThrow(new NotFoundError("Meal to delete not found."));
+    ).rejects.toThrow(new NotFoundError("Meal not found."));
   });
 
   it("returns undefined and deletes the meal successfully", async () => {

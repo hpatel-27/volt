@@ -16,16 +16,9 @@ import type { Response, NextFunction } from "express";
 import { it, describe, vi, beforeAll, afterAll, expect } from "vitest";
 import { prisma } from "../../../src/db.js";
 import request from "supertest";
-import express from "express";
-import { clerkMiddleware } from "@clerk/express";
-import routeIndex from "../../../src/routes/index.js";
+import { createApp } from "../../../src/app.js";
 
-const API_BASE = "/api/v1";
-
-const app = express();
-app.use(express.json());
-app.use(clerkMiddleware());
-app.use(API_BASE, routeIndex);
+const app = createApp({ skipRateLimit: true });
 
 // Unique clerkId so this test user doesn't collide with other test files running in parallel
 const TEST_CLERK_ID = "integration_test_nutrition_controller_user";
@@ -196,7 +189,7 @@ describe("GET /api/v1/nutrition/:id", () => {
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
       .expect(404)
-      .expect({ error: "Nutrition log not found" });
+      .expect({ error: "Nutrition log not found." });
   });
 
   it("returns 200 with the log", async () => {

@@ -16,16 +16,9 @@ import type { Response, NextFunction } from "express";
 import { it, describe, vi, beforeAll, afterAll, expect } from "vitest";
 import { prisma } from "../../../src/db.js";
 import request from "supertest";
-import express from "express";
-import { clerkMiddleware } from "@clerk/express";
-import routeIndex from "../../../src/routes/index.js";
+import { createApp } from "../../../src/app.js";
 
-const API_BASE = "/api/v1";
-
-const app = express();
-app.use(express.json());
-app.use(clerkMiddleware());
-app.use(API_BASE, routeIndex);
+const app = createApp({ skipRateLimit: true });
 
 // Unique clerkId so this test user doesn't collide with other test files running in parallel
 const TEST_CLERK_ID = "integration_test_meal_controller_user";
@@ -121,7 +114,7 @@ describe("GET /api/v1/nutrition/:logId/meals/:mealId", () => {
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
       .expect(404)
-      .expect({ error: "Log with id: 999999 not found." });
+      .expect({ error: `Meal with id: ${meal.id} not found.` });
   });
 
   it("returns 404 when mealId is not found", async () => {
@@ -512,7 +505,7 @@ describe("PATCH /api/v1/nutrition/:logId/meals/:mealId", () => {
       .send({ name: "Updated" })
       .expect("Content-Type", /json/)
       .expect(404)
-      .expect({ error: "Log associated to this meal does not exist." });
+      .expect({ error: "Meal not found." });
   });
 
   it("returns 404 when mealId not found", async () => {
@@ -523,7 +516,7 @@ describe("PATCH /api/v1/nutrition/:logId/meals/:mealId", () => {
       .send({ name: "Updated" })
       .expect("Content-Type", /json/)
       .expect(404)
-      .expect({ error: "Meal to update not found." });
+      .expect({ error: "Meal not found." });
   });
 
   it("returns 200 with the updated meal", async () => {
@@ -591,7 +584,7 @@ describe("DELETE /api/v1/nutrition/:logId/meals/:mealId", () => {
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
       .expect(404)
-      .expect({ error: "Log associated to this meal does not exist." });
+      .expect({ error: "Meal not found." });
   });
 
   it("returns 404 when mealId not found", async () => {
@@ -600,7 +593,7 @@ describe("DELETE /api/v1/nutrition/:logId/meals/:mealId", () => {
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
       .expect(404)
-      .expect({ error: "Meal to delete not found." });
+      .expect({ error: "Meal not found." });
   });
 
   it("returns 204 when meal is deleted", async () => {
