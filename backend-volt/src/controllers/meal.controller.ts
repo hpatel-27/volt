@@ -4,70 +4,37 @@ import type { Prisma } from "../generated/prisma/client.js";
 
 async function getAllMeals(req: Request, res: Response) {
   const userId = req.user?.id;
-  const logId = req.params.logId;
+  const logId = res.locals.logId as number;
 
-  // Check if user and logId are present
-  if (!userId || !logId || typeof logId !== "string") {
+  if (!userId) {
     return res.status(400).json({ error: "Missing required parameters" });
   }
 
-  // Validate logId is a number
-  const parsedLogId = parseInt(logId, 10);
-  if (isNaN(parsedLogId)) {
-    return res.status(400).json({ error: "Invalid log ID" });
-  }
-
-  const meals = await mealService.getAllMeals(parsedLogId, userId);
+  const meals = await mealService.getAllMeals(logId, userId);
   return res.json(meals);
 }
 
 async function getMealById(req: Request, res: Response) {
   const userId = req.user?.id;
-  const logId = req.params.logId;
-  const mealId = req.params.mealId;
+  const logId = res.locals.logId as number;
+  const mealId = res.locals.mealId as number;
 
-  // Check if user and logId are present
-  if (
-    !userId ||
-    !logId ||
-    !mealId ||
-    typeof logId !== "string" ||
-    typeof mealId !== "string"
-  ) {
+  if (!userId) {
     return res.status(400).json({ error: "Missing required parameters" });
   }
 
-  // Validate logId is a number
-  const parsedLogId = parseInt(logId, 10);
-  if (isNaN(parsedLogId)) {
-    return res.status(400).json({ error: "Invalid log ID" });
-  }
-
-  // Validate mealId is a number
-  const parsedMealId = parseInt(mealId, 10);
-  if (isNaN(parsedMealId)) {
-    return res.status(400).json({ error: "Invalid meal ID" });
-  }
-
-  const meal = await mealService.getMealById(parsedLogId, userId, parsedMealId);
+  const meal = await mealService.getMealById(logId, userId, mealId);
   res.json(meal);
 }
 
 // Create a meal for a nutrition log
 async function createMeal(req: Request, res: Response) {
   const userId = req.user?.id;
-  const logId = req.params.logId;
+  const logId = res.locals.logId as number;
   const { name, calories, protein, carbs, fat } = req.body;
 
-  // Check if user and logId are present
-  if (!userId || !logId || typeof logId !== "string") {
+  if (!userId) {
     return res.status(400).json({ error: "Missing required parameters" });
-  }
-
-  // Validate logId is a number
-  const parsedLogId = parseInt(logId, 10);
-  if (isNaN(parsedLogId)) {
-    return res.status(400).json({ error: "Invalid log ID" });
   }
 
   // Validate all the meal data
@@ -94,7 +61,7 @@ async function createMeal(req: Request, res: Response) {
   }
 
   const mealData: Prisma.MealUncheckedCreateInput = {
-    nutritionLogId: parsedLogId,
+    nutritionLogId: logId,
     name,
     calories,
     protein,
@@ -102,39 +69,20 @@ async function createMeal(req: Request, res: Response) {
     fat,
   };
 
-  const newMeal = await mealService.createMeal(parsedLogId, userId, mealData);
+  const newMeal = await mealService.createMeal(logId, userId, mealData);
   res.status(201).json(newMeal);
 }
 
 // Update meal
 async function updateMeal(req: Request, res: Response) {
   const userId = req.user?.id;
-  const logId = req.params.logId;
-  const mealId = req.params.mealId;
+  const logId = res.locals.logId as number;
+  const mealId = res.locals.mealId as number;
 
   const { name, calories, carbs, protein, fat } = req.body;
 
-  // Check if user and logId are present
-  if (
-    !userId ||
-    !logId ||
-    !mealId ||
-    typeof logId !== "string" ||
-    typeof mealId !== "string"
-  ) {
+  if (!userId) {
     return res.status(400).json({ error: "Missing required parameters" });
-  }
-
-  // Validate logId is a number
-  const parsedLogId = parseInt(logId, 10);
-  if (isNaN(parsedLogId)) {
-    return res.status(400).json({ error: "Invalid log ID" });
-  }
-
-  // Validate mealId is a number
-  const parsedMealId = parseInt(mealId, 10);
-  if (isNaN(parsedMealId)) {
-    return res.status(400).json({ error: "Invalid meal ID" });
   }
 
   // validate any provided data to update
@@ -186,7 +134,6 @@ async function updateMeal(req: Request, res: Response) {
     mealData.fat = fat;
   }
 
-  // mealData has been built with the provided data
   if (Object.keys(mealData).length === 0) {
     return res
       .status(400)
@@ -194,9 +141,9 @@ async function updateMeal(req: Request, res: Response) {
   }
 
   const updatedMeal = await mealService.updateMeal(
-    parsedLogId,
+    logId,
     userId,
-    parsedMealId,
+    mealId,
     mealData,
   );
   res.json(updatedMeal);
@@ -205,33 +152,14 @@ async function updateMeal(req: Request, res: Response) {
 // Delete a meal
 async function deleteMeal(req: Request, res: Response) {
   const userId = req.user?.id;
-  const logId = req.params.logId;
-  const mealId = req.params.mealId;
+  const logId = res.locals.logId as number;
+  const mealId = res.locals.mealId as number;
 
-  // Check if user and logId are present
-  if (
-    !userId ||
-    !logId ||
-    !mealId ||
-    typeof logId !== "string" ||
-    typeof mealId !== "string"
-  ) {
+  if (!userId) {
     return res.status(400).json({ error: "Missing required parameters" });
   }
 
-  // Validate logId is a number
-  const parsedLogId = parseInt(logId, 10);
-  if (isNaN(parsedLogId)) {
-    return res.status(400).json({ error: "Invalid log ID" });
-  }
-
-  // Validate mealId is a number
-  const parsedMealId = parseInt(mealId, 10);
-  if (isNaN(parsedMealId)) {
-    return res.status(400).json({ error: "Invalid meal ID" });
-  }
-
-  await mealService.deleteMeal(parsedLogId, userId, parsedMealId);
+  await mealService.deleteMeal(logId, userId, mealId);
   return res.status(204).send();
 }
 

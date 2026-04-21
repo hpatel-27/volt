@@ -64,12 +64,11 @@ async function createWeight(req: Request, res: Response) {
 
 async function updateWeight(req: Request, res: Response) {
   const userId = req.user?.id;
-  const weightId = req.params.id;
+  const weightId = res.locals.weightId as number;
   const { amount, date } = req.body;
 
-  // Check if userId and weightId are present
-  if (!userId || !weightId || typeof weightId !== "string") {
-    return res.status(400).json({ error: "Weight ID is required." });
+  if (!userId) {
+    return res.status(400).json({ error: "Missing required parameters" });
   }
 
   // Ensure that at least one of amount or date is provided
@@ -77,12 +76,6 @@ async function updateWeight(req: Request, res: Response) {
     return res
       .status(400)
       .json({ error: "At least one of amount or date must be provided" });
-  }
-
-  // Validate weightId
-  const weightIdNum = parseInt(weightId, 10);
-  if (isNaN(weightIdNum)) {
-    return res.status(400).json({ error: "Weight ID must be a number" });
   }
 
   // Validate weightAmount and date if they are present and add them to the data object
@@ -110,7 +103,7 @@ async function updateWeight(req: Request, res: Response) {
 
   const newWeight = await weightService.updateWeight(
     userId,
-    weightIdNum,
+    weightId,
     weightData,
   );
   res.status(200).json(newWeight);
@@ -118,20 +111,13 @@ async function updateWeight(req: Request, res: Response) {
 
 async function deleteWeight(req: Request, res: Response) {
   const userId = req.user?.id;
-  const weightId = req.params.id;
+  const weightId = res.locals.weightId as number;
 
-  // Check if userId and weightId are present
-  if (!userId || !weightId || typeof weightId !== "string") {
-    return res.status(400).json({ error: "Weight ID is required." });
+  if (!userId) {
+    return res.status(400).json({ error: "Missing required parameters" });
   }
 
-  // Validate weightId
-  const weightIdNum = parseInt(weightId, 10);
-  if (isNaN(weightIdNum)) {
-    return res.status(400).json({ error: "Weight ID must be a number" });
-  }
-
-  await weightService.deleteWeight(userId, weightIdNum);
+  await weightService.deleteWeight(userId, weightId);
   return res.status(204).send();
 }
 

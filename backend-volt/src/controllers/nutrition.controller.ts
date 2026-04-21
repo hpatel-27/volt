@@ -36,23 +36,15 @@ async function getAllNutritionLogs(req: Request, res: Response) {
 // Return a single nutrition log by its ID, this includes full meal details
 async function getNutritionLogById(req: Request, res: Response) {
   const userId = req.user?.id;
-  const logId = req.params.id;
+  const logId = res.locals.logId as number;
 
-  // Check if user and logId are present
-  if (!userId || !logId || typeof logId !== "string") {
+  if (!userId) {
     return res.status(400).json({ error: "Missing required parameters" });
   }
 
-  // Validate logId is a number
-  const parsedLogId = parseInt(logId, 10);
-  if (isNaN(parsedLogId)) {
-    return res.status(400).json({ error: "Invalid log ID" });
-  }
-
-  // Get the nutrition log for the user that made the request and return it
   const nutritionLog = await nutritionService.getNutritionLogById(
     userId,
-    parsedLogId,
+    logId,
   );
 
   res.json(nutritionLog);
@@ -88,24 +80,11 @@ async function createNutritionLog(req: Request, res: Response) {
 
 async function updateNutritionLog(req: Request, res: Response) {
   const userId = req.user?.id;
-  const logId = req.params.id;
+  const logId = res.locals.logId as number;
   const { date } = req.body;
 
-  // Check if user, logId, and date are present
-  if (
-    !userId ||
-    !logId ||
-    !date ||
-    typeof logId !== "string" ||
-    typeof date !== "string"
-  ) {
+  if (!userId || !date || typeof date !== "string") {
     return res.status(400).json({ error: "Missing required parameters" });
-  }
-
-  // Validate logId is a number
-  const parsedLogId = parseInt(logId, 10);
-  if (isNaN(parsedLogId)) {
-    return res.status(400).json({ error: "Invalid log ID" });
   }
 
   // Validate date format (ISO 8601)
@@ -119,7 +98,7 @@ async function updateNutritionLog(req: Request, res: Response) {
 
   // Update the nutrition log for the user that made the request and return it
   const updatedLog = await nutritionService.updateNutritionLog(
-    parsedLogId,
+    logId,
     userId,
     logData,
   );
@@ -128,21 +107,14 @@ async function updateNutritionLog(req: Request, res: Response) {
 
 async function deleteNutritionLog(req: Request, res: Response) {
   const userId = req.user?.id;
-  const logId = req.params.id;
+  const logId = res.locals.logId as number;
 
-  // Check if user and logId are present
-  if (!userId || !logId || typeof logId !== "string") {
+  if (!userId) {
     return res.status(400).json({ error: "Missing required parameters" });
   }
 
-  // Validate logId is a number
-  const parsedLogId = parseInt(logId, 10);
-  if (isNaN(parsedLogId)) {
-    return res.status(400).json({ error: "Invalid log ID" });
-  }
-
   // Delete the nutrition log for the user that made the request
-  await nutritionService.deleteNutritionLog(parsedLogId, userId);
+  await nutritionService.deleteNutritionLog(logId, userId);
   res.status(204).send();
 }
 
