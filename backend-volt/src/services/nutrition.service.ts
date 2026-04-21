@@ -28,7 +28,7 @@ async function getNutritionLogById(userId: number, logId: number) {
   });
 
   if (!nutritionLog) {
-    throw new NotFoundError("Nutrition log not found");
+    throw new NotFoundError("Nutrition log not found.");
   }
 
   return nutritionLog;
