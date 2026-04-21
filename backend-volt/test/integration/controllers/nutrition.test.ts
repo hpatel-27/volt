@@ -189,7 +189,7 @@ describe("GET /api/v1/nutrition/:id", () => {
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
       .expect(404)
-      .expect({ error: "Nutrition log not found" });
+      .expect({ error: "Nutrition log not found." });
   });
 
   it("returns 200 with the log", async () => {

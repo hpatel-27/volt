@@ -114,7 +114,7 @@ describe("GET /api/v1/nutrition/:logId/meals/:mealId", () => {
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
       .expect(404)
-      .expect({ error: "Log with id: 999999 not found." });
+      .expect({ error: `Meal with id: ${meal.id} not found.` });
   });
 
   it("returns 404 when mealId is not found", async () => {
@@ -505,7 +505,7 @@ describe("PATCH /api/v1/nutrition/:logId/meals/:mealId", () => {
       .send({ name: "Updated" })
       .expect("Content-Type", /json/)
       .expect(404)
-      .expect({ error: "Log associated to this meal does not exist." });
+      .expect({ error: "Meal not found." });
   });
 
   it("returns 404 when mealId not found", async () => {
@@ -516,7 +516,7 @@ describe("PATCH /api/v1/nutrition/:logId/meals/:mealId", () => {
       .send({ name: "Updated" })
       .expect("Content-Type", /json/)
       .expect(404)
-      .expect({ error: "Meal to update not found." });
+      .expect({ error: "Meal not found." });
   });
 
   it("returns 200 with the updated meal", async () => {
@@ -584,7 +584,7 @@ describe("DELETE /api/v1/nutrition/:logId/meals/:mealId", () => {
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
       .expect(404)
-      .expect({ error: "Log associated to this meal does not exist." });
+      .expect({ error: "Meal not found." });
   });
 
   it("returns 404 when mealId not found", async () => {
@@ -593,7 +593,7 @@ describe("DELETE /api/v1/nutrition/:logId/meals/:mealId", () => {
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
       .expect(404)
-      .expect({ error: "Meal to delete not found." });
+      .expect({ error: "Meal not found." });
   });
 
   it("returns 204 when meal is deleted", async () => {
