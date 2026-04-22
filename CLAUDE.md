@@ -102,6 +102,57 @@ The `__mocks__/db.ts` file is auto-picked up by Vitest's module mocking via `vi.
 
 The client is generated to `src/generated/prisma/` (configured in `schema.prisma`). Do not import from the default `@prisma/client` package — use the generated path.
 
+## API Routes
+
+All routes are mounted under `/api/v1` via `src/routes/index.ts`.
+
+### Weights — `🔒 userMiddleware` on all routes
+
+| Method   | Path            | Description                        |
+|----------|-----------------|------------------------------------|
+| GET      | `/weights`      | Get all weight entries (paginated) |
+| POST     | `/weights`      | Create a new weight entry          |
+| PATCH    | `/weights/:id`  | Update a weight entry by ID        |
+| DELETE   | `/weights/:id`  | Delete a weight entry by ID        |
+
+### Exercises — Public GET, `🔒 userMiddleware + requireAdmin` for mutations
+
+| Method   | Path               | Description                        |
+|----------|--------------------|------------------------------------|
+| GET      | `/exercises`       | List exercises (paginated)         |
+| GET      | `/exercises/:id`   | Get a single exercise by ID        |
+| POST     | `/exercises`       | Create an exercise (admin only)    |
+| PATCH    | `/exercises/:id`   | Update an exercise (admin only)    |
+| DELETE   | `/exercises/:id`   | Delete an exercise (admin only)    |
+
+### Nutrition Logs — `🔒 userMiddleware` on all routes
+
+| Method   | Path               | Description                                        |
+|----------|--------------------|-----------------------------------------------------|
+| GET      | `/nutrition`       | List nutrition logs as summaries (paginated)        |
+| GET      | `/nutrition/:id`   | Get a single log with full meal details             |
+| POST     | `/nutrition`       | Create a new nutrition log                          |
+| PATCH    | `/nutrition/:id`   | Update a nutrition log (e.g. change recorded date)  |
+| DELETE   | `/nutrition/:id`   | Delete a nutrition log                              |
+
+### Meals — Nested under nutrition logs, `🔒 userMiddleware` inherited from parent
+
+Meals are mounted at `/:logId/meals` with `mergeParams: true`, so `:logId` is available in meal controllers via `req.params.logId`.
+
+| Method   | Path                             | Description                          |
+|----------|----------------------------------|--------------------------------------|
+| GET      | `/nutrition/:logId/meals`        | List all meals for a nutrition log   |
+| GET      | `/nutrition/:logId/meals/:mealId`| Get a single meal                    |
+| POST     | `/nutrition/:logId/meals`        | Create a meal in a nutrition log     |
+| PATCH    | `/nutrition/:logId/meals/:mealId`| Update a meal                        |
+| DELETE   | `/nutrition/:logId/meals/:mealId`| Delete a meal                        |
+
+### Examples — Dev/testing only
+
+| Method | Path                  | Description                          |
+|--------|-----------------------|--------------------------------------|
+| GET    | `/examples/protected` | Returns Clerk user object (auth test)|
+
 ## Agent Routing
 
 - Use the **swe** agent for all code changes on Volt.
