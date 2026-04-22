@@ -2,6 +2,23 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Learning Project
+
+This is a learning project. When the user asks for help implementing something:
+- Guide them toward the solution with pseudocode, relevant documentation links, or targeted hints rather than writing the implementation for them.
+- Ask clarifying questions that prompt the user to think through the design decision themselves.
+- If they are stuck, increase detail incrementally — first a conceptual hint, then pseudocode, then a partial example — rather than jumping straight to a full solution.
+- When you do write code (scaffolding, boilerplate, non-learning work), follow the **Learn by Doing** format defined in the output style.
+
+## Coding Standards
+
+Enforce these standards in all code written for this project:
+
+- **Single Responsibility** — each function, middleware, or module does one thing. Controllers validate and delegate; services query and throw; middleware handles cross-cutting concerns.
+- **DRY** — before adding logic, check whether it already exists in a service, middleware, or utility. Extract repeated validation or query patterns rather than copy-pasting.
+- **Modular / reusable** — shared logic lives in the appropriate layer (e.g. param parsing belongs in middleware, not duplicated across controllers). New middleware, helpers, or service functions should be written to be composable.
+- **Explicit over implicit** — prefer clear, named error types over generic throws; prefer named exports over default exports where it aids discoverability.
+
 ## Commands
 
 ### Backend (`backend-volt/`)
@@ -84,3 +101,10 @@ The `__mocks__/db.ts` file is auto-picked up by Vitest's module mocking via `vi.
 ### Prisma Client Output Location
 
 The client is generated to `src/generated/prisma/` (configured in `schema.prisma`). Do not import from the default `@prisma/client` package — use the generated path.
+
+## Agent Routing
+
+- Use the **swe** agent for all code changes on Volt.
+- Use the **qa** agent after a feature lands to audit coverage.
+- Run swe and qa **sequentially**, not in parallel — qa needs to read what swe just wrote.
+- Only run qa in parallel if it's analyzing a completely separate module from what swe is actively touching.
