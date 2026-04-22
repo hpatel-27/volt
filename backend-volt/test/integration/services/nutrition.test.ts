@@ -90,6 +90,15 @@ describe("getNutritionLogById", () => {
     const log = await prisma.nutritionLog.create({
       data: { userId: testUserId, date: new Date("2026-02-01T00:00:00.000Z") },
     });
+    const mealData = {
+      nutritionLogId: log.id,
+      name: "Test Meal",
+      calories: 500,
+      protein: 20,
+      carbs: 30,
+      fat: 10,
+    };
+    const meal = await prisma.meal.create({ data: mealData });
     logId = log.id;
   });
 
@@ -104,6 +113,17 @@ describe("getNutritionLogById", () => {
     );
     expect(result.id).toBe(logId);
     expect(result.userId).toBe(testUserId);
+    expect(new Date(result.date).toISOString()).toBe(
+      new Date("2026-02-01T00:00:00.000Z").toISOString(),
+    );
+    // Meals should be included when we fetch a log by ID
+    expect(result.meals?.length).toBe(1);
+    const meal = result.meals[0];
+    expect(meal?.name).toBe("Test Meal");
+    expect(meal?.calories).toBe(500);
+    expect(meal?.protein).toBe(20);
+    expect(meal?.carbs).toBe(30);
+    expect(meal?.fat).toBe(10);
   });
 
   it("throws NotFoundError for a log that belongs to a different user", async () => {

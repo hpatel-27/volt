@@ -25,6 +25,7 @@ async function getAllNutritionLogs(
 async function getNutritionLogById(userId: number, logId: number) {
   const nutritionLog = await prisma.nutritionLog.findUnique({
     where: { id: logId, userId },
+    include: { meals: true },
   });
 
   if (!nutritionLog) {
