@@ -180,7 +180,7 @@ describe("GET /api/v1/nutrition/:id", () => {
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
       .expect(400)
-      .expect({ error: "Invalid log ID" });
+      .expect({ error: "Invalid logId" });
   });
 
   it("returns 404 when log not found", async () => {
@@ -293,7 +293,7 @@ describe("PATCH /api/v1/nutrition/:id", () => {
       .send({ date: "2026-02-01T00:00:00.000Z" })
       .expect("Content-Type", /json/)
       .expect(400)
-      .expect({ error: "Invalid log ID" });
+      .expect({ error: "Invalid logId" });
   });
 
   it("returns 400 when missing date", async () => {
@@ -383,7 +383,7 @@ describe("DELETE /api/v1/nutrition/:id", () => {
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
       .expect(400)
-      .expect({ error: "Invalid log ID" });
+      .expect({ error: "Invalid logId" });
   });
 
   it("returns 404 when log not found", async () => {

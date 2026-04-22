@@ -1,3 +1,4 @@
+import { parseIntParam } from "./../middleware/param.middleware";
 import express from "express";
 const router = express.Router();
 
@@ -12,15 +13,30 @@ import mealRouter from "./meal.routes.js";
 // Get all nutrition logs (as summaries) for the user that made the request, with pagination
 router.get("/", userMiddleware, nutritionController.getAllNutritionLogs);
 // Get a single nutrition log by its ID, this includes full meal details
-router.get("/:id", userMiddleware, nutritionController.getNutritionLogById);
+router.get(
+  "/:logId",
+  userMiddleware,
+  parseIntParam("logId"),
+  nutritionController.getNutritionLogById,
+);
 // Create a new nutrition log
 router.post("/", userMiddleware, nutritionController.createNutritionLog);
 // Update a nutrition log (change the recorded date)
-router.patch("/:id", userMiddleware, nutritionController.updateNutritionLog);
+router.patch(
+  "/:logId",
+  userMiddleware,
+  parseIntParam("logId"),
+  nutritionController.updateNutritionLog,
+);
 // Delete a nutrition log
-router.delete("/:id", userMiddleware, nutritionController.deleteNutritionLog);
+router.delete(
+  "/:logId",
+  userMiddleware,
+  parseIntParam("logId"),
+  nutritionController.deleteNutritionLog,
+);
 
 // Mount Meal routes
-router.use("/:logId/meals", userMiddleware, mealRouter);
+router.use("/:logId/meals", userMiddleware, parseIntParam("logId"), mealRouter);
 
 export default router;

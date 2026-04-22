@@ -13,7 +13,7 @@ async function getExercises(req: Request, res: Response) {
 }
 
 async function getExerciseById(req: Request, res: Response) {
-  const exerciseId = req.params.id;
+  const exerciseId = req.params.exerciseId;
   if (!exerciseId || typeof exerciseId !== "string") {
     return res.status(400).json({ error: "Exercise ID is required" });
   }
@@ -127,7 +127,7 @@ async function createExercise(req: Request, res: Response) {
 
 async function updateExercise(req: Request, res: Response) {
   // Validate exercise ID
-  const exerciseId = req.params.id;
+  const exerciseId = req.params.exerciseId;
   if (!exerciseId || typeof exerciseId !== "string") {
     return res.status(400).json({ error: "Exercise ID is required" });
   }
@@ -252,7 +252,7 @@ async function updateExercise(req: Request, res: Response) {
 }
 
 async function deleteExercise(req: Request, res: Response) {
-  const exerciseId = req.params.id;
+  const exerciseId = req.params.exerciseId;
 
   if (!exerciseId || typeof exerciseId !== "string") {
     return res.status(400).json({ error: "Exercise ID is required" });
