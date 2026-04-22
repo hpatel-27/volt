@@ -56,7 +56,7 @@ describe("GET /api/v1/nutrition/:logId/meals", () => {
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
       .expect(400)
-      .expect({ error: "Invalid log ID" });
+      .expect({ error: "Invalid logId" });
   });
 
   it("returns 404 when logId not found", async () => {
@@ -85,7 +85,7 @@ describe("GET /api/v1/nutrition/:logId/meals/:mealId", () => {
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
       .expect(400)
-      .expect({ error: "Invalid log ID" });
+      .expect({ error: "Invalid logId" });
   });
 
   it("returns 400 when mealId is not a number", async () => {
@@ -94,7 +94,7 @@ describe("GET /api/v1/nutrition/:logId/meals/:mealId", () => {
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
       .expect(400)
-      .expect({ error: "Invalid meal ID" });
+      .expect({ error: "Invalid mealId" });
   });
 
   it("returns 404 when logId is not found", async () => {
@@ -183,7 +183,7 @@ describe("POST /api/v1/nutrition/:logId/meals", () => {
       .send(validMeal)
       .expect("Content-Type", /json/)
       .expect(400)
-      .expect({ error: "Invalid log ID" });
+      .expect({ error: "Invalid logId" });
   });
 
   it("returns 400 when name is missing", async () => {
@@ -340,7 +340,7 @@ describe("PATCH /api/v1/nutrition/:logId/meals/:mealId", () => {
       .send({ name: "Updated" })
       .expect("Content-Type", /json/)
       .expect(400)
-      .expect({ error: "Invalid log ID" });
+      .expect({ error: "Invalid logId" });
   });
 
   it("returns 400 when mealId is not a number", async () => {
@@ -351,7 +351,7 @@ describe("PATCH /api/v1/nutrition/:logId/meals/:mealId", () => {
       .send({ name: "Updated" })
       .expect("Content-Type", /json/)
       .expect(400)
-      .expect({ error: "Invalid meal ID" });
+      .expect({ error: "Invalid mealId" });
   });
 
   it("returns 400 when no valid fields are provided", async () => {
@@ -555,7 +555,7 @@ describe("DELETE /api/v1/nutrition/:logId/meals/:mealId", () => {
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
       .expect(400)
-      .expect({ error: "Invalid log ID" });
+      .expect({ error: "Invalid logId" });
   });
 
   it("returns 400 when mealId is not a number", async () => {
@@ -564,7 +564,7 @@ describe("DELETE /api/v1/nutrition/:logId/meals/:mealId", () => {
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
       .expect(400)
-      .expect({ error: "Invalid meal ID" });
+      .expect({ error: "Invalid mealId" });
   });
 
   it("returns 404 when logId not found", async () => {

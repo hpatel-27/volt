@@ -16,9 +16,9 @@ describe("Meal Controller getAllMeals", () => {
   it("should return 400 - no userId", async () => {
     const mReq = {
       user: { id: undefined },
-      params: { logId: "1" },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 1 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -28,63 +28,14 @@ describe("Meal Controller getAllMeals", () => {
     expect(mRes.json).toHaveBeenCalledWith({
       error: "Missing required parameters",
     });
-  });
-
-  it("should return 400 - no logId", async () => {
-    const mReq = {
-      user: { id: 167 },
-      params: { logId: undefined },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await mealController.getAllMeals(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Missing required parameters",
-    });
-  });
-
-  it("should return 400 - logId is not a string", async () => {
-    const mReq = {
-      user: { id: 167 },
-      params: { logId: 823784962 },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await mealController.getAllMeals(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Missing required parameters",
-    });
-  });
-
-  it("should return 400 - logId is NaN", async () => {
-    const mReq = {
-      user: { id: 1 },
-      params: { logId: "abc" },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await mealController.getAllMeals(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({ error: "Invalid log ID" });
   });
 
   it("should throw an error", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { logId: "5" },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 5 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -101,9 +52,9 @@ describe("Meal Controller getAllMeals", () => {
   it("should throw an unknown error", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { logId: "5" },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 5 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -120,9 +71,9 @@ describe("Meal Controller getAllMeals", () => {
   it("should return 200 - empty meals list", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { logId: "5" },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 5 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -136,9 +87,9 @@ describe("Meal Controller getAllMeals", () => {
   it("should return 200 - multiple meals", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { logId: "5" },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 5 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -176,9 +127,9 @@ describe("Meal Controller getMealById", () => {
   it("should return 400 - no userId", async () => {
     const mReq = {
       user: { id: undefined },
-      params: { logId: "5", mealId: "1" },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 5, mealId: 1 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -188,112 +139,14 @@ describe("Meal Controller getMealById", () => {
     expect(mRes.json).toHaveBeenCalledWith({
       error: "Missing required parameters",
     });
-  });
-
-  it("should return 400 - no logId", async () => {
-    const mReq = {
-      user: { id: 5 },
-      params: { logId: undefined, mealId: "1" },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await mealController.getMealById(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Missing required parameters",
-    });
-  });
-
-  it("should return 400 - no mealId", async () => {
-    const mReq = {
-      user: { id: 1 },
-      params: { logId: "5", mealId: undefined },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await mealController.getMealById(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Missing required parameters",
-    });
-  });
-
-  it("should return 400 - logId is not a string", async () => {
-    const mReq = {
-      user: { id: 1 },
-      params: { logId: 324397, mealId: undefined },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await mealController.getMealById(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Missing required parameters",
-    });
-  });
-
-  it("should return 400 - mealId is not a string", async () => {
-    const mReq = {
-      user: { id: 1 },
-      params: { logId: "324397", mealId: undefined },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await mealController.getMealById(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Missing required parameters",
-    });
-  });
-
-  it("should return 400 - logId is NaN", async () => {
-    const mReq = {
-      user: { id: 1 },
-      params: { logId: "abc", mealId: "1" },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await mealController.getMealById(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({ error: "Invalid log ID" });
-  });
-
-  it("should return 400 - mealId is NaN", async () => {
-    const mReq = {
-      user: { id: 1 },
-      params: { logId: "5", mealId: "xyz" },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await mealController.getMealById(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({ error: "Invalid meal ID" });
   });
 
   it("should throw an error", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { logId: "5", mealId: "1" },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 5, mealId: 1 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -310,9 +163,9 @@ describe("Meal Controller getMealById", () => {
   it("should throw unknown error", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { logId: "5", mealId: "1" },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 5, mealId: 1 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -327,9 +180,9 @@ describe("Meal Controller getMealById", () => {
   it("should return 200 - success", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { logId: "5", mealId: "1" },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 5, mealId: 1 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -356,7 +209,6 @@ describe("Meal Controller createMeal", () => {
   it("should return 400 - no userId", async () => {
     const mReq = {
       user: { id: undefined },
-      params: { logId: "5" },
       body: {
         name: "Breakfast",
         calories: 500,
@@ -366,6 +218,7 @@ describe("Meal Controller createMeal", () => {
       },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 5 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -375,83 +228,12 @@ describe("Meal Controller createMeal", () => {
     expect(mRes.json).toHaveBeenCalledWith({
       error: "Missing required parameters",
     });
-  });
-
-  it("should return 400 - no logId", async () => {
-    const mReq = {
-      user: { id: 2345345 },
-      params: { logId: undefined },
-      body: {
-        name: "Breakfast",
-        calories: 500,
-        protein: 30,
-        carbs: 60,
-        fat: 15,
-      },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await mealController.createMeal(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Missing required parameters",
-    });
-  });
-
-  it("should return 400 - logId is not a string", async () => {
-    const mReq = {
-      user: { id: 2345345 },
-      params: { logId: 4798534 },
-      body: {
-        name: "Breakfast",
-        calories: 500,
-        protein: 30,
-        carbs: 60,
-        fat: 15,
-      },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await mealController.createMeal(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Missing required parameters",
-    });
-  });
-
-  it("should return 400 - logId is NaN", async () => {
-    const mReq = {
-      user: { id: 1 },
-      params: { logId: "xyz" },
-      body: {
-        name: "Breakfast",
-        calories: 500,
-        protein: 30,
-        carbs: 60,
-        fat: 15,
-      },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await mealController.createMeal(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({ error: "Invalid log ID" });
   });
 
   // Name Validation
   it("should return 400 - no name", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { logId: "453" },
       body: {
         name: undefined,
         calories: 500,
@@ -461,6 +243,7 @@ describe("Meal Controller createMeal", () => {
       },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 453 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -475,7 +258,6 @@ describe("Meal Controller createMeal", () => {
   it("should return 400 - name is not a string", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { logId: "453" },
       body: {
         name: 32456,
         calories: 500,
@@ -485,6 +267,7 @@ describe("Meal Controller createMeal", () => {
       },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 453 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -499,7 +282,6 @@ describe("Meal Controller createMeal", () => {
   it("should return 400 - name cannot be an empty string", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { logId: "453" },
       body: {
         name: "",
         calories: 500,
@@ -509,6 +291,7 @@ describe("Meal Controller createMeal", () => {
       },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 453 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -524,7 +307,6 @@ describe("Meal Controller createMeal", () => {
   it("should return 400 - no calories", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { logId: "453" },
       body: {
         name: "Breakfast",
         calories: undefined,
@@ -534,6 +316,7 @@ describe("Meal Controller createMeal", () => {
       },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 453 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -548,7 +331,6 @@ describe("Meal Controller createMeal", () => {
   it("should return 400 - calories is not a number", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { logId: "453" },
       body: {
         name: "Breakfast",
         calories: "undefined",
@@ -558,6 +340,7 @@ describe("Meal Controller createMeal", () => {
       },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 453 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -572,7 +355,6 @@ describe("Meal Controller createMeal", () => {
   it("should return 400 - calories must be non-negative", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { logId: "453" },
       body: {
         name: "Breakfast",
         calories: -100,
@@ -582,6 +364,7 @@ describe("Meal Controller createMeal", () => {
       },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 453 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -596,7 +379,6 @@ describe("Meal Controller createMeal", () => {
   it("should return 400 - calories must be non-negative - boundary", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { logId: "453" },
       body: {
         name: "Breakfast",
         calories: -1,
@@ -606,6 +388,7 @@ describe("Meal Controller createMeal", () => {
       },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 453 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -621,7 +404,6 @@ describe("Meal Controller createMeal", () => {
   it("should return 400 - no protein", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { logId: "453" },
       body: {
         name: "Breakfast",
         calories: 500,
@@ -631,6 +413,7 @@ describe("Meal Controller createMeal", () => {
       },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 453 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -645,7 +428,6 @@ describe("Meal Controller createMeal", () => {
   it("should return 400 - protein is not a number", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { logId: "453" },
       body: {
         name: "Breakfast",
         calories: 500,
@@ -655,6 +437,7 @@ describe("Meal Controller createMeal", () => {
       },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 453 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -669,7 +452,6 @@ describe("Meal Controller createMeal", () => {
   it("should return 400 - protein must be non-negative", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { logId: "453" },
       body: {
         name: "Breakfast",
         calories: 500,
@@ -679,6 +461,7 @@ describe("Meal Controller createMeal", () => {
       },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 453 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -693,7 +476,6 @@ describe("Meal Controller createMeal", () => {
   it("should return 400 - protein must be non-negative - boundary", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { logId: "453" },
       body: {
         name: "Breakfast",
         calories: 500,
@@ -703,6 +485,7 @@ describe("Meal Controller createMeal", () => {
       },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 453 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -718,7 +501,6 @@ describe("Meal Controller createMeal", () => {
   it("should return 400 - no carbs", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { logId: "453" },
       body: {
         name: "Breakfast",
         calories: 500,
@@ -728,6 +510,7 @@ describe("Meal Controller createMeal", () => {
       },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 453 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -742,7 +525,6 @@ describe("Meal Controller createMeal", () => {
   it("should return 400 - carbs must be a number", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { logId: "453" },
       body: {
         name: "Breakfast",
         calories: 500,
@@ -752,6 +534,7 @@ describe("Meal Controller createMeal", () => {
       },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 453 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -766,7 +549,6 @@ describe("Meal Controller createMeal", () => {
   it("should return 400 - carbs must be non-negative", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { logId: "453" },
       body: {
         name: "Breakfast",
         calories: 500,
@@ -776,6 +558,7 @@ describe("Meal Controller createMeal", () => {
       },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 453 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -790,7 +573,6 @@ describe("Meal Controller createMeal", () => {
   it("should return 400 - carbs must be non-negative - boundary", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { logId: "453" },
       body: {
         name: "Breakfast",
         calories: 500,
@@ -800,6 +582,7 @@ describe("Meal Controller createMeal", () => {
       },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 453 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -812,10 +595,9 @@ describe("Meal Controller createMeal", () => {
   });
 
   // Fat Validation
-  it("should return 400 - no carbs", async () => {
+  it("should return 400 - no fat", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { logId: "453" },
       body: {
         name: "Breakfast",
         calories: 500,
@@ -825,6 +607,7 @@ describe("Meal Controller createMeal", () => {
       },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 453 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -836,10 +619,9 @@ describe("Meal Controller createMeal", () => {
     });
   });
 
-  it("should return 400 - carbs must be a number", async () => {
+  it("should return 400 - fat must be a number", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { logId: "453" },
       body: {
         name: "Breakfast",
         calories: 500,
@@ -849,6 +631,7 @@ describe("Meal Controller createMeal", () => {
       },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 453 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -860,10 +643,9 @@ describe("Meal Controller createMeal", () => {
     });
   });
 
-  it("should return 400 - carbs must be non-negative", async () => {
+  it("should return 400 - fat must be non-negative", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { logId: "453" },
       body: {
         name: "Breakfast",
         calories: 500,
@@ -873,6 +655,7 @@ describe("Meal Controller createMeal", () => {
       },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 453 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -884,10 +667,9 @@ describe("Meal Controller createMeal", () => {
     });
   });
 
-  it("should return 400 - carbs must be non-negative - boundary", async () => {
+  it("should return 400 - fat must be non-negative - boundary", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { logId: "453" },
       body: {
         name: "Breakfast",
         calories: 500,
@@ -897,6 +679,7 @@ describe("Meal Controller createMeal", () => {
       },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 453 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -909,10 +692,8 @@ describe("Meal Controller createMeal", () => {
   });
 
   it("should throw an error", async () => {
-    // createMeal controller has no NotFoundError handler, so it hits instanceof Error → 500
     const mReq = {
       user: { id: 1 },
-      params: { logId: "999" },
       body: {
         name: "Breakfast",
         calories: 500,
@@ -922,6 +703,7 @@ describe("Meal Controller createMeal", () => {
       },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 999 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -938,7 +720,6 @@ describe("Meal Controller createMeal", () => {
   it("should throw unknown error", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { logId: "5" },
       body: {
         name: "Breakfast",
         calories: 500,
@@ -948,6 +729,7 @@ describe("Meal Controller createMeal", () => {
       },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 5 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -962,7 +744,6 @@ describe("Meal Controller createMeal", () => {
   it("should return 200 - success", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { logId: "5" },
       body: {
         name: "Breakfast",
         calories: 500,
@@ -972,6 +753,7 @@ describe("Meal Controller createMeal", () => {
       },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 5 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -998,10 +780,10 @@ describe("Meal Controller updateMeal", () => {
   it("should return 400 - no userId", async () => {
     const mReq = {
       user: { id: undefined },
-      params: { logId: "5", mealId: "1" },
       body: { name: "Dinner" },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 5, mealId: 1 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -1011,83 +793,15 @@ describe("Meal Controller updateMeal", () => {
     expect(mRes.json).toHaveBeenCalledWith({
       error: "Missing required parameters",
     });
-  });
-
-  it("should return 400 - no logId", async () => {
-    const mReq = {
-      user: { id: 2345 },
-      params: { logId: undefined, mealId: "1" },
-      body: { name: "Dinner" },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await mealController.updateMeal(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Missing required parameters",
-    });
-  });
-
-  it("should return 400 - no mealId", async () => {
-    const mReq = {
-      user: { id: 2345 },
-      params: { logId: "234", mealId: undefined },
-      body: { name: "Dinner" },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await mealController.updateMeal(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Missing required parameters",
-    });
-  });
-
-  it("should return 400 - logId is NaN", async () => {
-    const mReq = {
-      user: { id: 1 },
-      params: { logId: "abc", mealId: "1" },
-      body: { name: "Dinner" },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await mealController.updateMeal(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({ error: "Invalid log ID" });
-  });
-
-  it("should return 400 - mealId is NaN", async () => {
-    const mReq = {
-      user: { id: 1 },
-      params: { logId: "5", mealId: "xyz" },
-      body: { name: "Dinner" },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await mealController.updateMeal(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({ error: "Invalid meal ID" });
   });
 
   it("should return 400 - name cannot be an empty string", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { logId: "5", mealId: "1" },
       body: { name: "" },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 5, mealId: 1 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -1102,10 +816,10 @@ describe("Meal Controller updateMeal", () => {
   it("should return 400 - name is wrong type", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { logId: "5", mealId: "1" },
       body: { name: 123 },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 5, mealId: 1 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -1120,10 +834,10 @@ describe("Meal Controller updateMeal", () => {
   it("should return 400 - calories is negative", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { logId: "5", mealId: "1" },
       body: { calories: -1 },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 5, mealId: 1 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -1138,10 +852,10 @@ describe("Meal Controller updateMeal", () => {
   it("should return 400 - calories is wrong type", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { logId: "5", mealId: "1" },
       body: { calories: "500" },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 5, mealId: 1 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -1156,10 +870,10 @@ describe("Meal Controller updateMeal", () => {
   it("should return 400 - carbs is negative", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { logId: "5", mealId: "1" },
       body: { carbs: -1 },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 5, mealId: 1 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -1174,10 +888,10 @@ describe("Meal Controller updateMeal", () => {
   it("should return 400 - carbs is wrong type", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { logId: "5", mealId: "1" },
       body: { carbs: "60g" },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 5, mealId: 1 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -1192,10 +906,10 @@ describe("Meal Controller updateMeal", () => {
   it("should return 400 - protein is negative", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { logId: "5", mealId: "1" },
       body: { protein: -1 },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 5, mealId: 1 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -1210,10 +924,10 @@ describe("Meal Controller updateMeal", () => {
   it("should return 400 - protein is wrong type", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { logId: "5", mealId: "1" },
       body: { protein: true },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 5, mealId: 1 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -1228,10 +942,10 @@ describe("Meal Controller updateMeal", () => {
   it("should return 400 - fat is negative", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { logId: "5", mealId: "1" },
       body: { fat: -1 },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 5, mealId: 1 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -1246,10 +960,10 @@ describe("Meal Controller updateMeal", () => {
   it("should return 400 - fat is wrong type", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { logId: "5", mealId: "1" },
       body: { fat: "15g" },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 5, mealId: 1 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -1264,10 +978,10 @@ describe("Meal Controller updateMeal", () => {
   it("should return 400 - no valid fields provided", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { logId: "5", mealId: "1" },
       body: {},
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 5, mealId: 1 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -1282,10 +996,10 @@ describe("Meal Controller updateMeal", () => {
   it("should throw an error", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { logId: "5", mealId: "1" },
       body: { name: "Updated Breakfast" },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 5, mealId: 1 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -1302,10 +1016,10 @@ describe("Meal Controller updateMeal", () => {
   it("should return 500 - service throws unknown", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { logId: "5", mealId: "1" },
       body: { name: "Updated Breakfast" },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 5, mealId: 1 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -1320,10 +1034,10 @@ describe("Meal Controller updateMeal", () => {
   it("should return 200 - partial update (name only)", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { logId: "5", mealId: "1" },
       body: { name: "Updated Breakfast" },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 5, mealId: 1 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -1347,10 +1061,10 @@ describe("Meal Controller updateMeal", () => {
     // 0 is valid — the check is calories < 0, not calories <= 0
     const mReq = {
       user: { id: 1 },
-      params: { logId: "5", mealId: "1" },
       body: { calories: 0, protein: 0 },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 5, mealId: 1 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -1373,10 +1087,10 @@ describe("Meal Controller updateMeal", () => {
   it("should return 200 - full update", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { logId: "5", mealId: "1" },
       body: { name: "New Meal", calories: 300, protein: 25, carbs: 40, fat: 8 },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 5, mealId: 1 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -1403,9 +1117,9 @@ describe("Meal Controller deleteMeal", () => {
   it("should return 400 - no userId", async () => {
     const mReq = {
       user: { id: undefined },
-      params: { logId: "5", mealId: "1" },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 5, mealId: 1 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
       send: vi.fn().mockReturnThis(),
@@ -1418,116 +1132,12 @@ describe("Meal Controller deleteMeal", () => {
     });
   });
 
-  it("should return 400 - no logId", async () => {
-    const mReq = {
-      user: { id: 234543 },
-      params: { logId: undefined, mealId: "1" },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-      send: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await mealController.deleteMeal(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Missing required parameters",
-    });
-  });
-
-  it("should return 400 - no mealId", async () => {
-    const mReq = {
-      user: { id: 2343 },
-      params: { logId: "5", mealId: undefined },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-      send: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await mealController.deleteMeal(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Missing required parameters",
-    });
-  });
-
-  it("should return 400 - logId is wrong type", async () => {
-    const mReq = {
-      user: { id: 234543 },
-      params: { logId: 1231234, mealId: "1" },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-      send: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await mealController.deleteMeal(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Missing required parameters",
-    });
-  });
-
-  it("should return 400 - mealId is wrong type", async () => {
-    const mReq = {
-      user: { id: 2343 },
-      params: { logId: "5", mealId: 456456 },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-      send: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await mealController.deleteMeal(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Missing required parameters",
-    });
-  });
-
-  it("should return 400 - logId is NaN", async () => {
+  it("should return 404 - log or meal not found", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { logId: "abc", mealId: "1" },
     } as unknown as Request;
     const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-      send: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await mealController.deleteMeal(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({ error: "Invalid log ID" });
-  });
-
-  it("should return 400 - mealId is NaN", async () => {
-    const mReq = {
-      user: { id: 1 },
-      params: { logId: "5", mealId: "xyz" },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-      send: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await mealController.deleteMeal(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({ error: "Invalid meal ID" });
-  });
-
-  it("should return 404 - log not found", async () => {
-    const mReq = {
-      user: { id: 1 },
-      params: { logId: "5", mealId: "1" },
-    } as unknown as Request;
-    const mRes = {
+      locals: { logId: 5, mealId: 1 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
       send: vi.fn().mockReturnThis(),
@@ -1545,9 +1155,9 @@ describe("Meal Controller deleteMeal", () => {
   it("should return 500 - service throws unknown", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { logId: "5", mealId: "1" },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 5, mealId: 1 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
       send: vi.fn().mockReturnThis(),
@@ -1563,9 +1173,9 @@ describe("Meal Controller deleteMeal", () => {
   it("should return 204 - success", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { logId: "5", mealId: "1" },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 5, mealId: 1 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
       send: vi.fn().mockReturnThis(),

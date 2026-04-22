@@ -214,8 +214,6 @@ describe("Nutrition Controller getAllNutritionLogs", () => {
   });
 
   it("should throw unknown error", async () => {
-    // When the service is mocked to throw a non-Error, the controller's own else
-    // branch fires — returning its own message, not the service's.
     const mReq = {
       user: { id: 16 },
       query: { page: "1", limit: "5" },
@@ -276,9 +274,9 @@ describe("Nutrition Controller getNutritionLogById", () => {
   it("should return 400 - no userId", async () => {
     const mReq = {
       user: { id: undefined },
-      params: { id: "1" },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 1 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -288,63 +286,14 @@ describe("Nutrition Controller getNutritionLogById", () => {
     expect(mRes.json).toHaveBeenCalledWith({
       error: "Missing required parameters",
     });
-  });
-
-  it("should return 400 - no logId", async () => {
-    const mReq = {
-      user: { id: 1 },
-      params: { id: undefined },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await nutritionController.getNutritionLogById(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Missing required parameters",
-    });
-  });
-
-  it("should return 400 - logId is not a string", async () => {
-    const mReq = {
-      user: { id: 1 },
-      params: { id: 123 },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await nutritionController.getNutritionLogById(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Missing required parameters",
-    });
-  });
-
-  it("should return 400 - logId is NaN", async () => {
-    const mReq = {
-      user: { id: 1 },
-      params: { id: "abc" },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await nutritionController.getNutritionLogById(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({ error: "Invalid log ID" });
   });
 
   it("should throw error", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { id: "1" },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 1 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -361,9 +310,9 @@ describe("Nutrition Controller getNutritionLogById", () => {
   it("should throw unknown error", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { id: "1" },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 1 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -380,9 +329,9 @@ describe("Nutrition Controller getNutritionLogById", () => {
   it("should return 200 - success", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { id: "5" },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 5 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -549,28 +498,10 @@ describe("Nutrition Controller updateNutritionLog", () => {
   it("should return 400 - no userId", async () => {
     const mReq = {
       user: { id: undefined },
-      params: { id: "5" },
       body: { date: "2026-04-15T00:00:00.000Z" },
     } as unknown as Request;
     const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await nutritionController.updateNutritionLog(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Missing required parameters",
-    });
-  });
-
-  it("should return 400 - no logId", async () => {
-    const mReq = {
-      user: { id: undefined },
-      params: { id: undefined },
-      body: { date: "2026-04-15T00:00:00.000Z" },
-    } as unknown as Request;
-    const mRes = {
+      locals: { logId: 5 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -585,28 +516,10 @@ describe("Nutrition Controller updateNutritionLog", () => {
   it("should return 400 - no date", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { id: "5" },
       body: {},
     } as unknown as Request;
     const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await nutritionController.updateNutritionLog(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Missing required parameters",
-    });
-  });
-
-  it("should return 400 - logId is not a string", async () => {
-    const mReq = {
-      user: { id: undefined },
-      params: { id: 12335243 },
-      body: { date: "2026-04-15T00:00:00.000Z" },
-    } as unknown as Request;
-    const mRes = {
+      locals: { logId: 5 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -620,11 +533,11 @@ describe("Nutrition Controller updateNutritionLog", () => {
 
   it("should return 400 - date is not a string", async () => {
     const mReq = {
-      user: { id: undefined },
-      params: { id: "5" },
+      user: { id: 1 },
       body: { date: 324252343 },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 5 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -636,29 +549,13 @@ describe("Nutrition Controller updateNutritionLog", () => {
     });
   });
 
-  it("should return 400 - logId is NaN", async () => {
-    const mReq = {
-      user: { id: 1 },
-      params: { id: "abc" },
-      body: { date: "2026-04-15T00:00:00.000Z" },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await nutritionController.updateNutritionLog(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({ error: "Invalid log ID" });
-  });
-
   it("should return 400 - date is not valid ISO 8601", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { id: "5" },
       body: { date: "not-a-real-date" },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 5 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -673,10 +570,10 @@ describe("Nutrition Controller updateNutritionLog", () => {
   it("should throw error", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { id: "5" },
       body: { date: "2026-04-15T00:00:00.000Z" },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 5 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -693,10 +590,10 @@ describe("Nutrition Controller updateNutritionLog", () => {
   it("should throw unknown error", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { id: "5" },
       body: { date: "2026-04-15T00:00:00.000Z" },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 5 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -711,10 +608,10 @@ describe("Nutrition Controller updateNutritionLog", () => {
   it("should return 200 - success, date is converted to ISO format before service call", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { id: "5" },
       body: { date: "2026-04-16" },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 5 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -745,9 +642,9 @@ describe("Nutrition Controller deleteNutritionLog", () => {
   it("should return 400 - no userId", async () => {
     const mReq = {
       user: { id: undefined },
-      params: { id: "5" },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 5 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
       send: vi.fn().mockReturnThis(),
@@ -758,66 +655,14 @@ describe("Nutrition Controller deleteNutritionLog", () => {
     expect(mRes.json).toHaveBeenCalledWith({
       error: "Missing required parameters",
     });
-  });
-
-  it("should return 400 - no logId", async () => {
-    const mReq = {
-      user: { id: 1 },
-      params: { id: undefined },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-      send: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await nutritionController.deleteNutritionLog(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Missing required parameters",
-    });
-  });
-
-  it("should return 400 - logId is not a string", async () => {
-    const mReq = {
-      user: { id: 1 },
-      params: { id: 8749371 },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-      send: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await nutritionController.deleteNutritionLog(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Missing required parameters",
-    });
-  });
-
-  it("should return 400 - logId is NaN", async () => {
-    const mReq = {
-      user: { id: 1 },
-      params: { id: "abc" },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-      send: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await nutritionController.deleteNutritionLog(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({ error: "Invalid log ID" });
   });
 
   it("should throw error", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { id: "5" },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 5 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
       send: vi.fn().mockReturnThis(),
@@ -835,9 +680,9 @@ describe("Nutrition Controller deleteNutritionLog", () => {
   it("should throw unknown error", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { id: "5" },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 5 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
       send: vi.fn().mockReturnThis(),
@@ -855,9 +700,9 @@ describe("Nutrition Controller deleteNutritionLog", () => {
   it("should return 204 - success", async () => {
     const mReq = {
       user: { id: 1 },
-      params: { id: "5" },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 5 },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
       send: vi.fn().mockReturnThis(),
