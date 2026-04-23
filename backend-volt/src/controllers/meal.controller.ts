@@ -3,19 +3,17 @@ import * as mealService from "../services/meal.service.js";
 import type { Prisma } from "../generated/prisma/client.js";
 
 async function getAllMeals(req: Request, res: Response) {
-  const userId = req.user?.id;
+  const user = req.user!;
+  const userId = user.id;
   const logId = res.locals.logId as number;
-
-  if (!userId) {
-    return res.status(400).json({ error: "Missing required parameters" });
-  }
 
   const meals = await mealService.getAllMeals(logId, userId);
   return res.json(meals);
 }
 
 async function getMealById(req: Request, res: Response) {
-  const userId = req.user?.id;
+  const user = req.user!;
+  const userId = user.id;
   const logId = res.locals.logId as number;
   const mealId = res.locals.mealId as number;
 
@@ -29,13 +27,10 @@ async function getMealById(req: Request, res: Response) {
 
 // Create a meal for a nutrition log
 async function createMeal(req: Request, res: Response) {
-  const userId = req.user?.id;
+  const user = req.user!;
+  const userId = user.id;
   const logId = res.locals.logId as number;
   const { name, calories, protein, carbs, fat } = req.body;
-
-  if (!userId) {
-    return res.status(400).json({ error: "Missing required parameters" });
-  }
 
   // Validate all the meal data
   if (name === undefined || typeof name !== "string" || name.length < 1) {
@@ -75,15 +70,12 @@ async function createMeal(req: Request, res: Response) {
 
 // Update meal
 async function updateMeal(req: Request, res: Response) {
-  const userId = req.user?.id;
+  const user = req.user!;
+  const userId = user.id;
   const logId = res.locals.logId as number;
   const mealId = res.locals.mealId as number;
 
   const { name, calories, carbs, protein, fat } = req.body;
-
-  if (!userId) {
-    return res.status(400).json({ error: "Missing required parameters" });
-  }
 
   // validate any provided data to update
   const mealData: Prisma.MealUncheckedUpdateInput = {};
@@ -151,13 +143,10 @@ async function updateMeal(req: Request, res: Response) {
 
 // Delete a meal
 async function deleteMeal(req: Request, res: Response) {
-  const userId = req.user?.id;
+  const user = req.user!;
+  const userId = user.id;
   const logId = res.locals.logId as number;
   const mealId = res.locals.mealId as number;
-
-  if (!userId) {
-    return res.status(400).json({ error: "Missing required parameters" });
-  }
 
   await mealService.deleteMeal(logId, userId, mealId);
   return res.status(204).send();
