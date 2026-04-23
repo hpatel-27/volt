@@ -78,10 +78,10 @@ describe("Meal Controller getAllMeals", () => {
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
 
-    vi.mocked(mealService.getAllMeals).mockResolvedValueOnce([]);
+    vi.mocked(mealService.getAllMeals).mockResolvedValueOnce({ meals: [] });
 
     await mealController.getAllMeals(mReq, mRes);
-    expect(mRes.json).toHaveBeenCalledWith([]);
+    expect(mRes.json).toHaveBeenCalledWith({ meals: [] });
   });
 
   it("should return 200 - multiple meals", async () => {

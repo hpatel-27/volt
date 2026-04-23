@@ -32,18 +32,17 @@ async function createMeal(
   userId: number,
   mealData: Prisma.MealUncheckedCreateInput,
 ) {
-  const existingLog = await prisma.nutritionLog.findUnique({
-    where: { id: logId, userId },
-  });
+  return await prisma.$transaction(async (tx) => {
+    // Check log existence and ownership
+    const existingLog = await tx.nutritionLog.findUnique({
+      where: { id: logId, userId },
+    });
+    if (!existingLog) {
+      throw new NotFoundError("Log associated to this meal does not exist.");
+    }
 
-  if (!existingLog) {
-    throw new NotFoundError("Log associated to this meal does not exist.");
-  }
-
-  const newMeal = await prisma.meal.create({
-    data: mealData,
+    return await tx.meal.create({ data: mealData });
   });
-  return newMeal;
 }
 
 async function updateMeal(
