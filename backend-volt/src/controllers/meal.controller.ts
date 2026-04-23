@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import * as mealService from "../services/meal.service.js";
-import type { Prisma } from "../generated/prisma/client.js";
+import type { CreateMealInput, UpdateMealInput } from "../types/meal.dto.js";
 
 async function getAllMeals(req: Request, res: Response) {
   const user = req.user!;
@@ -51,7 +51,7 @@ async function createMeal(req: Request, res: Response) {
     return res.status(400).json({ error: "Fat is a required parameter." });
   }
 
-  const mealData: Prisma.MealUncheckedCreateInput = {
+  const mealData: CreateMealInput = {
     nutritionLogId: logId,
     name,
     calories,
@@ -74,7 +74,7 @@ async function updateMeal(req: Request, res: Response) {
   const { name, calories, carbs, protein, fat } = req.body;
 
   // validate any provided data to update
-  const mealData: Prisma.MealUncheckedUpdateInput = {};
+  const mealData: UpdateMealInput = {};
 
   // Validate allowed fields
   if (name !== undefined) {
