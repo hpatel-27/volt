@@ -17,10 +17,6 @@ async function getMealById(req: Request, res: Response) {
   const logId = res.locals.logId as number;
   const mealId = res.locals.mealId as number;
 
-  if (!userId) {
-    return res.status(400).json({ error: "Missing required parameters" });
-  }
-
   const meal = await mealService.getMealById(logId, userId, mealId);
   res.json(meal);
 }
