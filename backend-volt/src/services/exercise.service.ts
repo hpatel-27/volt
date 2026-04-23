@@ -1,6 +1,10 @@
 import { prisma } from "../db.js";
 import { Prisma } from "../generated/prisma/client.js";
 import { DuplicateEntryError, NotFoundError } from "../errors.js";
+import type {
+  CreateExerciseInput,
+  UpdateExerciseInput,
+} from "../types/exercise.dto.js";
 
 // Get a paginated list of exercises.
 // This allows clients to fetch exercises in chunks, which is more efficient than fetching all exercises at once.
@@ -33,9 +37,9 @@ async function getExerciseById(id: string) {
   return exercise;
 }
 
-async function createExercise(exerciseData: Prisma.ExerciseCreateInput) {
+async function createExercise(data: CreateExerciseInput) {
   try {
-    const exercise = await prisma.exercise.create({ data: exerciseData });
+    const exercise = await prisma.exercise.create({ data });
     return exercise;
   } catch (error) {
     if (
@@ -51,14 +55,11 @@ async function createExercise(exerciseData: Prisma.ExerciseCreateInput) {
   }
 }
 
-async function updateExercise(
-  id: string,
-  exerciseData: Prisma.ExerciseUpdateInput,
-) {
+async function updateExercise(id: string, data: UpdateExerciseInput) {
   try {
     const exercise = await prisma.exercise.update({
       where: { id },
-      data: exerciseData,
+      data,
     });
     return exercise;
   } catch (error) {
