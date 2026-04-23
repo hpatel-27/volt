@@ -3,10 +3,8 @@ import * as exerciseService from "../services/exercise.service.js";
 import { Prisma } from "../generated/prisma/client.js";
 
 async function getExercises(req: Request, res: Response) {
-  // Get pagination parameters from query string, with defaults.
-  const page = parseInt(req.query.page as string) || 1;
-  const limit = parseInt(req.query.limit as string) || 10;
-
+  // Get pagination parameters from query string
+  const { page, limit } = req.pagination!;
   const { exercises, total } = await exerciseService.getExercises(page, limit);
 
   res.json({ exercises, total, page, limit });
