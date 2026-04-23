@@ -12,7 +12,7 @@ async function getAllMeals(logId: number, userId: number) {
     throw new NotFoundError(`Log with id: ${logId} not found.`);
   }
 
-  return log.meals;
+  return { meals: log.meals };
 }
 
 async function getMealById(logId: number, userId: number, mealId: number) {
