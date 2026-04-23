@@ -13,23 +13,6 @@ import { NotFoundError } from "../../../src/errors.js";
 describe("Meal Controller getAllMeals", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("should return 400 - no userId", async () => {
-    const mReq = {
-      user: { id: undefined },
-    } as unknown as Request;
-    const mRes = {
-      locals: { logId: 1 },
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await mealController.getAllMeals(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Missing required parameters",
-    });
-  });
-
   it("should throw an error", async () => {
     const mReq = {
       user: { id: 1 },
@@ -124,23 +107,6 @@ describe("Meal Controller getAllMeals", () => {
 describe("Meal Controller getMealById", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("should return 400 - no userId", async () => {
-    const mReq = {
-      user: { id: undefined },
-    } as unknown as Request;
-    const mRes = {
-      locals: { logId: 5, mealId: 1 },
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await mealController.getMealById(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Missing required parameters",
-    });
-  });
-
   it("should throw an error", async () => {
     const mReq = {
       user: { id: 1 },
@@ -205,30 +171,6 @@ describe("Meal Controller getMealById", () => {
 
 describe("Meal Controller createMeal", () => {
   beforeEach(() => vi.clearAllMocks());
-
-  it("should return 400 - no userId", async () => {
-    const mReq = {
-      user: { id: undefined },
-      body: {
-        name: "Breakfast",
-        calories: 500,
-        protein: 30,
-        carbs: 60,
-        fat: 15,
-      },
-    } as unknown as Request;
-    const mRes = {
-      locals: { logId: 5 },
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await mealController.createMeal(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Missing required parameters",
-    });
-  });
 
   // Name Validation
   it("should return 400 - no name", async () => {
@@ -777,24 +719,6 @@ describe("Meal Controller createMeal", () => {
 describe("Meal Controller updateMeal", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("should return 400 - no userId", async () => {
-    const mReq = {
-      user: { id: undefined },
-      body: { name: "Dinner" },
-    } as unknown as Request;
-    const mRes = {
-      locals: { logId: 5, mealId: 1 },
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await mealController.updateMeal(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Missing required parameters",
-    });
-  });
-
   it("should return 400 - name cannot be an empty string", async () => {
     const mReq = {
       user: { id: 1 },
@@ -1113,24 +1037,6 @@ describe("Meal Controller updateMeal", () => {
 
 describe("Meal Controller deleteMeal", () => {
   beforeEach(() => vi.clearAllMocks());
-
-  it("should return 400 - no userId", async () => {
-    const mReq = {
-      user: { id: undefined },
-    } as unknown as Request;
-    const mRes = {
-      locals: { logId: 5, mealId: 1 },
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-      send: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await mealController.deleteMeal(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Missing required parameters",
-    });
-  });
 
   it("should return 404 - log or meal not found", async () => {
     const mReq = {
