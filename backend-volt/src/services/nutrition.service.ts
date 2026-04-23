@@ -1,6 +1,10 @@
 import { prisma } from "../db.js";
 import { Prisma } from "../generated/prisma/client.js";
 import { DuplicateEntryError, NotFoundError } from "../errors.js";
+import type {
+  CreateNutritionLogInput,
+  UpdateNutritionLogInput,
+} from "../types/nutrition.dto.js";
 
 // Take a userId and return all the user's logged nutrition logs
 async function getAllNutritionLogs(
@@ -37,12 +41,10 @@ async function getNutritionLogById(userId: number, logId: number) {
 
 // Create a new nutrition log for the user, this initially only includes
 // the date and an empty list of meals
-async function createNutritionLog(
-  logData: Prisma.NutritionLogUncheckedCreateInput,
-) {
+async function createNutritionLog(data: CreateNutritionLogInput) {
   try {
     const newNutritionLog = await prisma.nutritionLog.create({
-      data: logData,
+      data,
     });
     return newNutritionLog;
   } catch (error: unknown) {
@@ -66,13 +68,13 @@ async function createNutritionLog(
 async function updateNutritionLog(
   logId: number,
   userId: number,
-  logData: Prisma.NutritionLogUpdateInput,
+  data: UpdateNutritionLogInput,
 ) {
   try {
     // Update the log only if the user and log id match an existing log
     const updatedLog = await prisma.nutritionLog.update({
       where: { id: logId, userId },
-      data: logData,
+      data,
     });
     return updatedLog;
   } catch (error: unknown) {
