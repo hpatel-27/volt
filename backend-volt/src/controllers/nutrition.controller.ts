@@ -1,6 +1,9 @@
 import type { Request, Response } from "express";
 import * as nutritionService from "../services/nutrition.service.js";
-import type { Prisma } from "../generated/prisma/client.js";
+import type {
+  CreateNutritionLogInput,
+  UpdateNutritionLogInput,
+} from "../types/nutrition.dto.js";
 
 // Return all nutrition logs for the user that made the request
 // Use pagination to limit the number of logs returned at once
@@ -50,7 +53,7 @@ async function createNutritionLog(req: Request, res: Response) {
   }
   const isoDate = new Date(date).toISOString();
 
-  const logData: Prisma.NutritionLogUncheckedCreateInput = {
+  const logData: CreateNutritionLogInput = {
     userId,
     date: isoDate,
   };
@@ -75,7 +78,7 @@ async function updateNutritionLog(req: Request, res: Response) {
     return res.status(400).json({ error: "Date must be in ISO 8601 format" });
   }
   const isoDate = new Date(date).toISOString();
-  const logData: Prisma.NutritionLogUncheckedUpdateInput = {
+  const logData: UpdateNutritionLogInput = {
     date: isoDate,
   };
 

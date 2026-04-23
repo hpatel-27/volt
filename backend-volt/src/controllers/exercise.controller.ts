@@ -1,6 +1,9 @@
 import type { Request, Response } from "express";
 import * as exerciseService from "../services/exercise.service.js";
-import { Prisma } from "../generated/prisma/client.js";
+import type {
+  CreateExerciseInput,
+  UpdateExerciseInput,
+} from "../types/exercise.dto.js";
 
 async function getExercises(req: Request, res: Response) {
   // Get pagination parameters from query string
@@ -105,7 +108,7 @@ async function createExercise(req: Request, res: Response) {
       .json({ error: "Attribute images must be an array of strings" });
   }
 
-  const exerciseData: Prisma.ExerciseCreateInput = {
+  const exerciseData: CreateExerciseInput = {
     id: req.body.id,
     name: req.body.name,
     force: req.body.force,
@@ -130,7 +133,7 @@ async function updateExercise(req: Request, res: Response) {
     return res.status(400).json({ error: "Exercise ID is required" });
   }
 
-  const exerciseData: Prisma.ExerciseUpdateInput = {};
+  const exerciseData: UpdateExerciseInput = {};
 
   // Validate potential String fields to update
   if (req.body.name !== undefined) {

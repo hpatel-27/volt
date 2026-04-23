@@ -1,6 +1,9 @@
 import type { Request, Response } from "express";
 import * as weightService from "../services/weight.service.js";
-import type { Prisma } from "../generated/prisma/client.js";
+import type {
+  CreateWeightInput,
+  UpdateWeightInput,
+} from "../types/weight.dto.js";
 
 async function getAllWeights(req: Request, res: Response) {
   const user = req.user!;
@@ -42,7 +45,7 @@ async function createWeight(req: Request, res: Response) {
   }
   const isoDate = new Date(date).toISOString();
 
-  const weightData: Prisma.WeightUncheckedCreateInput = {
+  const weightData: CreateWeightInput = {
     userId,
     amount,
     date: isoDate,
@@ -66,7 +69,7 @@ async function updateWeight(req: Request, res: Response) {
   }
 
   // Validate weightAmount and date if they are present and add them to the data object
-  const weightData: Prisma.WeightUpdateInput = {};
+  const weightData: UpdateWeightInput = {};
   if (amount !== undefined) {
     if (typeof amount !== "number" || amount < 0) {
       return res
@@ -88,6 +91,10 @@ async function updateWeight(req: Request, res: Response) {
 
     const isoDate = new Date(date).toISOString();
     weightData.date = isoDate;
+  }
+
+  if (Object.keys(weightData).length === 0) {
+    return res.status(400).json({ error: "No valid fields to update" });
   }
 
   const newWeight = await weightService.updateWeight(

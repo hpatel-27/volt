@@ -1,6 +1,10 @@
 import { prisma } from "../db.js";
 import { Prisma } from "../generated/prisma/client.js";
 import { NotFoundError } from "../errors.js";
+import type {
+  CreateWeightInput,
+  UpdateWeightInput,
+} from "../types/weight.dto.js";
 
 // Take a userId and return all the user's logged weights
 async function getAllWeights(userId: number, page: number, limit: number) {
@@ -18,9 +22,9 @@ async function getAllWeights(userId: number, page: number, limit: number) {
   return { weights, total, page, limit };
 }
 
-async function createWeight(weightData: Prisma.WeightUncheckedCreateInput) {
+async function createWeight(data: CreateWeightInput) {
   const newWeight = await prisma.weight.create({
-    data: weightData,
+    data,
   });
   return newWeight;
 }
@@ -28,7 +32,7 @@ async function createWeight(weightData: Prisma.WeightUncheckedCreateInput) {
 async function updateWeight(
   userId: number,
   weightId: number,
-  data: Prisma.WeightUpdateInput,
+  data: UpdateWeightInput,
 ) {
   try {
     // Update the weight entry
