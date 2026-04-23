@@ -7,6 +7,7 @@ import { expect, it, describe, vi, beforeEach } from "vitest";
 import { prisma } from "../../../src/db.js";
 import * as mealService from "../../../src/services/meal.service.js";
 import { Prisma } from "../../../src/generated/prisma/client.js";
+import { NotFoundError } from "../../../src/errors.js";
 
 // Mock prisma proxy, otherwise a type error exists when trying to call the mockResolved...
 const prismaMock = prisma as unknown as DeepMockProxy<typeof prisma>;
@@ -188,8 +189,12 @@ describe("Meal Service getMealById", () => {
 });
 
 describe("Meal Service createMeal", () => {
-  // Clear mocks between tests
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    prismaMock.$transaction.mockImplementation(async (callback) =>
+      callback(prismaMock as any),
+    );
+  });
 
   it("should throw error for log not found or it does not belong to the user", async () => {
     // Invalid userId and logId
@@ -207,7 +212,9 @@ describe("Meal Service createMeal", () => {
     // Log not found
     await expect(
       mealService.createMeal(logId, userId, mealData),
-    ).rejects.toThrow("Log associated to this meal does not exist.");
+    ).rejects.toThrow(
+      new NotFoundError("Log associated to this meal does not exist."),
+    );
   });
 
   it("should propagate unexpected errors", async () => {
@@ -258,8 +265,7 @@ describe("Meal Service createMeal", () => {
       id: logId,
       userId,
       date,
-    });
-
+    } as any);
     prismaMock.meal.create.mockRejectedValueOnce(undefined);
 
     await expect(mealService.createMeal(logId, userId, mealData)).rejects.toBe(
@@ -286,10 +292,8 @@ describe("Meal Service createMeal", () => {
       id: logId,
       userId,
       date,
-    });
-
+    } as any);
     prismaMock.meal.create.mockResolvedValueOnce(mealData);
-
     const createdMeal = await mealService.createMeal(logId, userId, mealData);
     expect(createdMeal).toStrictEqual(mealData);
   });
