@@ -130,7 +130,7 @@ model SetLog {
   id            Int         @id @default(autoincrement())
   setNumber     Int
   reps          Int
-  weight        Float // in lbs or kg — decide on one unit convention
+  weight        Float // in lbs
   exerciseLogId Int
   exerciseLog   ExerciseLog @relation(fields: [exerciseLogId], references: [id])
 
