@@ -34,6 +34,11 @@ async function createWeight(req: Request, res: Response) {
       .json({ error: "Amount must be a number and date must be a string" });
   }
 
+  // Validate weight amount (must be a positive number)
+  if (amount < 0) {
+    return res.status(400).json({ error: "Amount must be a positive number" });
+  }
+
   // Validate date format (ISO 8601)
   if (isNaN(Date.parse(date))) {
     return res.status(400).json({ error: "Date must be in ISO 8601 format" });
@@ -69,8 +74,10 @@ async function updateWeight(req: Request, res: Response) {
   // Validate weightAmount and date if they are present and add them to the data object
   const weightData: Prisma.WeightUpdateInput = {};
   if (amount !== undefined) {
-    if (typeof amount !== "number") {
-      return res.status(400).json({ error: "Amount must be a number" });
+    if (typeof amount !== "number" || amount < 0) {
+      return res
+        .status(400)
+        .json({ error: "Amount must be a positive number" });
     }
     weightData.amount = amount;
   }
