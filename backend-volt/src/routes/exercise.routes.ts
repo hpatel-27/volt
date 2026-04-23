@@ -3,10 +3,11 @@ const router = express.Router();
 import * as exerciseController from "../controllers/exercise.controller.js";
 import { userMiddleware } from "../middleware/user.middleware.js";
 import { requireAdmin } from "../middleware/admin.middleware.js";
+import { paginationMiddleware } from "../middleware/pagination.middleware.js";
 
 // Get a paginated list of exercises. Clients can specify the page and limit
 // via query parameters, e.g. /exercises?page=2&limit=10
-router.get("/", exerciseController.getExercises);
+router.get("/", paginationMiddleware, exerciseController.getExercises);
 
 // Get a specific exercise by ID, e.g. /exercises/123
 router.get("/:exerciseId", exerciseController.getExerciseById);

@@ -4,27 +4,15 @@ import type { Prisma } from "../generated/prisma/client.js";
 
 async function getAllWeights(req: Request, res: Response) {
   const userId = req.user?.id;
-  const page = req.query.page;
-  const limit = req.query.limit;
+  const { page, limit } = req.pagination!;
 
-  // Check if user, page, and limit are present
-  if (!userId || typeof page !== "string" || typeof limit !== "string") {
+  // Check if user is present
+  if (!userId) {
     return res.status(400).json({ error: "Missing required parameters" });
   }
 
-  // Convert page and limit to numbers
-  const pageNum = parseInt(page, 10);
-  const limitNum = parseInt(limit, 10);
-
-  // Validate page and limit
-  if (isNaN(pageNum) || isNaN(limitNum) || pageNum < 1 || limitNum < 1) {
-    return res
-      .status(400)
-      .json({ error: "Page and limit must be positive integers" });
-  }
-
   // Get all the weights for the user that made the request
-  const weights = await weightService.getAllWeights(userId, pageNum, limitNum);
+  const weights = await weightService.getAllWeights(userId, page, limit);
 
   // This could be an empty list of weights
   res.json(weights);
