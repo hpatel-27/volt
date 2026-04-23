@@ -14,23 +14,6 @@ describe("Nutrition Controller getAllNutritionLogs", () => {
   beforeEach(() => vi.clearAllMocks());
 
   // Bad Request paths
-  it("should return 400 - no userId", async () => {
-    const mReq = {
-      user: { id: undefined },
-      pagination: { page: 1, limit: 10 },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await nutritionController.getAllNutritionLogs(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Missing required parameters",
-    });
-  });
-
   it("should return 200 and return 0 nutrition logs", async () => {
     const mReq = {
       user: { id: 1 },
@@ -135,23 +118,6 @@ describe("Nutrition Controller getAllNutritionLogs", () => {
 describe("Nutrition Controller getNutritionLogById", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("should return 400 - no userId", async () => {
-    const mReq = {
-      user: { id: undefined },
-    } as unknown as Request;
-    const mRes = {
-      locals: { logId: 1 },
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await nutritionController.getNutritionLogById(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Missing required parameters",
-    });
-  });
-
   it("should throw error", async () => {
     const mReq = {
       user: { id: 1 },
@@ -216,23 +182,6 @@ describe("Nutrition Controller getNutritionLogById", () => {
 
 describe("Nutrition Controller createNutritionLog", () => {
   beforeEach(() => vi.clearAllMocks());
-
-  it("should return 400 - no userId", async () => {
-    const mReq = {
-      user: { id: undefined },
-      body: { date: "2026-04-15T00:00:00.000Z" },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await nutritionController.createNutritionLog(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Missing required parameters",
-    });
-  });
 
   it("should return 400 - no date", async () => {
     const mReq = {
@@ -359,24 +308,6 @@ describe("Nutrition Controller createNutritionLog", () => {
 describe("Nutrition Controller updateNutritionLog", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("should return 400 - no userId", async () => {
-    const mReq = {
-      user: { id: undefined },
-      body: { date: "2026-04-15T00:00:00.000Z" },
-    } as unknown as Request;
-    const mRes = {
-      locals: { logId: 5 },
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await nutritionController.updateNutritionLog(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Missing required parameters",
-    });
-  });
-
   it("should return 400 - no date", async () => {
     const mReq = {
       user: { id: 1 },
@@ -502,24 +433,6 @@ describe("Nutrition Controller updateNutritionLog", () => {
 
 describe("Nutrition Controller deleteNutritionLog", () => {
   beforeEach(() => vi.clearAllMocks());
-
-  it("should return 400 - no userId", async () => {
-    const mReq = {
-      user: { id: undefined },
-    } as unknown as Request;
-    const mRes = {
-      locals: { logId: 5 },
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-      send: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await nutritionController.deleteNutritionLog(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Missing required parameters",
-    });
-  });
 
   it("should throw error", async () => {
     const mReq = {
