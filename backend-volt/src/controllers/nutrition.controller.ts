@@ -5,13 +5,9 @@ import type { Prisma } from "../generated/prisma/client.js";
 // Return all nutrition logs for the user that made the request
 // Use pagination to limit the number of logs returned at once
 async function getAllNutritionLogs(req: Request, res: Response) {
-  const userId = req.user?.id;
+  const user = req.user!;
+  const userId = user.id;
   const { page, limit } = req.pagination!;
-
-  // Check if user is present
-  if (!userId) {
-    return res.status(400).json({ error: "Missing required parameters" });
-  }
 
   const nutritionLogs = await nutritionService.getAllNutritionLogs(
     userId,
@@ -23,12 +19,9 @@ async function getAllNutritionLogs(req: Request, res: Response) {
 
 // Return a single nutrition log by its ID, this includes full meal details
 async function getNutritionLogById(req: Request, res: Response) {
-  const userId = req.user?.id;
+  const user = req.user!;
+  const userId = user.id;
   const logId = res.locals.logId as number;
-
-  if (!userId) {
-    return res.status(400).json({ error: "Missing required parameters" });
-  }
 
   const nutritionLog = await nutritionService.getNutritionLogById(
     userId,
@@ -39,11 +32,12 @@ async function getNutritionLogById(req: Request, res: Response) {
 }
 
 async function createNutritionLog(req: Request, res: Response) {
-  const userId = req.user?.id;
+  const user = req.user!;
+  const userId = user.id;
   const { date } = req.body;
 
-  // Check if user and date are present
-  if (!userId || !date) {
+  // Check if date is present
+  if (!date) {
     return res.status(400).json({ error: "Missing required parameters" });
   }
   // Validate date is a string
@@ -67,11 +61,12 @@ async function createNutritionLog(req: Request, res: Response) {
 }
 
 async function updateNutritionLog(req: Request, res: Response) {
-  const userId = req.user?.id;
+  const user = req.user!;
+  const userId = user.id;
   const logId = res.locals.logId as number;
   const { date } = req.body;
 
-  if (!userId || !date || typeof date !== "string") {
+  if (!date || typeof date !== "string") {
     return res.status(400).json({ error: "Missing required parameters" });
   }
 
@@ -94,12 +89,9 @@ async function updateNutritionLog(req: Request, res: Response) {
 }
 
 async function deleteNutritionLog(req: Request, res: Response) {
-  const userId = req.user?.id;
+  const user = req.user!;
+  const userId = user.id;
   const logId = res.locals.logId as number;
-
-  if (!userId) {
-    return res.status(400).json({ error: "Missing required parameters" });
-  }
 
   // Delete the nutrition log for the user that made the request
   await nutritionService.deleteNutritionLog(logId, userId);

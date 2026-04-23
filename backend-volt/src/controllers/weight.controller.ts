@@ -3,13 +3,9 @@ import * as weightService from "../services/weight.service.js";
 import type { Prisma } from "../generated/prisma/client.js";
 
 async function getAllWeights(req: Request, res: Response) {
-  const userId = req.user?.id;
+  const user = req.user!;
+  const userId = user.id;
   const { page, limit } = req.pagination!;
-
-  // Check if user is present
-  if (!userId) {
-    return res.status(400).json({ error: "Missing required parameters" });
-  }
 
   // Get all the weights for the user that made the request
   const weights = await weightService.getAllWeights(userId, page, limit);
@@ -19,11 +15,12 @@ async function getAllWeights(req: Request, res: Response) {
 }
 
 async function createWeight(req: Request, res: Response) {
-  const userId = req.user?.id;
+  const user = req.user!;
+  const userId = user.id;
   const { amount, date } = req.body;
 
-  // Check if user, amount, and date are present
-  if (!userId || amount === undefined || date === undefined) {
+  // Check if amount, and date are present
+  if (amount === undefined || date === undefined) {
     return res.status(400).json({ error: "Missing required parameters" });
   }
 
@@ -56,13 +53,10 @@ async function createWeight(req: Request, res: Response) {
 }
 
 async function updateWeight(req: Request, res: Response) {
-  const userId = req.user?.id;
+  const user = req.user!;
+  const userId = user.id;
   const weightId = res.locals.weightId as number;
   const { amount, date } = req.body;
-
-  if (!userId) {
-    return res.status(400).json({ error: "Missing required parameters" });
-  }
 
   // Ensure that at least one of amount or date is provided
   if (amount === undefined && date === undefined) {
@@ -105,12 +99,9 @@ async function updateWeight(req: Request, res: Response) {
 }
 
 async function deleteWeight(req: Request, res: Response) {
-  const userId = req.user?.id;
+  const user = req.user!;
+  const userId = user.id;
   const weightId = res.locals.weightId as number;
-
-  if (!userId) {
-    return res.status(400).json({ error: "Missing required parameters" });
-  }
 
   await weightService.deleteWeight(userId, weightId);
   return res.status(204).send();
