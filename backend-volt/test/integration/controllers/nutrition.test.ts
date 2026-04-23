@@ -53,7 +53,7 @@ describe("GET /api/v1/nutrition", () => {
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
       .expect(400)
-      .expect({ error: "Missing required parameters" });
+      .expect({ error: "Page and limit must be positive integers" });
   });
 
   it("returns 400 when page not parsed to number", async () => {
@@ -94,7 +94,7 @@ describe("GET /api/v1/nutrition", () => {
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
       .expect(400)
-      .expect({ error: "Missing required parameters" });
+      .expect({ error: "Page and limit must be positive integers" });
   });
 
   it("returns 400 when limit not parseable to number", async () => {

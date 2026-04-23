@@ -56,7 +56,8 @@ describe("Meal Service getAllMeals", () => {
       meals: [],
     } as any);
 
-    const meals = await mealService.getAllMeals(logId, userId);
+    const data = await mealService.getAllMeals(logId, userId);
+    const meals = data.meals;
     expect(meals.length).toBe(0);
     expect(meals).toStrictEqual([]);
   });
@@ -93,7 +94,8 @@ describe("Meal Service getAllMeals", () => {
       ],
     } as any);
 
-    const meals = await mealService.getAllMeals(logId, userId);
+    const data = await mealService.getAllMeals(logId, userId);
+    const meals = data.meals;
     expect(meals.length).toBe(2);
     expect(meals).toStrictEqual([
       {
@@ -153,9 +155,9 @@ describe("Meal Service getMealById", () => {
     const mealId = 109;
     prismaMock.meal.findFirst.mockRejectedValueOnce("45");
 
-    await expect(
-      mealService.getMealById(logId, userId, mealId),
-    ).rejects.toBe("45");
+    await expect(mealService.getMealById(logId, userId, mealId)).rejects.toBe(
+      "45",
+    );
   });
 
   it("should return a valid meal", async () => {
@@ -260,9 +262,9 @@ describe("Meal Service createMeal", () => {
 
     prismaMock.meal.create.mockRejectedValueOnce(undefined);
 
-    await expect(
-      mealService.createMeal(logId, userId, mealData),
-    ).rejects.toBe(undefined);
+    await expect(mealService.createMeal(logId, userId, mealData)).rejects.toBe(
+      undefined,
+    );
   });
 
   it("should create a valid meal", async () => {

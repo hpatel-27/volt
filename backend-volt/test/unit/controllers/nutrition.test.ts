@@ -17,7 +17,7 @@ describe("Nutrition Controller getAllNutritionLogs", () => {
   it("should return 400 - no userId", async () => {
     const mReq = {
       user: { id: undefined },
-      query: { page: "1", limit: "10" },
+      pagination: { page: 1, limit: 10 },
     } as unknown as Request;
     const mRes = {
       status: vi.fn().mockReturnThis(),
@@ -28,149 +28,13 @@ describe("Nutrition Controller getAllNutritionLogs", () => {
     expect(mRes.status).toHaveBeenCalledWith(400);
     expect(mRes.json).toHaveBeenCalledWith({
       error: "Missing required parameters",
-    });
-  });
-
-  it("should return 400 - page is not a string", async () => {
-    const mReq = {
-      user: { id: 1 },
-      query: { page: 1, limit: "10" },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await nutritionController.getAllNutritionLogs(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Missing required parameters",
-    });
-  });
-
-  it("should return 400 - limit is not a string", async () => {
-    const mReq = {
-      user: { id: 1 },
-      query: { page: "1", limit: 10 },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await nutritionController.getAllNutritionLogs(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Missing required parameters",
-    });
-  });
-
-  it("should return 400 - parsed page is not a number", async () => {
-    const mReq = {
-      user: { id: 1 },
-      query: { page: "abd", limit: "10" },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await nutritionController.getAllNutritionLogs(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Page and limit must be positive integers",
-    });
-  });
-
-  it("should return 400 - parsed limit is not a number", async () => {
-    const mReq = {
-      user: { id: 1 },
-      query: { page: "1", limit: "abg" },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await nutritionController.getAllNutritionLogs(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Page and limit must be positive integers",
-    });
-  });
-
-  it("should return 400 - parsed page is negative", async () => {
-    const mReq = {
-      user: { id: 1 },
-      query: { page: "-999", limit: "10" },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await nutritionController.getAllNutritionLogs(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Page and limit must be positive integers",
-    });
-  });
-
-  it("should return 400 - parsed page is not positive", async () => {
-    const mReq = {
-      user: { id: 1 },
-      query: { page: "0", limit: "10" },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await nutritionController.getAllNutritionLogs(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Page and limit must be positive integers",
-    });
-  });
-
-  it("should return 400 - parsed limit is negative", async () => {
-    const mReq = {
-      user: { id: 1 },
-      query: { page: "1", limit: "-999" },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await nutritionController.getAllNutritionLogs(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Page and limit must be positive integers",
-    });
-  });
-
-  it("should return 400 - parsed limit is not positive", async () => {
-    const mReq = {
-      user: { id: 1 },
-      query: { page: "1", limit: "0" },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await nutritionController.getAllNutritionLogs(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Page and limit must be positive integers",
     });
   });
 
   it("should return 200 and return 0 nutrition logs", async () => {
     const mReq = {
       user: { id: 1 },
-      query: { page: "1", limit: "10" },
+      pagination: { page: 1, limit: 10 },
     } as unknown as Request;
     const mRes = {
       status: vi.fn().mockReturnThis(),
@@ -197,7 +61,7 @@ describe("Nutrition Controller getAllNutritionLogs", () => {
   it("should return 500 - service throws Error", async () => {
     const mReq = {
       user: { id: 16 },
-      query: { page: "1", limit: "5" },
+      pagination: { page: 1, limit: 5 },
     } as unknown as Request;
     const mRes = {
       status: vi.fn().mockReturnThis(),
@@ -216,7 +80,7 @@ describe("Nutrition Controller getAllNutritionLogs", () => {
   it("should throw unknown error", async () => {
     const mReq = {
       user: { id: 16 },
-      query: { page: "1", limit: "5" },
+      pagination: { page: 1, limit: 10 },
     } as unknown as Request;
     const mRes = {
       status: vi.fn().mockReturnThis(),
@@ -235,7 +99,7 @@ describe("Nutrition Controller getAllNutritionLogs", () => {
   it("should return 200 and return multiple nutrition logs", async () => {
     const mReq = {
       user: { id: 1 },
-      query: { page: "1", limit: "10" },
+      pagination: { page: 1, limit: 10 },
     } as unknown as Request;
     const mRes = {
       status: vi.fn().mockReturnThis(),

@@ -48,7 +48,8 @@ describe("getAllMeals", () => {
   });
 
   it("returns an empty list of meals for the log", async () => {
-    const meals = await mealService.getAllMeals(logId, testUserId);
+    const data = await mealService.getAllMeals(logId, testUserId);
+    const meals = data.meals;
     expect(meals.length).toBe(0);
     expect(meals).toStrictEqual([]);
   });
@@ -83,7 +84,8 @@ describe("getAllMeals", () => {
       secondMealData,
     );
 
-    const meals = await mealService.getAllMeals(logId, testUserId);
+    const data = await mealService.getAllMeals(logId, testUserId);
+    const meals = data.meals;
     expect(meals.length).toBe(2);
     // Check the first meal
     expect(meals[0]?.nutritionLogId).toBe(logId);
