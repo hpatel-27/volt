@@ -4,9 +4,15 @@ const router = express.Router();
 import * as weightController from "../controllers/weight.controller.js";
 import { userMiddleware } from "../middleware/user.middleware.js";
 import { parseIntParam } from "../middleware/param.middleware.js";
+import { paginationMiddleware } from "../middleware/pagination.middleware.js";
 
 // Get all of a user's weights with pagination
-router.get("/", userMiddleware, weightController.getAllWeights);
+router.get(
+  "/",
+  userMiddleware,
+  paginationMiddleware,
+  weightController.getAllWeights,
+);
 
 // Create a new weight entry
 router.post("/", userMiddleware, weightController.createWeight);
