@@ -35,7 +35,7 @@ volt/
     │   ├── controllers/  # Request handlers
     │   ├── services/     # Business logic + Prisma queries
     │   ├── routes/       # Express routers
-    │   ├── middleware/   # Auth (Clerk), user upsert
+    │   ├── middleware/   # Auth (Clerk), user upsert, pagination, param parsing
     │   ├── errors/       # Custom error classes
     │   └── server.ts     # App entry point
     ├── prisma/
@@ -51,12 +51,12 @@ All routes are prefixed with `/api/v1`. Auth-protected routes require a valid Cl
 
 ### Weights `🔒 Auth required`
 
-| Method   | Endpoint           | Description                              |
-|----------|--------------------|------------------------------------------|
-| `GET`    | `/weights`         | Get all weight entries (paginated)       |
-| `POST`   | `/weights`         | Create a new weight entry                |
-| `PATCH`  | `/weights/:id`     | Update a weight entry by ID              |
-| `DELETE` | `/weights/:id`     | Delete a weight entry by ID              |
+| Method   | Endpoint             | Description                        |
+|----------|----------------------|------------------------------------|
+| `GET`    | `/weights`           | Get all weight entries (paginated) |
+| `POST`   | `/weights`           | Create a new weight entry          |
+| `PATCH`  | `/weights/:weightId` | Update a weight entry by ID        |
+| `DELETE` | `/weights/:weightId` | Delete a weight entry by ID        |
 
 **Query params for `GET /weights`:** `page`, `limit`
 
@@ -65,23 +65,70 @@ All routes are prefixed with `/api/v1`. Auth-protected routes require a valid Cl
 { "amount": 185.5, "date": "2025-01-15" }
 ```
 
-**Body for `PATCH /weights/:id`:**
+**Body for `PATCH /weights/:weightId`:**
 ```json
-{ "amount": 183.0 }
+{ "amount": 183.0, "date": "2025-01-16" }
 ```
 
 ---
 
-### Exercises `🔓 Public`
+### Exercises `🔓 Public GETs` / `🔒 Admin-only mutations`
 
-| Method | Endpoint            | Description                              |
-|--------|---------------------|------------------------------------------|
-| `GET`  | `/exercises`        | Get all exercises (paginated)            |
-| `GET`  | `/exercises/:id`    | Get a single exercise by ID              |
+| Method   | Endpoint                  | Description                        |
+|----------|---------------------------|------------------------------------|
+| `GET`    | `/exercises`              | List all exercises (paginated)     |
+| `GET`    | `/exercises/:exerciseId`  | Get a single exercise by ID        |
+| `POST`   | `/exercises`              | Create an exercise (admin only)    |
+| `PATCH`  | `/exercises/:exerciseId`  | Update an exercise (admin only)    |
+| `DELETE` | `/exercises/:exerciseId`  | Delete an exercise (admin only)    |
 
 **Query params for `GET /exercises`:** `page`, `limit`
 
 **Example:** `GET /api/v1/exercises/Barbell_Deadlift`
+
+---
+
+### Nutrition Logs `🔒 Auth required`
+
+| Method   | Endpoint             | Description                                       |
+|----------|----------------------|---------------------------------------------------|
+| `GET`    | `/nutrition`         | List nutrition logs as summaries (paginated)      |
+| `GET`    | `/nutrition/:logId`  | Get a single log with full meal details           |
+| `POST`   | `/nutrition`         | Create a new nutrition log                        |
+| `PATCH`  | `/nutrition/:logId`  | Update a nutrition log (e.g. change date)         |
+| `DELETE` | `/nutrition/:logId`  | Delete a nutrition log                            |
+
+**Body for `POST /nutrition`:**
+```json
+{ "date": "2025-01-15" }
+```
+
+---
+
+### Meals `🔒 Auth required` — Nested under nutrition logs
+
+Meal routes are nested under `/:logId/meals`. One nutrition log per user per day is enforced.
+
+| Method   | Endpoint                               | Description                        |
+|----------|----------------------------------------|------------------------------------|
+| `GET`    | `/nutrition/:logId/meals`              | List all meals for a nutrition log |
+| `GET`    | `/nutrition/:logId/meals/:mealId`      | Get a single meal                  |
+| `POST`   | `/nutrition/:logId/meals`              | Create a meal in a nutrition log   |
+| `PATCH`  | `/nutrition/:logId/meals/:mealId`      | Update a meal                      |
+| `DELETE` | `/nutrition/:logId/meals/:mealId`      | Delete a meal                      |
+
+**Body for `POST` / `PATCH` meals:**
+```json
+{ "name": "Lunch", "calories": 650, "protein": 45, "carbs": 70, "fat": 18 }
+```
+
+---
+
+### Examples — Dev/testing only
+
+| Method | Endpoint             | Description                            |
+|--------|----------------------|----------------------------------------|
+| `GET`  | `/examples/protected`| Returns Clerk user object (auth test)  |
 
 ---
 
@@ -90,17 +137,17 @@ All routes are prefixed with `/api/v1`. Auth-protected routes require a valid Cl
 ### Prerequisites
 
 - Node.js 18+
-- A [Neon](https://neon.tech) PostgreSQL database
+- PostgreSQL databases (dev + test)
 - A [Clerk](https://clerk.com) application
 
 ### Backend
 
 ```bash
 cd backend-volt
-cp .env.example .env       # fill in DATABASE_URL, CLERK_SECRET_KEY
+cp .env.example .env       # fill in all required variables (see below)
 npm install
 npx prisma migrate dev
-node scripts/exercises.js  # seed exercise library
+npm run seed:exercises     # seed exercise library
 npm run dev                # starts on port 8080
 ```
 
@@ -108,6 +155,7 @@ npm run dev                # starts on port 8080
 
 ```bash
 cd frontend-volt
+cp .env.example .env       # fill in VITE_CLERK_PUBLISHABLE_KEY
 npm install
 npm run dev                # starts Vite dev server
 ```
@@ -116,29 +164,41 @@ npm run dev                # starts Vite dev server
 
 ## Environment Variables
 
-**`backend-volt/.env`**
+### `backend-volt/.env`
 
-| Variable           | Description                                      |
-|--------------------|--------------------------------------------------|
-| `SERVER_PORT`      | Port for the Express server (default: `8080`)    |
-| `DATABASE_URL`     | Neon PostgreSQL connection string                |
-| `CLERK_SECRET_KEY` | Clerk secret key for JWT validation              |
-| `ALLOWED_ORIGINS`  | Comma-separated allowed CORS origins (prod only) |
+| Variable           | Required              | Description                                                    |
+|--------------------|-----------------------|----------------------------------------------------------------|
+| `NODE_ENV`         | Yes                   | `development`, `test`, or `production`                         |
+| `DEV_DATABASE_URL` | Yes (development)     | PostgreSQL connection string for local dev                     |
+| `TEST_DATABASE_URL`| Yes (test)            | PostgreSQL connection string for test runs                     |
+| `DATABASE_URL`     | Yes (production)      | PostgreSQL connection string for production                    |
+| `CLERK_SECRET_KEY` | Yes                   | Clerk backend secret for JWT validation                        |
+| `SERVER_PORT`      | No                    | Express listen port (default: `8080`)                          |
+| `API_BASE`         | No                    | Base path for all routes (default: `/api/v1`)                  |
+| `ALLOWED_ORIGINS`  | No (production only)  | Comma-separated CORS origins — defaults to localhost in dev    |
+
+`db.ts` selects the database URL based on `NODE_ENV` and throws at startup if the matching variable is missing.
+
+### `frontend-volt/.env`
+
+| Variable                    | Required | Description                             |
+|-----------------------------|----------|-----------------------------------------|
+| `VITE_CLERK_PUBLISHABLE_KEY`| Yes      | Clerk publishable key for the frontend  |
 
 ---
 
 ## Data Models
 
-| Model              | Description                                         |
-|--------------------|-----------------------------------------------------|
-| `User`             | Clerk-linked user profile with `isAdmin` flag       |
-| `Weight`           | Per-user weight entries (lbs + date)                |
-| `Exercise`         | Pre-seeded exercise library (string ID)             |
-| `WorkoutPlan`      | Named workout template linked to a user             |
-| `WorkoutDay`       | A day within a plan (e.g. Push Day)                 |
-| `WorkoutDayExercise` | Exercises scheduled for a workout day             |
-| `WorkoutLog`       | A completed workout session                         |
-| `ExerciseLog`      | Exercises performed within a session                |
-| `SetLog`           | Individual sets with reps and weight                |
-| `NutritionLog`     | Daily nutrition record                              |
-| `Meal`             | Individual meal with macro breakdown                |
+| Model               | Description                                                      |
+|---------------------|------------------------------------------------------------------|
+| `User`              | Clerk-linked user profile with `isAdmin` flag and optional height|
+| `Weight`            | Per-user weight entries (lbs + date)                             |
+| `Exercise`          | Pre-seeded exercise library (string ID, muscles, instructions)   |
+| `WorkoutPlan`       | Named workout template linked to a user                          |
+| `WorkoutDay`        | An ordered day within a plan (e.g. Push Day)                     |
+| `WorkoutDayExercise`| Exercises scheduled for a workout day (ordered)                  |
+| `WorkoutLog`        | A completed workout session (optionally tied to a WorkoutDay)    |
+| `ExerciseLog`       | Exercises performed within a session, with optional notes        |
+| `SetLog`            | Individual sets with reps and weight (lbs)                       |
+| `NutritionLog`      | Daily nutrition record — unique per user per day                 |
+| `Meal`              | Individual meal with calorie and macro breakdown (protein/carbs/fat) |
