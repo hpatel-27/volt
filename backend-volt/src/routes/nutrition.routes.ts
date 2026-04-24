@@ -6,6 +6,7 @@ import { userMiddleware } from "../middleware/user.middleware.js";
 import { parseIntParam } from "../middleware/param.middleware.js";
 import { paginationMiddleware } from "../middleware/pagination.middleware.js";
 import mealRouter from "./meal.routes.js";
+import { parseDate, parseOptionalDate } from "../middleware/date.middleware.js";
 
 // All routes in this file require the user to be authenticated, so we apply the userMiddleware to all routes
 
@@ -26,12 +27,18 @@ router.get(
   nutritionController.getNutritionLogById,
 );
 // Create a new nutrition log
-router.post("/", userMiddleware, nutritionController.createNutritionLog);
+router.post(
+  "/",
+  userMiddleware,
+  parseDate,
+  nutritionController.createNutritionLog,
+);
 // Update a nutrition log (change the recorded date)
 router.patch(
   "/:logId",
   userMiddleware,
   parseIntParam("logId"),
+  parseOptionalDate,
   nutritionController.updateNutritionLog,
 );
 // Delete a nutrition log
