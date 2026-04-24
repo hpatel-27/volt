@@ -20,30 +20,24 @@ async function getAllWeights(req: Request, res: Response) {
 async function createWeight(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
-  const { amount, date } = req.body;
+  const { amount } = req.body;
+  // The date middleware guarantees the date is valid if it exists
+  const isoDate = res.locals.date;
 
-  // Check if amount, and date are present
-  if (amount === undefined || date === undefined) {
+  // Check if amount is present
+  if (amount === undefined) {
     return res.status(400).json({ error: "Missing required parameters" });
   }
 
-  // Validate amount and date
-  if (typeof amount !== "number" || typeof date !== "string") {
-    return res
-      .status(400)
-      .json({ error: "Amount must be a number and date must be a string" });
+  // Validate amount
+  if (typeof amount !== "number") {
+    return res.status(400).json({ error: "Amount must be a number" });
   }
 
   // Validate weight amount (must be a positive number)
   if (amount < 0) {
     return res.status(400).json({ error: "Amount must be a positive number" });
   }
-
-  // Validate date format (ISO 8601)
-  if (isNaN(Date.parse(date))) {
-    return res.status(400).json({ error: "Date must be in ISO 8601 format" });
-  }
-  const isoDate = new Date(date).toISOString();
 
   const weightData: CreateWeightInput = {
     userId,
@@ -59,14 +53,10 @@ async function updateWeight(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
   const weightId = res.locals.weightId as number;
-  const { amount, date } = req.body;
+  const { amount } = req.body;
 
-  // Ensure that at least one of amount or date is provided
-  if (amount === undefined && date === undefined) {
-    return res
-      .status(400)
-      .json({ error: "At least one of amount or date must be provided" });
-  }
+  // The date middleware guarantees the date is valid if it exists
+  const isoDate = res.locals.date;
 
   // Validate weightAmount and date if they are present and add them to the data object
   const weightData: UpdateWeightInput = {};
@@ -79,17 +69,7 @@ async function updateWeight(req: Request, res: Response) {
     weightData.amount = amount;
   }
 
-  if (date !== undefined) {
-    if (typeof date !== "string") {
-      return res.status(400).json({ error: "Date must be a string" });
-    }
-
-    // Validate date format (ISO 8601)
-    if (date && isNaN(Date.parse(date))) {
-      return res.status(400).json({ error: "Date must be in ISO 8601 format" });
-    }
-
-    const isoDate = new Date(date).toISOString();
+  if (isoDate !== undefined) {
     weightData.date = isoDate;
   }
 

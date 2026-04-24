@@ -1,0 +1,51 @@
+import type { Request, Response, NextFunction } from "express";
+const validateDate = (date: unknown): string | null => {
+  // Check if date is present, a string, and is a valid date
+  if (!date || typeof date !== "string" || Number.isNaN(Date.parse(date))) {
+    return null;
+  }
+
+  return date;
+};
+
+export const parseDate = (req: Request, res: Response, next: NextFunction) => {
+  const { date } = req.body;
+
+  const validatedDate = validateDate(date);
+  if (!validatedDate) {
+    return res
+      .status(400)
+      .json({ error: "Date must be a string in ISO 8601 format" });
+  }
+
+  // Convert date to ISO format and make available for subsequent middleware
+  const isoDate = new Date(validatedDate).toISOString();
+  res.locals.date = isoDate;
+  next();
+};
+
+// If date is absent from the body, call next() without setting res.locals.date.
+// If date is present, apply the same type and format checks as parseDate,
+// then normalize to ISO and store in res.locals.date.
+export const parseOptionalDate = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  const { date } = req.body;
+  if (date === undefined) {
+    next();
+  }
+
+  const validatedDate = validateDate(date);
+  if (!validatedDate) {
+    return res
+      .status(400)
+      .json({ error: "Date must be a string in ISO 8601 format" });
+  }
+
+  // Convert date to ISO format and make available for subsequent middleware
+  const isoDate = new Date(validatedDate).toISOString();
+  res.locals.date = isoDate;
+  next();
+};

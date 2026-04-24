@@ -37,21 +37,8 @@ async function getNutritionLogById(req: Request, res: Response) {
 async function createNutritionLog(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
-  const { date } = req.body;
-
-  // Check if date is present
-  if (!date) {
-    return res.status(400).json({ error: "Missing required parameters" });
-  }
-  // Validate date is a string
-  if (typeof date !== "string") {
-    return res.status(400).json({ error: "Date must be a string" });
-  }
-  // Validate date format (ISO 8601)
-  if (isNaN(Date.parse(date))) {
-    return res.status(400).json({ error: "Date must be in ISO 8601 format" });
-  }
-  const isoDate = new Date(date).toISOString();
+  // The date middleware guarantees the date is valid if it exists
+  const isoDate = res.locals.date;
 
   const logData: CreateNutritionLogInput = {
     userId,
@@ -67,17 +54,13 @@ async function updateNutritionLog(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
   const logId = res.locals.logId as number;
-  const { date } = req.body;
 
-  if (!date || typeof date !== "string") {
+  // The date middleware guarantees the date is valid if it exists
+  const isoDate = res.locals.date;
+  if (!isoDate) {
     return res.status(400).json({ error: "Missing required parameters" });
   }
 
-  // Validate date format (ISO 8601)
-  if (isNaN(Date.parse(date))) {
-    return res.status(400).json({ error: "Date must be in ISO 8601 format" });
-  }
-  const isoDate = new Date(date).toISOString();
   const logData: UpdateNutritionLogInput = {
     date: isoDate,
   };
