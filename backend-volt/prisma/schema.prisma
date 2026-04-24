@@ -77,7 +77,7 @@ model WorkoutDay {
   name          String
   order         Int // order within the plan
   workoutPlanId Int
-  workoutPlan   WorkoutPlan @relation(fields: [workoutPlanId], references: [id])
+  workoutPlan   WorkoutPlan @relation(fields: [workoutPlanId], references: [id], onDelete: Cascade)
 
   exercises   WorkoutDayExercise[]
   workoutLogs WorkoutLog[]
@@ -91,7 +91,7 @@ model WorkoutDayExercise {
   order        Int
   workoutDayId Int
   exerciseId   String
-  workoutDay   WorkoutDay @relation(fields: [workoutDayId], references: [id])
+  workoutDay   WorkoutDay @relation(fields: [workoutDayId], references: [id], onDelete: Cascade)
   exercise     Exercise   @relation(fields: [exerciseId], references: [id])
 
   @@map("workout_day_exercises")
@@ -104,7 +104,7 @@ model WorkoutLog {
   userId       Int
   workoutDayId Int? // nullable — user may log an ad-hoc session
   user         User        @relation(fields: [userId], references: [id])
-  workoutDay   WorkoutDay? @relation(fields: [workoutDayId], references: [id])
+  workoutDay   WorkoutDay? @relation(fields: [workoutDayId], references: [id], onDelete: SetNull)
 
   exerciseLogs ExerciseLog[]
 
@@ -118,7 +118,7 @@ model ExerciseLog {
   workoutLogId Int
   notes        String?
   exercise     Exercise   @relation(fields: [exerciseId], references: [id])
-  workoutLog   WorkoutLog @relation(fields: [workoutLogId], references: [id])
+  workoutLog   WorkoutLog @relation(fields: [workoutLogId], references: [id], onDelete: Cascade)
 
   sets SetLog[]
 
@@ -132,7 +132,7 @@ model SetLog {
   reps          Int
   weight        Float // in lbs
   exerciseLogId Int
-  exerciseLog   ExerciseLog @relation(fields: [exerciseLogId], references: [id])
+  exerciseLog   ExerciseLog @relation(fields: [exerciseLogId], references: [id], onDelete: Cascade)
 
   @@map("set_logs")
 }
