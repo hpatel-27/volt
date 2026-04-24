@@ -183,61 +183,12 @@ describe("Nutrition Controller getNutritionLogById", () => {
 describe("Nutrition Controller createNutritionLog", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("should return 400 - no date", async () => {
-    const mReq = {
-      user: { id: 1 },
-      body: {},
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await nutritionController.createNutritionLog(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Missing required parameters",
-    });
-  });
-
-  it("should return 400 - date is not a string", async () => {
-    const mReq = {
-      user: { id: 1 },
-      body: { date: 3242348793 },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await nutritionController.createNutritionLog(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({ error: "Date must be a string" });
-  });
-
-  it("should return 400 - date is not in Date format", async () => {
-    const mReq = {
-      user: { id: 1 },
-      body: { date: "3242348793" },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await nutritionController.createNutritionLog(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Date must be in ISO 8601 format",
-    });
-  });
-
   it("should throw error", async () => {
     const mReq = {
       user: { id: 1 },
-      body: { date: "2026-04-15T00:00:00.000Z" },
     } as unknown as Request;
     const mRes = {
+      locals: { date: "2026-04-12T00:00:00.000Z" },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -254,9 +205,9 @@ describe("Nutrition Controller createNutritionLog", () => {
   it("should throw unknown error", async () => {
     const mReq = {
       user: { id: 1 },
-      body: { date: "2026-04-15T00:00:00.000Z" },
     } as unknown as Request;
     const mRes = {
+      locals: { date: "2026-04-20T00:00:00.000Z" },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -273,12 +224,12 @@ describe("Nutrition Controller createNutritionLog", () => {
   it("should return 201 - success, date is converted to ISO format before service call", async () => {
     // The controller converts the raw date string to a full ISO-8601 timestamp.
     // "2026-04-15" becomes "2026-04-15T00:00:00.000Z" — the service receives the
-    // normalised value, not the raw input.
+    // normalized value, not the raw input.
     const mReq = {
       user: { id: 1 },
-      body: { date: "2026-04-15" },
     } as unknown as Request;
     const mRes = {
+      locals: { logId: 7, date: "2026-04-15T00:00:00.000Z" },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -326,49 +277,12 @@ describe("Nutrition Controller updateNutritionLog", () => {
     });
   });
 
-  it("should return 400 - date is not a string", async () => {
-    const mReq = {
-      user: { id: 1 },
-      body: { date: 324252343 },
-    } as unknown as Request;
-    const mRes = {
-      locals: { logId: 5 },
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await nutritionController.updateNutritionLog(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Missing required parameters",
-    });
-  });
-
-  it("should return 400 - date is not valid ISO 8601", async () => {
-    const mReq = {
-      user: { id: 1 },
-      body: { date: "not-a-real-date" },
-    } as unknown as Request;
-    const mRes = {
-      locals: { logId: 5 },
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    await nutritionController.updateNutritionLog(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Date must be in ISO 8601 format",
-    });
-  });
-
   it("should throw error", async () => {
     const mReq = {
       user: { id: 1 },
-      body: { date: "2026-04-15T00:00:00.000Z" },
     } as unknown as Request;
     const mRes = {
-      locals: { logId: 5 },
+      locals: { logId: 5, date: "2026-04-15T00:00:00.000Z" },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -385,10 +299,9 @@ describe("Nutrition Controller updateNutritionLog", () => {
   it("should throw unknown error", async () => {
     const mReq = {
       user: { id: 1 },
-      body: { date: "2026-04-15T00:00:00.000Z" },
     } as unknown as Request;
     const mRes = {
-      locals: { logId: 5 },
+      locals: { logId: 5, date: "2026-04-15T00:00:00.000Z" },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
@@ -403,10 +316,9 @@ describe("Nutrition Controller updateNutritionLog", () => {
   it("should return 200 - success, date is converted to ISO format before service call", async () => {
     const mReq = {
       user: { id: 1 },
-      body: { date: "2026-04-16" },
     } as unknown as Request;
     const mRes = {
-      locals: { logId: 5 },
+      locals: { logId: 5, date: "2026-04-16T00:00:00.000Z" },
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;

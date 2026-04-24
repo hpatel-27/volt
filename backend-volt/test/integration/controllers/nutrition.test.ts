@@ -223,7 +223,7 @@ describe("POST /api/v1/nutrition", () => {
       .send({})
       .expect("Content-Type", /json/)
       .expect(400)
-      .expect({ error: "Missing required parameters" });
+      .expect({ error: "Date must be a string in ISO 8601 format" });
   });
 
   it("returns 400 when date is not a string", async () => {
@@ -234,7 +234,7 @@ describe("POST /api/v1/nutrition", () => {
       .send({ date: 12345 })
       .expect("Content-Type", /json/)
       .expect(400)
-      .expect({ error: "Date must be a string" });
+      .expect({ error: "Date must be a string in ISO 8601 format" });
   });
 
   it("returns 400 when date is not valid ISO 8601", async () => {
@@ -245,7 +245,7 @@ describe("POST /api/v1/nutrition", () => {
       .send({ date: "not-a-date" })
       .expect("Content-Type", /json/)
       .expect(400)
-      .expect({ error: "Date must be in ISO 8601 format" });
+      .expect({ error: "Date must be a string in ISO 8601 format" });
   });
 
   it("returns 409 when a log already exists for that date", async () => {
@@ -323,7 +323,7 @@ describe("PATCH /api/v1/nutrition/:id", () => {
       .send({ date: "not-a-date" })
       .expect("Content-Type", /json/)
       .expect(400)
-      .expect({ error: "Date must be in ISO 8601 format" });
+      .expect({ error: "Date must be a string in ISO 8601 format" });
   });
 
   it("returns 404 when log not found", async () => {
