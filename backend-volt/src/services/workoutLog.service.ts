@@ -6,11 +6,7 @@ import type {
   UpdateWorkoutLogInput,
 } from "../types/workoutLog.dto.js";
 
-async function getAllWorkoutLogs(
-  userId: number,
-  page: number,
-  limit: number,
-) {
+async function getAllWorkoutLogs(userId: number, page: number, limit: number) {
   const [workoutLogs, total] = await prisma.$transaction([
     prisma.workoutLog.findMany({
       where: { userId },
@@ -73,17 +69,35 @@ async function updateWorkoutLog(
 ) {
   // If updating workoutDayId to a non-null value, verify it belongs to the user
   if (data.workoutDayId) {
-    const day = await prisma.workoutDay.findFirst({
-      where: {
-        id: data.workoutDayId,
-        workoutPlan: { userId },
-      },
+    return await prisma.$transaction(async (tx) => {
+      const day = await tx.workoutDay.findFirst({
+        where: {
+          id: data.workoutDayId!,
+          workoutPlan: { userId },
+        },
+      });
+      if (!day) {
+        throw new NotFoundError("Workout day not found.");
+      }
+
+      try {
+        return await tx.workoutLog.update({
+          where: { id: logId, userId },
+          data,
+        });
+      } catch (error: unknown) {
+        if (
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === "P2025"
+        ) {
+          throw new NotFoundError("Workout log not found.", { cause: error });
+        }
+        throw error;
+      }
     });
-    if (!day) {
-      throw new NotFoundError("Workout day not found.");
-    }
   }
 
+  // If workoutDayId is not being updated, we can skip the transaction since we only need to update the workout log
   try {
     const updatedLog = await prisma.workoutLog.update({
       where: { id: logId, userId },
