@@ -34,14 +34,15 @@ async function createWorkoutDayExercise(req: Request, res: Response) {
       .json({ error: "exerciseId is required and cannot be empty." });
   }
 
-  if (order === undefined || typeof order !== "number" || order < 1) {
+  if (
+    order === undefined ||
+    typeof order !== "number" ||
+    order < 1 ||
+    !Number.isInteger(order)
+  ) {
     return res
       .status(400)
       .json({ error: "Order is required and must be a positive integer." });
-  }
-
-  if (!Number.isInteger(order)) {
-    return res.status(400).json({ error: "Order must be an integer." });
   }
 
   const data: CreateWorkoutDayExerciseInput = {
@@ -49,13 +50,12 @@ async function createWorkoutDayExercise(req: Request, res: Response) {
     exerciseId,
     order,
   };
-  const newExercise =
-    await workoutDayExerciseService.createWorkoutDayExercise(
-      planId,
-      dayId,
-      userId,
-      data,
-    );
+  const newExercise = await workoutDayExerciseService.createWorkoutDayExercise(
+    planId,
+    dayId,
+    userId,
+    data,
+  );
   res.status(201).json(newExercise);
 }
 
