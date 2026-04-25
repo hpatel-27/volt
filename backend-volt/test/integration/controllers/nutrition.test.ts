@@ -41,14 +41,14 @@ afterAll(async () => {
   await prisma.user.delete({ where: { id: testUserId } });
 });
 
-describe("GET /api/v1/nutrition", () => {
+describe("GET /api/v1/nutrition-logs", () => {
   // Sending query parameters are always going to be strings when they are sent,
   // so only when they are not provided can they be of another type (undefined)
 
   // Page query param validation
   it("returns 400 when missing page query parameter / not a string", async () => {
     await request(app)
-      .get("/api/v1/nutrition")
+      .get("/api/v1/nutrition-logs")
       .query({})
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
@@ -58,7 +58,7 @@ describe("GET /api/v1/nutrition", () => {
 
   it("returns 400 when page not parsed to number", async () => {
     await request(app)
-      .get("/api/v1/nutrition")
+      .get("/api/v1/nutrition-logs")
       .query({ page: "notanumber", limit: "5" })
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
@@ -68,7 +68,7 @@ describe("GET /api/v1/nutrition", () => {
 
   it("returns 400 when page not parsed to positive number", async () => {
     await request(app)
-      .get("/api/v1/nutrition")
+      .get("/api/v1/nutrition-logs")
       .query({ page: "-999", limit: "5" })
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
@@ -78,7 +78,7 @@ describe("GET /api/v1/nutrition", () => {
 
   it("returns 400 when page not parsed to positive number (boundary)", async () => {
     await request(app)
-      .get("/api/v1/nutrition")
+      .get("/api/v1/nutrition-logs")
       .query({ page: "0", limit: "5" })
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
@@ -89,7 +89,7 @@ describe("GET /api/v1/nutrition", () => {
   // Limit query param validation
   it("returns 400 when missing limit query parameter / not a string", async () => {
     await request(app)
-      .get("/api/v1/nutrition")
+      .get("/api/v1/nutrition-logs")
       .query({ page: "2" })
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
@@ -99,7 +99,7 @@ describe("GET /api/v1/nutrition", () => {
 
   it("returns 400 when limit not parseable to number", async () => {
     await request(app)
-      .get("/api/v1/nutrition")
+      .get("/api/v1/nutrition-logs")
       .query({ page: "2", limit: "fjklsdjf" })
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
@@ -109,7 +109,7 @@ describe("GET /api/v1/nutrition", () => {
 
   it("returns 400 when limit < 1", async () => {
     await request(app)
-      .get("/api/v1/nutrition")
+      .get("/api/v1/nutrition-logs")
       .query({ page: "2", limit: "-100" })
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
@@ -119,7 +119,7 @@ describe("GET /api/v1/nutrition", () => {
 
   it("returns 400 when limit < 1 (boundary)", async () => {
     await request(app)
-      .get("/api/v1/nutrition")
+      .get("/api/v1/nutrition-logs")
       .query({ page: "2", limit: "0" })
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
@@ -131,7 +131,7 @@ describe("GET /api/v1/nutrition", () => {
 
   it("returns 200 with empty array", async () => {
     await request(app)
-      .get("/api/v1/nutrition")
+      .get("/api/v1/nutrition-logs")
       .query({ page: 1, limit: 10 })
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
@@ -149,7 +149,7 @@ describe("GET /api/v1/nutrition", () => {
     });
 
     await request(app)
-      .get("/api/v1/nutrition")
+      .get("/api/v1/nutrition-logs")
       .query({ page: 1, limit: 5 })
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
@@ -173,10 +173,10 @@ describe("GET /api/v1/nutrition", () => {
 
 // Get NutritionLog By ID
 
-describe("GET /api/v1/nutrition/:id", () => {
+describe("GET /api/v1/nutrition-logs/:id", () => {
   it("returns 400 when id is not a number", async () => {
     await request(app)
-      .get("/api/v1/nutrition/notanumber")
+      .get("/api/v1/nutrition-logs/notanumber")
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
       .expect(400)
@@ -185,7 +185,7 @@ describe("GET /api/v1/nutrition/:id", () => {
 
   it("returns 404 when log not found", async () => {
     await request(app)
-      .get("/api/v1/nutrition/999999999")
+      .get("/api/v1/nutrition-logs/999999999")
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
       .expect(404)
@@ -198,7 +198,7 @@ describe("GET /api/v1/nutrition/:id", () => {
     });
 
     await request(app)
-      .get(`/api/v1/nutrition/${log.id}`)
+      .get(`/api/v1/nutrition-logs/${log.id}`)
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
       .expect(200)
@@ -214,10 +214,10 @@ describe("GET /api/v1/nutrition/:id", () => {
 
 // Create NutritionLogs
 
-describe("POST /api/v1/nutrition", () => {
+describe("POST /api/v1/nutrition-logs", () => {
   it("returns 400 when missing date", async () => {
     await request(app)
-      .post("/api/v1/nutrition")
+      .post("/api/v1/nutrition-logs")
       .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .send({})
@@ -228,7 +228,7 @@ describe("POST /api/v1/nutrition", () => {
 
   it("returns 400 when date is not a string", async () => {
     await request(app)
-      .post("/api/v1/nutrition")
+      .post("/api/v1/nutrition-logs")
       .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .send({ date: 12345 })
@@ -239,7 +239,7 @@ describe("POST /api/v1/nutrition", () => {
 
   it("returns 400 when date is not valid ISO 8601", async () => {
     await request(app)
-      .post("/api/v1/nutrition")
+      .post("/api/v1/nutrition-logs")
       .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .send({ date: "not-a-date" })
@@ -255,7 +255,7 @@ describe("POST /api/v1/nutrition", () => {
     });
 
     await request(app)
-      .post("/api/v1/nutrition")
+      .post("/api/v1/nutrition-logs")
       .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .send({ date })
@@ -268,7 +268,7 @@ describe("POST /api/v1/nutrition", () => {
     const date = "2026-01-15T00:00:00.000Z";
 
     await request(app)
-      .post("/api/v1/nutrition")
+      .post("/api/v1/nutrition-logs")
       .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .send({ date })
@@ -284,10 +284,10 @@ describe("POST /api/v1/nutrition", () => {
 
 // Update NutritionLog with an ID
 
-describe("PATCH /api/v1/nutrition/:id", () => {
+describe("PATCH /api/v1/nutrition-logs/:id", () => {
   it("returns 400 when id is not a number", async () => {
     await request(app)
-      .patch("/api/v1/nutrition/notanumber")
+      .patch("/api/v1/nutrition-logs/notanumber")
       .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .send({ date: "2026-02-01T00:00:00.000Z" })
@@ -302,7 +302,7 @@ describe("PATCH /api/v1/nutrition/:id", () => {
     });
 
     await request(app)
-      .patch(`/api/v1/nutrition/${log.id}`)
+      .patch(`/api/v1/nutrition-logs/${log.id}`)
       .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .send({})
@@ -317,7 +317,7 @@ describe("PATCH /api/v1/nutrition/:id", () => {
     });
 
     await request(app)
-      .patch(`/api/v1/nutrition/${log.id}`)
+      .patch(`/api/v1/nutrition-logs/${log.id}`)
       .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .send({ date: "not-a-date" })
@@ -328,7 +328,7 @@ describe("PATCH /api/v1/nutrition/:id", () => {
 
   it("returns 404 when log not found", async () => {
     await request(app)
-      .patch("/api/v1/nutrition/999999999")
+      .patch("/api/v1/nutrition-logs/999999999")
       .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .send({ date: "2026-02-07T00:00:00.000Z" })
@@ -346,7 +346,7 @@ describe("PATCH /api/v1/nutrition/:id", () => {
     });
 
     await request(app)
-      .patch(`/api/v1/nutrition/${toUpdate.id}`)
+      .patch(`/api/v1/nutrition-logs/${toUpdate.id}`)
       .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .send({ date: existing.date.toISOString() })
@@ -362,7 +362,7 @@ describe("PATCH /api/v1/nutrition/:id", () => {
     const newDate = "2026-02-20T00:00:00.000Z";
 
     await request(app)
-      .patch(`/api/v1/nutrition/${log.id}`)
+      .patch(`/api/v1/nutrition-logs/${log.id}`)
       .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .send({ date: newDate })
@@ -376,10 +376,10 @@ describe("PATCH /api/v1/nutrition/:id", () => {
   });
 });
 
-describe("DELETE /api/v1/nutrition/:id", () => {
+describe("DELETE /api/v1/nutrition-logs/:id", () => {
   it("returns 400 when id is not a number", async () => {
     await request(app)
-      .delete("/api/v1/nutrition/notanumber")
+      .delete("/api/v1/nutrition-logs/notanumber")
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
       .expect(400)
@@ -388,7 +388,7 @@ describe("DELETE /api/v1/nutrition/:id", () => {
 
   it("returns 404 when log not found", async () => {
     await request(app)
-      .delete("/api/v1/nutrition/999999999")
+      .delete("/api/v1/nutrition-logs/999999999")
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
       .expect(404)
@@ -400,6 +400,6 @@ describe("DELETE /api/v1/nutrition/:id", () => {
       data: { userId: testUserId, date: new Date("2026-02-25T00:00:00.000Z") },
     });
 
-    await request(app).delete(`/api/v1/nutrition/${log.id}`).expect(204);
+    await request(app).delete(`/api/v1/nutrition-logs/${log.id}`).expect(204);
   });
 });
