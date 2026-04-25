@@ -49,10 +49,10 @@ afterAll(async () => {
 
 // GET all meals for a specific nutrition log (there are no query parameters for this)
 
-describe("GET /api/v1/nutrition/:logId/meals", () => {
+describe("GET /api/v1/nutrition-logs/:logId/meals", () => {
   it("returns 400 when logId is not a number", async () => {
     await request(app)
-      .get(`/api/v1/nutrition/notanumber/meals`)
+      .get(`/api/v1/nutrition-logs/notanumber/meals`)
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
       .expect(400)
@@ -61,7 +61,7 @@ describe("GET /api/v1/nutrition/:logId/meals", () => {
 
   it("returns 404 when logId not found", async () => {
     await request(app)
-      .get(`/api/v1/nutrition/999999/meals`)
+      .get(`/api/v1/nutrition-logs/999999/meals`)
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
       .expect(404)
@@ -70,7 +70,7 @@ describe("GET /api/v1/nutrition/:logId/meals", () => {
 
   it("returns 200 with empty array", async () => {
     await request(app)
-      .get(`/api/v1/nutrition/${logId}/meals`)
+      .get(`/api/v1/nutrition-logs/${logId}/meals`)
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
       .expect(200);
@@ -78,10 +78,10 @@ describe("GET /api/v1/nutrition/:logId/meals", () => {
 });
 
 // GET a meal by id from a nutrition log
-describe("GET /api/v1/nutrition/:logId/meals/:mealId", () => {
+describe("GET /api/v1/nutrition-logs/:logId/meals/:mealId", () => {
   it("returns 400 when logId is not a number", async () => {
     await request(app)
-      .get(`/api/v1/nutrition/notanumber/meals/1`)
+      .get(`/api/v1/nutrition-logs/notanumber/meals/1`)
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
       .expect(400)
@@ -90,7 +90,7 @@ describe("GET /api/v1/nutrition/:logId/meals/:mealId", () => {
 
   it("returns 400 when mealId is not a number", async () => {
     await request(app)
-      .get(`/api/v1/nutrition/${logId}/meals/notanumber`)
+      .get(`/api/v1/nutrition-logs/${logId}/meals/notanumber`)
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
       .expect(400)
@@ -110,7 +110,7 @@ describe("GET /api/v1/nutrition/:logId/meals/:mealId", () => {
     });
 
     await request(app)
-      .get(`/api/v1/nutrition/999999/meals/${meal.id}`)
+      .get(`/api/v1/nutrition-logs/999999/meals/${meal.id}`)
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
       .expect(404)
@@ -130,7 +130,7 @@ describe("GET /api/v1/nutrition/:logId/meals/:mealId", () => {
     });
 
     await request(app)
-      .get(`/api/v1/nutrition/${logId}/meals/999999`)
+      .get(`/api/v1/nutrition-logs/${logId}/meals/999999`)
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
       .expect(404)
@@ -150,7 +150,7 @@ describe("GET /api/v1/nutrition/:logId/meals/:mealId", () => {
     });
 
     await request(app)
-      .get(`/api/v1/nutrition/${logId}/meals/${meal.id}`)
+      .get(`/api/v1/nutrition-logs/${logId}/meals/${meal.id}`)
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
       .expect(200)
@@ -166,7 +166,7 @@ describe("GET /api/v1/nutrition/:logId/meals/:mealId", () => {
 });
 
 // POST a meal to a nutrition log
-describe("POST /api/v1/nutrition/:logId/meals", () => {
+describe("POST /api/v1/nutrition-logs/:logId/meals", () => {
   const validMeal = {
     name: "Oatmeal",
     calories: 300,
@@ -177,7 +177,7 @@ describe("POST /api/v1/nutrition/:logId/meals", () => {
 
   it("returns 400 when logId is not a number", async () => {
     await request(app)
-      .post(`/api/v1/nutrition/notanumber/meals`)
+      .post(`/api/v1/nutrition-logs/notanumber/meals`)
       .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .send(validMeal)
@@ -188,7 +188,7 @@ describe("POST /api/v1/nutrition/:logId/meals", () => {
 
   it("returns 400 when name is missing", async () => {
     await request(app)
-      .post(`/api/v1/nutrition/${logId}/meals`)
+      .post(`/api/v1/nutrition-logs/${logId}/meals`)
       .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .send({ calories: 300, protein: 10, carbs: 54, fat: 6 })
@@ -201,7 +201,7 @@ describe("POST /api/v1/nutrition/:logId/meals", () => {
 
   it("returns 400 when name is an empty string", async () => {
     await request(app)
-      .post(`/api/v1/nutrition/${logId}/meals`)
+      .post(`/api/v1/nutrition-logs/${logId}/meals`)
       .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .send({ ...validMeal, name: "" })
@@ -214,7 +214,7 @@ describe("POST /api/v1/nutrition/:logId/meals", () => {
 
   it("returns 400 when calories is missing", async () => {
     await request(app)
-      .post(`/api/v1/nutrition/${logId}/meals`)
+      .post(`/api/v1/nutrition-logs/${logId}/meals`)
       .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .send({ name: "Oatmeal", protein: 10, carbs: 54, fat: 6 })
@@ -225,7 +225,7 @@ describe("POST /api/v1/nutrition/:logId/meals", () => {
 
   it("returns 400 when calories is negative", async () => {
     await request(app)
-      .post(`/api/v1/nutrition/${logId}/meals`)
+      .post(`/api/v1/nutrition-logs/${logId}/meals`)
       .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .send({ ...validMeal, calories: -1 })
@@ -236,7 +236,7 @@ describe("POST /api/v1/nutrition/:logId/meals", () => {
 
   it("returns 400 when protein is missing", async () => {
     await request(app)
-      .post(`/api/v1/nutrition/${logId}/meals`)
+      .post(`/api/v1/nutrition-logs/${logId}/meals`)
       .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .send({ name: "Oatmeal", calories: 300, carbs: 54, fat: 6 })
@@ -247,7 +247,7 @@ describe("POST /api/v1/nutrition/:logId/meals", () => {
 
   it("returns 400 when protein is negative", async () => {
     await request(app)
-      .post(`/api/v1/nutrition/${logId}/meals`)
+      .post(`/api/v1/nutrition-logs/${logId}/meals`)
       .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .send({ ...validMeal, protein: -1 })
@@ -258,7 +258,7 @@ describe("POST /api/v1/nutrition/:logId/meals", () => {
 
   it("returns 400 when carbs is missing", async () => {
     await request(app)
-      .post(`/api/v1/nutrition/${logId}/meals`)
+      .post(`/api/v1/nutrition-logs/${logId}/meals`)
       .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .send({ name: "Oatmeal", calories: 300, protein: 10, fat: 6 })
@@ -269,7 +269,7 @@ describe("POST /api/v1/nutrition/:logId/meals", () => {
 
   it("returns 400 when carbs is negative", async () => {
     await request(app)
-      .post(`/api/v1/nutrition/${logId}/meals`)
+      .post(`/api/v1/nutrition-logs/${logId}/meals`)
       .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .send({ ...validMeal, carbs: -1 })
@@ -280,7 +280,7 @@ describe("POST /api/v1/nutrition/:logId/meals", () => {
 
   it("returns 400 when fat is missing", async () => {
     await request(app)
-      .post(`/api/v1/nutrition/${logId}/meals`)
+      .post(`/api/v1/nutrition-logs/${logId}/meals`)
       .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .send({ name: "Oatmeal", calories: 300, protein: 10, carbs: 54 })
@@ -291,7 +291,7 @@ describe("POST /api/v1/nutrition/:logId/meals", () => {
 
   it("returns 400 when fat is negative", async () => {
     await request(app)
-      .post(`/api/v1/nutrition/${logId}/meals`)
+      .post(`/api/v1/nutrition-logs/${logId}/meals`)
       .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .send({ ...validMeal, fat: -1 })
@@ -302,7 +302,7 @@ describe("POST /api/v1/nutrition/:logId/meals", () => {
 
   it("returns 404 when logId not found", async () => {
     await request(app)
-      .post(`/api/v1/nutrition/999999/meals`)
+      .post(`/api/v1/nutrition-logs/999999/meals`)
       .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .send(validMeal)
@@ -313,7 +313,7 @@ describe("POST /api/v1/nutrition/:logId/meals", () => {
 
   it("returns 201 with the created meal", async () => {
     await request(app)
-      .post(`/api/v1/nutrition/${logId}/meals`)
+      .post(`/api/v1/nutrition-logs/${logId}/meals`)
       .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .send(validMeal)
@@ -331,10 +331,10 @@ describe("POST /api/v1/nutrition/:logId/meals", () => {
 });
 
 // PATCH a meal in a nutrition log
-describe("PATCH /api/v1/nutrition/:logId/meals/:mealId", () => {
+describe("PATCH /api/v1/nutrition-logs/:logId/meals/:mealId", () => {
   it("returns 400 when logId is not a number", async () => {
     await request(app)
-      .patch(`/api/v1/nutrition/notanumber/meals/1`)
+      .patch(`/api/v1/nutrition-logs/notanumber/meals/1`)
       .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .send({ name: "Updated" })
@@ -345,7 +345,7 @@ describe("PATCH /api/v1/nutrition/:logId/meals/:mealId", () => {
 
   it("returns 400 when mealId is not a number", async () => {
     await request(app)
-      .patch(`/api/v1/nutrition/${logId}/meals/notanumber`)
+      .patch(`/api/v1/nutrition-logs/${logId}/meals/notanumber`)
       .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .send({ name: "Updated" })
@@ -367,7 +367,7 @@ describe("PATCH /api/v1/nutrition/:logId/meals/:mealId", () => {
     });
 
     await request(app)
-      .patch(`/api/v1/nutrition/${logId}/meals/${meal.id}`)
+      .patch(`/api/v1/nutrition-logs/${logId}/meals/${meal.id}`)
       .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .send({})
@@ -389,7 +389,7 @@ describe("PATCH /api/v1/nutrition/:logId/meals/:mealId", () => {
     });
 
     await request(app)
-      .patch(`/api/v1/nutrition/${logId}/meals/${meal.id}`)
+      .patch(`/api/v1/nutrition-logs/${logId}/meals/${meal.id}`)
       .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .send({ name: "" })
@@ -411,7 +411,7 @@ describe("PATCH /api/v1/nutrition/:logId/meals/:mealId", () => {
     });
 
     await request(app)
-      .patch(`/api/v1/nutrition/${logId}/meals/${meal.id}`)
+      .patch(`/api/v1/nutrition-logs/${logId}/meals/${meal.id}`)
       .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .send({ calories: -1 })
@@ -433,7 +433,7 @@ describe("PATCH /api/v1/nutrition/:logId/meals/:mealId", () => {
     });
 
     await request(app)
-      .patch(`/api/v1/nutrition/${logId}/meals/${meal.id}`)
+      .patch(`/api/v1/nutrition-logs/${logId}/meals/${meal.id}`)
       .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .send({ protein: -1 })
@@ -455,7 +455,7 @@ describe("PATCH /api/v1/nutrition/:logId/meals/:mealId", () => {
     });
 
     await request(app)
-      .patch(`/api/v1/nutrition/${logId}/meals/${meal.id}`)
+      .patch(`/api/v1/nutrition-logs/${logId}/meals/${meal.id}`)
       .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .send({ carbs: -1 })
@@ -477,7 +477,7 @@ describe("PATCH /api/v1/nutrition/:logId/meals/:mealId", () => {
     });
 
     await request(app)
-      .patch(`/api/v1/nutrition/${logId}/meals/${meal.id}`)
+      .patch(`/api/v1/nutrition-logs/${logId}/meals/${meal.id}`)
       .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .send({ fat: -1 })
@@ -499,7 +499,7 @@ describe("PATCH /api/v1/nutrition/:logId/meals/:mealId", () => {
     });
 
     await request(app)
-      .patch(`/api/v1/nutrition/999999/meals/${meal.id}`)
+      .patch(`/api/v1/nutrition-logs/999999/meals/${meal.id}`)
       .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .send({ name: "Updated" })
@@ -510,7 +510,7 @@ describe("PATCH /api/v1/nutrition/:logId/meals/:mealId", () => {
 
   it("returns 404 when mealId not found", async () => {
     await request(app)
-      .patch(`/api/v1/nutrition/${logId}/meals/999999`)
+      .patch(`/api/v1/nutrition-logs/${logId}/meals/999999`)
       .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .send({ name: "Updated" })
@@ -532,7 +532,7 @@ describe("PATCH /api/v1/nutrition/:logId/meals/:mealId", () => {
     });
 
     await request(app)
-      .patch(`/api/v1/nutrition/${logId}/meals/${meal.id}`)
+      .patch(`/api/v1/nutrition-logs/${logId}/meals/${meal.id}`)
       .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .send({ name: "Banana Updated", calories: 100 })
@@ -548,10 +548,10 @@ describe("PATCH /api/v1/nutrition/:logId/meals/:mealId", () => {
 });
 
 // DELETE a meal from a nutrition log
-describe("DELETE /api/v1/nutrition/:logId/meals/:mealId", () => {
+describe("DELETE /api/v1/nutrition-logs/:logId/meals/:mealId", () => {
   it("returns 400 when logId is not a number", async () => {
     await request(app)
-      .delete(`/api/v1/nutrition/notanumber/meals/1`)
+      .delete(`/api/v1/nutrition-logs/notanumber/meals/1`)
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
       .expect(400)
@@ -560,7 +560,7 @@ describe("DELETE /api/v1/nutrition/:logId/meals/:mealId", () => {
 
   it("returns 400 when mealId is not a number", async () => {
     await request(app)
-      .delete(`/api/v1/nutrition/${logId}/meals/notanumber`)
+      .delete(`/api/v1/nutrition-logs/${logId}/meals/notanumber`)
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
       .expect(400)
@@ -580,7 +580,7 @@ describe("DELETE /api/v1/nutrition/:logId/meals/:mealId", () => {
     });
 
     await request(app)
-      .delete(`/api/v1/nutrition/999999/meals/${meal.id}`)
+      .delete(`/api/v1/nutrition-logs/999999/meals/${meal.id}`)
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
       .expect(404)
@@ -589,7 +589,7 @@ describe("DELETE /api/v1/nutrition/:logId/meals/:mealId", () => {
 
   it("returns 404 when mealId not found", async () => {
     await request(app)
-      .delete(`/api/v1/nutrition/${logId}/meals/999999`)
+      .delete(`/api/v1/nutrition-logs/${logId}/meals/999999`)
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
       .expect(404)
@@ -609,7 +609,7 @@ describe("DELETE /api/v1/nutrition/:logId/meals/:mealId", () => {
     });
 
     await request(app)
-      .delete(`/api/v1/nutrition/${logId}/meals/${meal.id}`)
+      .delete(`/api/v1/nutrition-logs/${logId}/meals/${meal.id}`)
       .expect(204);
   });
 });
