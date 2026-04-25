@@ -6,7 +6,8 @@ import type {
 } from "../types/workoutDayExercise.dto.js";
 
 async function getAllWorkoutDayExercises(req: Request, res: Response) {
-  const userId = req.user!.id;
+  const user = req.user!;
+  const userId = user.id;
   const planId = res.locals.planId as number;
   const dayId = res.locals.dayId as number;
 
@@ -19,7 +20,8 @@ async function getAllWorkoutDayExercises(req: Request, res: Response) {
 }
 
 async function createWorkoutDayExercise(req: Request, res: Response) {
-  const userId = req.user!.id;
+  const user = req.user!;
+  const userId = user.id;
   const planId = res.locals.planId as number;
   const dayId = res.locals.dayId as number;
   const { exerciseId, order } = req.body;
@@ -60,7 +62,8 @@ async function createWorkoutDayExercise(req: Request, res: Response) {
 }
 
 async function updateWorkoutDayExercise(req: Request, res: Response) {
-  const userId = req.user!.id;
+  const user = req.user!;
+  const userId = user.id;
   const planId = res.locals.planId as number;
   const dayId = res.locals.dayId as number;
   const dayExerciseId = res.locals.dayExerciseId as number;
@@ -94,7 +97,8 @@ async function updateWorkoutDayExercise(req: Request, res: Response) {
 }
 
 async function deleteWorkoutDayExercise(req: Request, res: Response) {
-  const userId = req.user!.id;
+  const user = req.user!;
+  const userId = user.id;
   const planId = res.locals.planId as number;
   const dayId = res.locals.dayId as number;
   const dayExerciseId = res.locals.dayExerciseId as number;

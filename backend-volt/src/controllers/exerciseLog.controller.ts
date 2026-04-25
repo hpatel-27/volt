@@ -6,7 +6,8 @@ import type {
 } from "../types/exerciseLog.dto.js";
 
 async function getAllExerciseLogs(req: Request, res: Response) {
-  const userId = req.user!.id;
+  const user = req.user!;
+  const userId = user.id;
   const logId = res.locals.logId as number;
 
   const exerciseLogs = await exerciseLogService.getAllExerciseLogs(
@@ -17,7 +18,8 @@ async function getAllExerciseLogs(req: Request, res: Response) {
 }
 
 async function getExerciseLogById(req: Request, res: Response) {
-  const userId = req.user!.id;
+  const user = req.user!;
+  const userId = user.id;
   const logId = res.locals.logId as number;
   const exerciseLogId = res.locals.exerciseLogId as number;
 
@@ -30,7 +32,8 @@ async function getExerciseLogById(req: Request, res: Response) {
 }
 
 async function createExerciseLog(req: Request, res: Response) {
-  const userId = req.user!.id;
+  const user = req.user!;
+  const userId = user.id;
   const logId = res.locals.logId as number;
   const { exerciseId, notes } = req.body;
 
@@ -65,7 +68,8 @@ async function createExerciseLog(req: Request, res: Response) {
 }
 
 async function updateExerciseLog(req: Request, res: Response) {
-  const userId = req.user!.id;
+  const user = req.user!;
+  const userId = user.id;
   const logId = res.locals.logId as number;
   const exerciseLogId = res.locals.exerciseLogId as number;
   const { notes } = req.body;
@@ -97,7 +101,8 @@ async function updateExerciseLog(req: Request, res: Response) {
 }
 
 async function deleteExerciseLog(req: Request, res: Response) {
-  const userId = req.user!.id;
+  const user = req.user!;
+  const userId = user.id;
   const logId = res.locals.logId as number;
   const exerciseLogId = res.locals.exerciseLogId as number;
 

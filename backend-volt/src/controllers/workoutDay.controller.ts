@@ -6,7 +6,8 @@ import type {
 } from "../types/workoutDay.dto.js";
 
 async function getAllWorkoutDays(req: Request, res: Response) {
-  const userId = req.user!.id;
+  const user = req.user!;
+  const userId = user.id;
   const planId = res.locals.planId as number;
 
   const days = await workoutDayService.getAllWorkoutDays(planId, userId);
@@ -14,7 +15,8 @@ async function getAllWorkoutDays(req: Request, res: Response) {
 }
 
 async function getWorkoutDayById(req: Request, res: Response) {
-  const userId = req.user!.id;
+  const user = req.user!;
+  const userId = user.id;
   const planId = res.locals.planId as number;
   const dayId = res.locals.dayId as number;
 
@@ -23,7 +25,8 @@ async function getWorkoutDayById(req: Request, res: Response) {
 }
 
 async function createWorkoutDay(req: Request, res: Response) {
-  const userId = req.user!.id;
+  const user = req.user!;
+  const userId = user.id;
   const planId = res.locals.planId as number;
   const { name, order } = req.body;
 
@@ -50,7 +53,8 @@ async function createWorkoutDay(req: Request, res: Response) {
 }
 
 async function updateWorkoutDay(req: Request, res: Response) {
-  const userId = req.user!.id;
+  const user = req.user!;
+  const userId = user.id;
   const planId = res.locals.planId as number;
   const dayId = res.locals.dayId as number;
   const { name, order } = req.body;
@@ -89,7 +93,8 @@ async function updateWorkoutDay(req: Request, res: Response) {
 }
 
 async function deleteWorkoutDay(req: Request, res: Response) {
-  const userId = req.user!.id;
+  const user = req.user!;
+  const userId = user.id;
   const planId = res.locals.planId as number;
   const dayId = res.locals.dayId as number;
 

@@ -6,7 +6,8 @@ import type {
 } from "../types/workoutPlan.dto.js";
 
 async function getAllWorkoutPlans(req: Request, res: Response) {
-  const userId = req.user!.id;
+  const user = req.user!;
+  const userId = user.id;
   const { page, limit } = req.pagination!;
 
   const workoutPlans = await workoutPlanService.getAllWorkoutPlans(
@@ -18,7 +19,8 @@ async function getAllWorkoutPlans(req: Request, res: Response) {
 }
 
 async function getWorkoutPlanById(req: Request, res: Response) {
-  const userId = req.user!.id;
+  const user = req.user!;
+  const userId = user.id;
   const planId = res.locals.planId as number;
 
   const workoutPlan = await workoutPlanService.getWorkoutPlanById(
@@ -29,7 +31,8 @@ async function getWorkoutPlanById(req: Request, res: Response) {
 }
 
 async function createWorkoutPlan(req: Request, res: Response) {
-  const userId = req.user!.id;
+  const user = req.user!;
+  const userId = user.id;
   const { name } = req.body;
 
   if (name === undefined || typeof name !== "string" || name.length < 1) {
@@ -44,7 +47,8 @@ async function createWorkoutPlan(req: Request, res: Response) {
 }
 
 async function updateWorkoutPlan(req: Request, res: Response) {
-  const userId = req.user!.id;
+  const user = req.user!;
+  const userId = user.id;
   const planId = res.locals.planId as number;
   const { name } = req.body;
 
@@ -72,7 +76,8 @@ async function updateWorkoutPlan(req: Request, res: Response) {
 }
 
 async function deleteWorkoutPlan(req: Request, res: Response) {
-  const userId = req.user!.id;
+  const user = req.user!;
+  const userId = user.id;
   const planId = res.locals.planId as number;
 
   await workoutPlanService.deleteWorkoutPlan(userId, planId);

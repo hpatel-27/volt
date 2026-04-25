@@ -6,7 +6,8 @@ import type {
 } from "../types/setLog.dto.js";
 
 async function getAllSetLogs(req: Request, res: Response) {
-  const userId = req.user!.id;
+  const user = req.user!;
+  const userId = user.id;
   const logId = res.locals.logId as number;
   const exerciseLogId = res.locals.exerciseLogId as number;
 
@@ -15,7 +16,8 @@ async function getAllSetLogs(req: Request, res: Response) {
 }
 
 async function createSetLog(req: Request, res: Response) {
-  const userId = req.user!.id;
+  const user = req.user!;
+  const userId = user.id;
   const logId = res.locals.logId as number;
   const exerciseLogId = res.locals.exerciseLogId as number;
   const { setNumber, reps, weight } = req.body;
@@ -65,7 +67,8 @@ async function createSetLog(req: Request, res: Response) {
 }
 
 async function updateSetLog(req: Request, res: Response) {
-  const userId = req.user!.id;
+  const user = req.user!;
+  const userId = user.id;
   const logId = res.locals.logId as number;
   const exerciseLogId = res.locals.exerciseLogId as number;
   const setId = res.locals.setId as number;
@@ -121,7 +124,8 @@ async function updateSetLog(req: Request, res: Response) {
 }
 
 async function deleteSetLog(req: Request, res: Response) {
-  const userId = req.user!.id;
+  const user = req.user!;
+  const userId = user.id;
   const logId = res.locals.logId as number;
   const exerciseLogId = res.locals.exerciseLogId as number;
   const setId = res.locals.setId as number;
