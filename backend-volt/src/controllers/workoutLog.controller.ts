@@ -6,7 +6,8 @@ import type {
 } from "../types/workoutLog.dto.js";
 
 async function getAllWorkoutLogs(req: Request, res: Response) {
-  const userId = req.user!.id;
+  const user = req.user!;
+  const userId = user.id;
   const { page, limit } = req.pagination!;
 
   const logs = await workoutLogService.getAllWorkoutLogs(userId, page, limit);
@@ -14,7 +15,8 @@ async function getAllWorkoutLogs(req: Request, res: Response) {
 }
 
 async function getWorkoutLogById(req: Request, res: Response) {
-  const userId = req.user!.id;
+  const user = req.user!;
+  const userId = user.id;
   const logId = res.locals.logId as number;
 
   const log = await workoutLogService.getWorkoutLogById(userId, logId);
@@ -22,7 +24,8 @@ async function getWorkoutLogById(req: Request, res: Response) {
 }
 
 async function createWorkoutLog(req: Request, res: Response) {
-  const userId = req.user!.id;
+  const user = req.user!;
+  const userId = user.id;
   const isoDate = res.locals.date;
   const { workoutDayId } = req.body;
 
@@ -46,7 +49,8 @@ async function createWorkoutLog(req: Request, res: Response) {
 }
 
 async function updateWorkoutLog(req: Request, res: Response) {
-  const userId = req.user!.id;
+  const user = req.user!;
+  const userId = user.id;
   const logId = res.locals.logId as number;
   const isoDate = res.locals.date;
   const { workoutDayId } = req.body;
@@ -88,7 +92,8 @@ async function updateWorkoutLog(req: Request, res: Response) {
 }
 
 async function deleteWorkoutLog(req: Request, res: Response) {
-  const userId = req.user!.id;
+  const user = req.user!;
+  const userId = user.id;
   const logId = res.locals.logId as number;
 
   await workoutLogService.deleteWorkoutLog(userId, logId);
