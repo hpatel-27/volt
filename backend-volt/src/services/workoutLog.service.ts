@@ -55,11 +55,17 @@ async function createWorkoutLog(userId: number, data: CreateWorkoutLogInput) {
         throw new NotFoundError("Workout day not found.");
       }
 
-      return await tx.workoutLog.create({ data });
+      return await tx.workoutLog.create({
+        data,
+        include: { workoutDay: true },
+      });
     });
   }
 
-  return await prisma.workoutLog.create({ data });
+  return await prisma.workoutLog.create({
+    data,
+    include: { workoutDay: true },
+  });
 }
 
 async function updateWorkoutLog(
@@ -84,6 +90,7 @@ async function updateWorkoutLog(
         return await tx.workoutLog.update({
           where: { id: logId, userId },
           data,
+          include: { workoutDay: true },
         });
       } catch (error: unknown) {
         if (
@@ -102,6 +109,7 @@ async function updateWorkoutLog(
     const updatedLog = await prisma.workoutLog.update({
       where: { id: logId, userId },
       data,
+      include: { workoutDay: true },
     });
     return updatedLog;
   } catch (error: unknown) {

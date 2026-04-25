@@ -56,6 +56,17 @@ async function updateWorkoutPlan(
     const updatedPlan = await prisma.workoutPlan.update({
       where: { id: planId, userId },
       data,
+      include: {
+        workoutDays: {
+          orderBy: { order: "asc" },
+          include: {
+            exercises: {
+              orderBy: { order: "asc" },
+              include: { exercise: true },
+            },
+          },
+        },
+      },
     });
     return updatedPlan;
   } catch (error: unknown) {
