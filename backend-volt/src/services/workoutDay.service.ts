@@ -74,6 +74,12 @@ async function updateWorkoutDay(
         workoutPlan: { userId },
       },
       data,
+      include: {
+        exercises: {
+          orderBy: { order: "asc" },
+          include: { exercise: true },
+        },
+      },
     });
     return updatedDay;
   } catch (error: unknown) {

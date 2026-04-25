@@ -91,6 +91,10 @@ async function updateExerciseLog(
         workoutLog: { userId },
       },
       data,
+      include: {
+        exercise: true,
+        sets: { orderBy: { setNumber: "asc" } },
+      },
     });
     return updated;
   } catch (error: unknown) {

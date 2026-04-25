@@ -71,6 +71,7 @@ async function updateWorkoutDayExercise(
         workoutDay: { workoutPlanId: planId, workoutPlan: { userId } },
       },
       data,
+      include: { exercise: true },
     });
     return updated;
   } catch (error: unknown) {

@@ -75,6 +75,7 @@ async function updateNutritionLog(
     const updatedLog = await prisma.nutritionLog.update({
       where: { id: logId, userId },
       data,
+      include: { meals: true },
     });
     return updatedLog;
   } catch (error: unknown) {
