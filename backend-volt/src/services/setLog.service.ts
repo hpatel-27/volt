@@ -1,0 +1,114 @@
+import { prisma } from "../db.js";
+import { Prisma } from "../generated/prisma/client.js";
+import { NotFoundError } from "../errors.js";
+import type {
+  CreateSetLogInput,
+  UpdateSetLogInput,
+} from "../types/setLog.dto.js";
+
+async function getAllSetLogs(
+  logId: number,
+  exerciseLogId: number,
+  userId: number,
+) {
+  const exerciseLog = await prisma.exerciseLog.findFirst({
+    where: {
+      id: exerciseLogId,
+      workoutLogId: logId,
+      workoutLog: { userId },
+    },
+    include: {
+      sets: { orderBy: { setNumber: "asc" } },
+    },
+  });
+
+  if (!exerciseLog) {
+    throw new NotFoundError("Exercise log not found.");
+  }
+
+  return { sets: exerciseLog.sets };
+}
+
+async function createSetLog(
+  logId: number,
+  exerciseLogId: number,
+  userId: number,
+  data: CreateSetLogInput,
+) {
+  return await prisma.$transaction(async (tx) => {
+    const existingExerciseLog = await tx.exerciseLog.findFirst({
+      where: {
+        id: exerciseLogId,
+        workoutLogId: logId,
+        workoutLog: { userId },
+      },
+    });
+    if (!existingExerciseLog) {
+      throw new NotFoundError("Exercise log not found.");
+    }
+
+    return await tx.setLog.create({ data });
+  });
+}
+
+async function updateSetLog(
+  logId: number,
+  exerciseLogId: number,
+  userId: number,
+  setId: number,
+  data: UpdateSetLogInput,
+) {
+  try {
+    const updated = await prisma.setLog.update({
+      where: {
+        id: setId,
+        exerciseLogId,
+        exerciseLog: {
+          workoutLogId: logId,
+          workoutLog: { userId },
+        },
+      },
+      data,
+    });
+    return updated;
+  } catch (error: unknown) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2025"
+    ) {
+      throw new NotFoundError("Set not found.", { cause: error });
+    }
+    throw error;
+  }
+}
+
+async function deleteSetLog(
+  logId: number,
+  exerciseLogId: number,
+  userId: number,
+  setId: number,
+) {
+  try {
+    await prisma.setLog.delete({
+      where: {
+        id: setId,
+        exerciseLogId,
+        exerciseLog: {
+          workoutLogId: logId,
+          workoutLog: { userId },
+        },
+      },
+    });
+    return;
+  } catch (error: unknown) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2025"
+    ) {
+      throw new NotFoundError("Set not found.", { cause: error });
+    }
+    throw error;
+  }
+}
+
+export { getAllSetLogs, createSetLog, updateSetLog, deleteSetLog };
