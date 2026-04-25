@@ -22,7 +22,7 @@ router.post("/", userMiddleware, parseDate, weightController.createWeight);
 router.patch(
   "/:weightId",
   userMiddleware,
-  parseIntParam("mealId"),
+  parseIntParam("weightId"),
   parseOptionalDate,
   weightController.updateWeight,
 );
@@ -31,7 +31,7 @@ router.patch(
 router.delete(
   "/:weightId",
   userMiddleware,
-  parseIntParam("mealId"),
+  parseIntParam("weightId"),
   weightController.deleteWeight,
 );
 
