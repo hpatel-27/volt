@@ -22,6 +22,17 @@ async function getAllWeights(userId: number, page: number, limit: number) {
   return { weights, total, page, limit };
 }
 
+async function getWeightById(userId: number, weightId: number) {
+  const weight = await prisma.weight.findFirst({
+    where: { id: weightId, userId },
+  });
+
+  if (!weight) {
+    throw new NotFoundError(`Weight entry with id: ${weightId} not found.`);
+  }
+  return weight;
+}
+
 async function createWeight(data: CreateWeightInput) {
   const newWeight = await prisma.weight.create({
     data,
@@ -71,4 +82,10 @@ async function deleteWeight(userId: number, weightId: number) {
   }
 }
 
-export { getAllWeights, createWeight, updateWeight, deleteWeight };
+export {
+  getAllWeights,
+  getWeightById,
+  createWeight,
+  updateWeight,
+  deleteWeight,
+};
