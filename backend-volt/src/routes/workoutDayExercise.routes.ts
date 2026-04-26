@@ -7,6 +7,13 @@ import { parseIntParam } from "../middleware/param.middleware.js";
 // Get all exercises for a workout day
 router.get("/", workoutDayExerciseController.getAllWorkoutDayExercises);
 
+// Get a specific exercise in a workout day by its ID
+router.get(
+  "/:dayExerciseId",
+  parseIntParam("dayExerciseId"),
+  workoutDayExerciseController.getWorkoutDayExerciseById,
+);
+
 // Add an exercise to a workout day
 router.post("/", workoutDayExerciseController.createWorkoutDayExercise);
 

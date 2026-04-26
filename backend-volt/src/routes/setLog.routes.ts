@@ -7,6 +7,9 @@ import { parseIntParam } from "../middleware/param.middleware.js";
 // Get all sets for an exercise log
 router.get("/", setLogController.getAllSetLogs);
 
+// Get a specific set by ID
+router.get("/:setId", parseIntParam("setId"), setLogController.getSetById);
+
 // Add a set to an exercise log
 router.post("/", setLogController.createSetLog);
 
@@ -14,10 +17,6 @@ router.post("/", setLogController.createSetLog);
 router.patch("/:setId", parseIntParam("setId"), setLogController.updateSetLog);
 
 // Delete a set
-router.delete(
-  "/:setId",
-  parseIntParam("setId"),
-  setLogController.deleteSetLog,
-);
+router.delete("/:setId", parseIntParam("setId"), setLogController.deleteSetLog);
 
 export default router;

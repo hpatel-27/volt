@@ -15,6 +15,22 @@ async function getAllSetLogs(req: Request, res: Response) {
   res.json(sets);
 }
 
+async function getSetById(req: Request, res: Response) {
+  const user = req.user!;
+  const userId = user.id;
+  const logId = res.locals.logId as number;
+  const exerciseLogId = res.locals.exerciseLogId as number;
+  const setId = res.locals.setId as number;
+
+  const set = await setLogService.getSetById(
+    logId,
+    exerciseLogId,
+    setId,
+    userId,
+  );
+  res.json(set);
+}
+
 async function createSetLog(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
@@ -134,4 +150,4 @@ async function deleteSetLog(req: Request, res: Response) {
   return res.status(204).send();
 }
 
-export { getAllSetLogs, createSetLog, updateSetLog, deleteSetLog };
+export { getAllSetLogs, getSetById, createSetLog, updateSetLog, deleteSetLog };

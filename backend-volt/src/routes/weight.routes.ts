@@ -15,6 +15,14 @@ router.get(
   weightController.getAllWeights,
 );
 
+// Get a weight entry by its ID
+router.get(
+  "/:weightId",
+  userMiddleware,
+  parseIntParam("weightId"),
+  weightController.getWeightById,
+);
+
 // Create a new weight entry
 router.post("/", userMiddleware, parseDate, weightController.createWeight);
 

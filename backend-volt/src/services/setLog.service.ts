@@ -29,6 +29,30 @@ async function getAllSetLogs(
   return { sets: exerciseLog.sets };
 }
 
+async function getSetById(
+  logId: number,
+  exerciseLogId: number,
+  setId: number,
+  userId: number,
+) {
+  const set = await prisma.setLog.findFirst({
+    where: {
+      id: setId,
+      exerciseLogId,
+      exerciseLog: {
+        workoutLogId: logId,
+        workoutLog: { userId },
+      },
+    },
+  });
+
+  if (!set) {
+    throw new NotFoundError("Set not found.");
+  }
+
+  return set;
+}
+
 async function createSetLog(
   logId: number,
   exerciseLogId: number,
@@ -111,4 +135,4 @@ async function deleteSetLog(
   }
 }
 
-export { getAllSetLogs, createSetLog, updateSetLog, deleteSetLog };
+export { getAllSetLogs, getSetById, createSetLog, updateSetLog, deleteSetLog };

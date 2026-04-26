@@ -28,6 +28,30 @@ async function getAllWorkoutDayExercises(
   return { exercises: day.exercises };
 }
 
+async function getWorkoutDayExerciseById(
+  planId: number,
+  dayId: number,
+  dayExerciseId: number,
+  userId: number,
+) {
+  const dayExercise = await prisma.workoutDayExercise.findFirst({
+    where: {
+      id: dayExerciseId,
+      workoutDayId: dayId,
+      workoutDay: { workoutPlanId: planId, workoutPlan: { userId } },
+    },
+    include: { exercise: true },
+  });
+
+  if (!dayExercise) {
+    throw new NotFoundError(
+      `Workout day exercise with id: ${dayExerciseId} not found.`,
+    );
+  }
+
+  return dayExercise;
+}
+
 async function createWorkoutDayExercise(
   planId: number,
   dayId: number,
@@ -117,6 +141,7 @@ async function deleteWorkoutDayExercise(
 
 export {
   getAllWorkoutDayExercises,
+  getWorkoutDayExerciseById,
   createWorkoutDayExercise,
   updateWorkoutDayExercise,
   deleteWorkoutDayExercise,

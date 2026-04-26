@@ -17,6 +17,15 @@ async function getAllWeights(req: Request, res: Response) {
   res.json(weights);
 }
 
+async function getWeightById(req: Request, res: Response) {
+  const user = req.user!;
+  const userId = user.id;
+  const weightId = res.locals.weightId as number;
+
+  const weight = await weightService.getWeightById(userId, weightId);
+  res.json(weight);
+}
+
 async function createWeight(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
@@ -94,4 +103,10 @@ async function deleteWeight(req: Request, res: Response) {
   return res.status(204).send();
 }
 
-export { getAllWeights, createWeight, updateWeight, deleteWeight };
+export {
+  getAllWeights,
+  getWeightById,
+  createWeight,
+  updateWeight,
+  deleteWeight,
+};
