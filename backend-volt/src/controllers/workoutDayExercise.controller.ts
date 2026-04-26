@@ -19,6 +19,22 @@ async function getAllWorkoutDayExercises(req: Request, res: Response) {
   res.json(exercises);
 }
 
+async function getWorkoutDayExerciseById(req: Request, res: Response) {
+  const user = req.user!;
+  const userId = user.id;
+  const planId = res.locals.planId as number;
+  const dayId = res.locals.dayId as number;
+  const dayExerciseId = res.locals.dayExerciseId as number;
+
+  const exercise = await workoutDayExerciseService.getWorkoutDayExerciseById(
+    planId,
+    dayId,
+    dayExerciseId,
+    userId,
+  );
+  res.json(exercise);
+}
+
 async function createWorkoutDayExercise(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
@@ -114,6 +130,7 @@ async function deleteWorkoutDayExercise(req: Request, res: Response) {
 
 export {
   getAllWorkoutDayExercises,
+  getWorkoutDayExerciseById,
   createWorkoutDayExercise,
   updateWorkoutDayExercise,
   deleteWorkoutDayExercise,
