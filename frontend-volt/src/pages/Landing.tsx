@@ -4,45 +4,46 @@ import {
   SignInButton,
   SignUpButton,
   UserButton,
-  useAuth,
+  // useAuth,
 } from "@clerk/clerk-react";
-import { useEffect, useState } from "react";
-import useFetch from "../hooks/useFetch";
+import { Spinner } from "../components/ui/Spinner";
+// import { useEffect, useState } from "react";
+// import useFetch from "../hooks/useFetch";
 
 const Home = () => {
-  const authenticatedFetch = useFetch();
-  const [weights, setWeights] = useState([]);
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
-  const [total, setTotal] = useState(0);
+  // const authenticatedFetch = useFetch();
+  // const [weights, setWeights] = useState([]);
+  // const [page, setPage] = useState(1);
+  // const [limit, setLimit] = useState(10);
+  // const [total, setTotal] = useState(0);
 
-  useEffect(() => {
-    async function fetchWeights() {
-      const response = await authenticatedFetch(
-        "http://localhost:8080/api/v1/weights?page=1&limit=10",
-      );
-      console.log("Fetched weights:", response);
-      setWeights(response.weights);
-      setPage(response.page);
-      setLimit(response.limit);
-      setTotal(response.total);
-    }
+  // useEffect(() => {
+  //   async function fetchWeights() {
+  //     const response = await authenticatedFetch(
+  //       "http://localhost:8080/api/v1/weights?page=1&limit=10",
+  //     );
+  //     console.log("Fetched weights:", response);
+  //     setWeights(response.weights);
+  //     setPage(response.page);
+  //     setLimit(response.limit);
+  //     setTotal(response.total);
+  //   }
 
-    fetchWeights();
-  }, [authenticatedFetch]);
+  //   fetchWeights();
+  // }, [authenticatedFetch]);
 
-  console.log("Weights state:", weights);
-  console.log("Page state:", page);
-  console.log("Limit state:", limit);
-  console.log("Total state:", total);
+  // console.log("Weights state:", weights);
+  // console.log("Page state:", page);
+  // console.log("Limit state:", limit);
+  // console.log("Total state:", total);
 
-  const { getToken } = useAuth();
-  async function fetchToken() {
-    const token = await getToken();
-    console.log(token);
-  }
+  // const { getToken } = useAuth();
+  // async function fetchToken() {
+  //   const token = await getToken();
+  //   console.log(token);
+  // }
 
-  fetchToken();
+  // fetchToken();
   console.log(new Date().toISOString());
   return (
     <>
@@ -54,6 +55,7 @@ const Home = () => {
         <SignedIn>
           <UserButton />
         </SignedIn>
+        <Spinner fullscreen={true} />
       </header>
     </>
   );
