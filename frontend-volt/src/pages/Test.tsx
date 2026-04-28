@@ -55,7 +55,7 @@ const Home = () => {
         <SignedIn>
           <UserButton />
         </SignedIn>
-        <Spinner fullscreen={true} />
+        <Spinner />
       </header>
     </>
   );
