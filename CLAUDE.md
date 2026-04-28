@@ -10,6 +10,10 @@ This is a learning project. When the user asks for help implementing something:
 - If they are stuck, increase detail incrementally — first a conceptual hint, then pseudocode, then a partial example — rather than jumping straight to a full solution.
 - When you do write code (scaffolding, boilerplate, non-learning work), follow the **Learn by Doing** format defined in the output style.
 
+## Frontend Design
+
+The frontend visual direction, color tokens, typography scale, navigation structure, UX flows, and a decisions log live in `frontend-volt/DESIGN.md`. Read it before making any design or layout choices in `frontend-volt/`. A static visual reference (all 8 key screens in mobile frames) lives at `frontend-volt/mockups.html` — open in a browser. Keep `DESIGN.md` updated when non-trivial design decisions are made.
+
 ## Coding Standards
 
 Enforce these standards in all code written for this project:
