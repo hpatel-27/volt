@@ -1,1 +1,80 @@
 @import "tailwindcss";
+
+@theme {
+  /* Surfaces — black canvas with hairline tonal steps */
+  --color-ink-950: #0a0a0b;
+  --color-ink-900: #111113;
+  --color-ink-850: #161618;
+  --color-ink-800: #1a1a1d;
+  --color-ink-700: #26262a;
+  --color-ink-600: #3a3a40;
+
+  /* Text */
+  --color-bone-50: #fafafa;
+  --color-bone-200: #d4d4d8;
+  --color-bone-300: #a1a1aa;
+  --color-bone-500: #71717a;
+  --color-bone-600: #52525b;
+
+  /* Accents — solid, vivid */
+  --color-volt-300: #e1ff7a;
+  --color-volt-400: #d4ff5c;
+  --color-volt-500: #c6ff3d;
+  --color-volt-600: #a8e020;
+  --color-volt-700: #84b815;
+
+  --color-blaze-400: #ff5a50;
+  --color-blaze-500: #ff3b30;
+  --color-blaze-600: #e02418;
+
+  --color-sky-400: #7ad3fb;
+  --color-sky-500: #5ac8fa;
+  --color-sky-600: #2faee0;
+
+  /* Typography */
+  --font-display: "Inter Tight", "Inter", system-ui, sans-serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* Radius scale — rounded but not soft */
+  --radius-card: 1rem;
+  --radius-card-lg: 1.5rem;
+}
+
+@layer base {
+  html {
+    background-color: var(--color-ink-950);
+    color: var(--color-bone-50);
+    -webkit-font-smoothing: antialiased;
+    font-family: var(--font-sans);
+  }
+
+  body {
+    min-height: 100dvh;
+  }
+
+  /* Hero numbers — used wherever a stat is the protagonist */
+  .text-display {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(2.75rem, 8vw, 4rem);
+    line-height: 1;
+    letter-spacing: -0.03em;
+  }
+
+  .text-stat {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 2rem;
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+
+  .text-caption {
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-bone-500);
+  }
+}
