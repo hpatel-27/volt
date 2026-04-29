@@ -1,5 +1,6 @@
 import { Card } from "../components/ui/Card";
 import { Stat } from "../components/ui/Stat";
+import { Link } from "react-router";
 
 const today = {
   day: "Push Day",
@@ -26,10 +27,27 @@ export default function Dashboard() {
         <div className="w-10 h-10 rounded-full bg-ink-700" />
       </header>
 
-      {/* TODO(human): Today's workout hero card.
-          Mockup reference: mockups.html, "Dashboard" phone, the volt-gradient card.
-          Use `today` mock data above. Should visually dominate the screen and have a
-          clear "Start →" affordance that links to /app/log. */}
+      <Link to="/log" className="block">
+        <div className="rounded-2xl bg-linear-to-br from-volt-500 to-volt-600 text-ink-950 p-5 hover:from-volt-600 hover:to-volt-600 transition-colors">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[11px] font-bold uppercase tracking-wider">
+              Today · {today.day}
+            </span>
+            <span className="text-[11px] font-semibold opacity-70">
+              {today.exerciseCount} exercises
+            </span>
+          </div>
+          <div className="font-display text-3xl font-bold">{today.preview}</div>
+          <div className="mt-4 flex items-center justify-between">
+            <span className="text-xs font-semibold opacity-80">
+              ≈ {today.estMinutes} min
+            </span>
+            <span className="bg-ink-950 text-volt-500 font-semibold rounded-xl h-9 px-4 text-sm inline-flex items-center cursor-pointer">
+              Start →
+            </span>
+          </div>
+        </div>
+      </Link>
 
       <div className="grid grid-cols-2 gap-3">
         <Card>
@@ -66,7 +84,11 @@ export default function Dashboard() {
               key={i}
               className={
                 "flex-1 rounded-md " +
-                (h === 80 ? "bg-volt-500" : i === 6 ? "bg-ink-800 border border-dashed border-white/10" : "bg-ink-700")
+                (h === 80
+                  ? "bg-volt-500"
+                  : i === 6
+                    ? "bg-ink-800 border border-dashed border-white/10"
+                    : "bg-ink-700")
               }
               style={{ height: `${h}%` }}
             />
