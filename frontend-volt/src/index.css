@@ -31,6 +31,10 @@
   --color-sky-500: #5ac8fa;
   --color-sky-600: #2faee0;
 
+  --color-royal-400: #b200ed;
+  --color-royal-500: #9d00d7;
+  --color-royal-600: #8a00c2;
+
   /* Typography */
   --font-display: "Inter Tight", "Inter", system-ui, sans-serif;
   --font-sans: "Inter", system-ui, sans-serif;
