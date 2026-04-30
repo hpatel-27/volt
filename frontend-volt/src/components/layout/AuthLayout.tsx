@@ -12,8 +12,11 @@ export function AuthLayout({ children }: { children: ReactNode }) {
           }}
         />
         <div className="relative flex items-center gap-2">
-          <div className="w-9 h-9 rounded-xl bg-volt-500 flex items-center justify-center">
-            <span className="text-ink-950 font-black text-lg">V</span>
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center">
+            <span className="text-ink-950 font-black text-lg">
+              {" "}
+              <img src="/thunder.svg" alt="Volt Logo - lightning bolt" />
+            </span>
           </div>
           <span className="font-display font-bold text-xl tracking-tight">
             VOLT
