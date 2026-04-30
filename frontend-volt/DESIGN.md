@@ -127,5 +127,6 @@ Bottom-tab order: **Home · Workouts · Log (center, raised, volt) · Nutrition 
 | 2026-04-26 | No `tailwind.config.js`; tokens live in `index.css` `@theme` | Tailwind v4 idiom; reduces config surface area. |
 | 2026-04-26 | Static `mockups.html` precedes React port | Lets us iterate on look without wrestling component APIs first. Will be deleted once screens are in React. |
 | 2026-04-26 | Nutrition log auto-creates on first meal | Removes a meaningless step — users think in meals, not "log objects". |
+| 2026-04-29 | Landing page is the exception to "one accent per screen" | Marketing surface, not an app screen — showcases all three domain accents (volt/sky/blaze) so each is advertised once. Rule still holds for every authenticated screen. |
 
 Append new rows when a non-trivial decision is made — short reason, not a essay.
