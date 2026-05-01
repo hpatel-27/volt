@@ -18,7 +18,9 @@ export function errorMiddleware(
   const errors = [NotFoundError, DuplicateEntryError];
   for (const e of errors) {
     if (err instanceof e) {
-      return res.status(err.statusCode).json({ error: err.message });
+      return res
+        .status(err.statusCode)
+        .json({ error: err.message, requestId: req.id });
     }
   }
   return res
