@@ -4,10 +4,13 @@ export default function useFetch() {
   // Use `useAuth()` to access the `getToken()` method
   const { getToken } = useAuth();
 
-  const authenticatedFetch = async (
-    input: RequestInfo | URL,
+  // Make an authenticated fetch function with generic return type
+  // The generic type T represents the expected return type of the fetch.
+  // Ex. Call it with a specific type: authenticatedFetch<Weight[]>("/api/v1/weights") or unknown
+  const authenticatedFetch = async <T = unknown>(
+    input: string | URL,
     init?: RequestInit,
-  ) => {
+  ): Promise<T | null> => {
     // Use `getToken()` to get the current session token
     const token = await getToken();
 
