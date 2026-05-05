@@ -1,4 +1,5 @@
 import { useAuth } from "@clerk/clerk-react";
+import { FetchError } from "../lib/errors";
 
 export default function useFetch() {
   // Use `useAuth()` to access the `getToken()` method
@@ -22,8 +23,11 @@ export default function useFetch() {
     if (!res.ok) {
       const errorDetail = await res.json().catch(() => null);
       const errorMessage = errorDetail?.error || res.statusText;
-      throw new Error(
-        `Fetch error for Request ${errorDetail?.requestId ?? "unknown"}: ${res.status} ${errorMessage}`,
+      const requestId = errorDetail?.requestId ?? null;
+      throw new FetchError(
+        res.status,
+        `Fetch error for Request ${requestId ?? "unknown"}: ${res.status} ${errorMessage}`,
+        requestId,
       );
     }
 
