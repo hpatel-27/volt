@@ -4,13 +4,42 @@ export default function useFetch() {
   // Use `useAuth()` to access the `getToken()` method
   const { getToken } = useAuth();
 
-  const authenticatedFetch = async (...args) => {
+  // Make an authenticated fetch function with generic return type
+  // The generic type T represents the expected return type of the fetch.
+  // Ex. Call it with a specific type: authenticatedFetch<Weight[]>("/api/v1/weights") or unknown
+  const authenticatedFetch = async <T = unknown>(
+    input: string | URL,
+    init?: RequestInit,
+  ): Promise<T | null> => {
     // Use `getToken()` to get the current session token
     const token = await getToken();
 
-    return fetch(...args, {
-      headers: { Authorization: `Bearer ${token}` }, // Include the session token as a Bearer token in the Authorization header
-    }).then((res) => res.json());
+    const res = await fetch(input, {
+      ...init,
+      headers: { ...init?.headers, Authorization: `Bearer ${token}` }, // Include the session token as a Bearer token in the Authorization header
+    });
+
+    if (!res.ok) {
+      const errorDetail = await res.json().catch(() => null);
+      const errorMessage = errorDetail?.error || res.statusText;
+      throw new Error(
+        `Fetch error for Request ${errorDetail?.requestId ?? "unknown"}: ${res.status} ${errorMessage}`,
+      );
+    }
+
+    // Handle the success case with no content (204 No Content)
+    if (res.status === 204) {
+      return null;
+    }
+
+    // Handle the success case with a JSON body
+    if (res.headers.get("content-type")?.includes("application/json")) {
+      return await res.json();
+    }
+    // If the content type isn't JSON, throw an error since we don't know how to handle it
+    throw new Error(
+      `Unexpected response content type: ${res.headers.get("content-type")}`,
+    );
   };
 
   return authenticatedFetch;
