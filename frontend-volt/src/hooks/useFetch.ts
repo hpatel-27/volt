@@ -21,14 +21,10 @@ export default function useFetch() {
     });
 
     if (!res.ok) {
-      const errorDetail = await res.json().catch(() => null);
-      const errorMessage = errorDetail?.error || res.statusText;
-      const requestId = errorDetail?.requestId ?? null;
-      throw new FetchError(
-        res.status,
-        `Fetch error for Request ${requestId ?? "unknown"}: ${res.status} ${errorMessage}`,
-        requestId,
-      );
+      const body = await res.json().catch(() => null);
+      const detail = body?.error || res.statusText;
+      const requestId = body?.requestId ?? null;
+      throw new FetchError(res.status, detail, requestId);
     }
 
     // Handle the success case with no content (204 No Content)
