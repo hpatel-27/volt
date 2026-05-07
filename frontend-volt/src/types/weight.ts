@@ -21,3 +21,6 @@ export type UpdateWeightInput = {
   amount?: number;
   date?: string;
 };
+
+export type UpdateWeightVariables = { id: number; input: UpdateWeightInput };
+export type DeleteWeightVariables = { id: number };
