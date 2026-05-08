@@ -8,7 +8,7 @@ import type {
   WeightsPage,
 } from "../types/weight";
 
-const BASE = "/api/v1/weights";
+const BASE = `${import.meta.env.VITE_API_BASE_URL}/weights`;
 
 /**
  * Query key factory for the weights resource.
