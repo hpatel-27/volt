@@ -16,6 +16,7 @@ import Weight from "./pages/Weight";
 import Profile from "./pages/Profile";
 import { useDelayedFlag } from "./hooks/useDelayedFlag";
 import { Spinner } from "./components/ui/Spinner";
+import { Toaster } from "sonner";
 
 const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -60,6 +61,7 @@ export function App() {
           <Route path="/profile" element={<Profile />} />
         </Route>
       </Routes>
+      <Toaster />
     </ClerkProvider>
   );
 }
