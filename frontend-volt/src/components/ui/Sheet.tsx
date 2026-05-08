@@ -5,11 +5,18 @@ import { cn } from "../../lib/cn";
 interface SheetProps {
   open: boolean;
   onClose: () => void;
+  onOpenEnd?: () => void;
   title?: string;
   children: ReactNode;
 }
 
-export function Sheet({ open, onClose, title, children }: SheetProps) {
+export function Sheet({
+  open,
+  onClose,
+  onOpenEnd,
+  title,
+  children,
+}: SheetProps) {
   const [prevOpen, setPrevOpen] = useState(open);
   const [isClosing, setIsClosing] = useState(false);
 
@@ -49,8 +56,10 @@ export function Sheet({ open, onClose, title, children }: SheetProps) {
         )}
       />
       <div
-        onAnimationEnd={() => {
+        onAnimationEnd={(e) => {
+          if (e.target !== e.currentTarget) return;
           if (isClosing) setIsClosing(false);
+          else onOpenEnd?.();
         }}
         className={cn(
           "absolute inset-x-0 bottom-0 bg-ink-900 rounded-t-2xl border-t border-white/5",
