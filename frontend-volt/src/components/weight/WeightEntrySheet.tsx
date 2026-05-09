@@ -24,6 +24,11 @@ export function WeightEntrySheet({ open, onClose }: WeightEntrySheetProps) {
         "Please enter a valid weight. Weights should be positive numbers, and can include decimals.",
       );
       return;
+    } else if (Number(amount) >= 1000.0) {
+      toast.error(
+        "If you are genuinely this rotund, lose some weight you fat fucking chud.",
+      );
+      return;
     } else if (!date || date > todayLocalIso()) {
       toast.error("Please select a valid date for this weight entry.");
       return;
@@ -63,7 +68,10 @@ export function WeightEntrySheet({ open, onClose }: WeightEntrySheetProps) {
                 flex-1 min-w-0 bg-transparent border-0 outline-none
                 font-display font-bold text-display text-right tracking-tight
                 text-bone-200 placeholder:text-bone-600
-                focus:outline-none -webkit-appearance:none transition
+                focus:outline-none transition scheme-dark
+                [appearance:textfield]
+                [&::-webkit-inner-spin-button]:appearance-none
+                [&::-webkit-outer-spin-button]:appearance-none
               "
             />
             <span className="text-bone-500 font-medium text-xl">lbs</span>
