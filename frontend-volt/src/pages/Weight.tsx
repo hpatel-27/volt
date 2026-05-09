@@ -8,7 +8,6 @@ import { todayLocalIso, yesterdayLocalIso } from "../lib/date";
 
 function formatWhen(dateIso: string): string {
   const date = dateIso.slice(0, 10);
-  console.log(date, todayLocalIso());
   if (date === todayLocalIso()) return "Today";
   if (date === yesterdayLocalIso()) return "Yesterday";
 
