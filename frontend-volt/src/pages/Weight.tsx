@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Plus } from "lucide-react";
 import { WeightEntrySheet } from "../components/weight/WeightEntrySheet";
 import { todayLocalIso, yesterdayLocalIso } from "../lib/date";
+import { cn } from "../lib/cn";
 
 function formatWhen(dateIso: string): string {
   const date = dateIso.slice(0, 10);
@@ -31,6 +32,8 @@ function formatDelta(delta: number): {
 }
 
 export default function Weight() {
+  const listFilters = ["7D", "30D", "90D", "All"];
+  const [filter, setFilter] = useState("7D");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -63,7 +66,9 @@ export default function Weight() {
       <div>
         <div className="text-caption">Current</div>
         <div className="flex items-baseline gap-2 mt-1">
-          <span className="text-display">182.4</span>
+          <span className="text-display">
+            {weightsQuery.data?.weights[0]?.amount}
+          </span>
           <span className="text-bone-500 font-medium">lbs</span>
         </div>
         <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-volt-500/10 border border-volt-500/20 text-volt-500 text-xs font-semibold">
@@ -72,18 +77,22 @@ export default function Weight() {
       </div>
 
       <div className="flex gap-2">
-        {["7D", "30D", "90D", "All"].map((r, i) => (
-          <span
+        {listFilters.map((r) => (
+          <button
             key={r}
-            className={
-              "px-3 py-1.5 rounded-full text-xs " +
-              (i === 0
-                ? "bg-ink-800 font-semibold"
-                : "text-bone-300 font-medium")
-            }
+            className={cn(
+              "px-3 py-1.5 rounded-full text-xs cursor-pointer transition",
+              "hover:bg-ink-700 hover:text-bone-300 active:bg-ink-800",
+              r === filter
+                ? "bg-ink-800 text-bone-300 font-semibold"
+                : "text-bone-500 font-medium",
+            )}
+            onClick={() => {
+              setFilter(r);
+            }}
           >
             {r}
-          </span>
+          </button>
         ))}
       </div>
 
