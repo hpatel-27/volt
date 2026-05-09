@@ -1,36 +1,52 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { Sheet } from "../ui/Sheet";
 import { Button } from "../ui/Button";
 import { useCreateWeight } from "../../api/weights";
+import type { CreateWeightInput } from "../../types/weight";
+import { todayLocalIso } from "../../lib/date";
 
 interface WeightEntrySheetProps {
   open: boolean;
   onClose: () => void;
 }
 
-function todayIso() {
-  return new Date().toISOString().slice(0, 10);
-}
-
 export function WeightEntrySheet({ open, onClose }: WeightEntrySheetProps) {
   const [amount, setAmount] = useState("");
-  const [date, setDate] = useState(todayIso);
+  const [date, setDate] = useState(todayLocalIso);
   const amountRef = useRef<HTMLInputElement>(null);
   const createWeight = useCreateWeight();
 
-  useEffect(() => {
-    const t = setTimeout(() => amountRef.current?.focus(), 280);
-    return () => clearTimeout(t);
-  }, []);
-
-  function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
-    toast.error("Not implemented");
+    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0.0) {
+      toast.error(
+        "Please enter a valid weight. Weights should be positive numbers, and can include decimals.",
+      );
+      return;
+    } else if (!date || date > todayLocalIso()) {
+      toast.error("Please select a valid date for this weight entry.");
+      return;
+    }
+    const data: CreateWeightInput = {
+      amount: Number(amount),
+      date,
+    };
+    createWeight.mutate(data, {
+      onSuccess: () => {
+        toast.success("Weight entry created!");
+        onClose();
+      },
+    });
   }
 
   return (
-    <Sheet open={open} onClose={onClose} title="Log Weight">
+    <Sheet
+      open={open}
+      onClose={onClose}
+      onOpenEnd={() => amountRef.current?.focus()}
+      title="Log Weight"
+    >
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
           <div className="text-caption mb-2">Weight</div>
@@ -44,7 +60,7 @@ export function WeightEntrySheet({ open, onClose }: WeightEntrySheetProps) {
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               className="
-                flex-1 bg-transparent border-0 outline-none
+                flex-1 min-w-0 bg-transparent border-0 outline-none
                 font-display font-bold text-display text-right tracking-tight
                 text-bone-200 placeholder:text-bone-600
                 focus:outline-none -webkit-appearance:none transition
