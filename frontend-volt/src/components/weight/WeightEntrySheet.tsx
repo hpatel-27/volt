@@ -81,6 +81,7 @@ export function WeightEntrySheet({ open, onClose }: WeightEntrySheetProps) {
               bg-ink-850 border border-white/5 rounded-xl
               px-3 h-10 text-sm text-bone-50
               focus:outline-none focus:border-volt-500/60
+              scheme-dark
             "
           />
         </label>
