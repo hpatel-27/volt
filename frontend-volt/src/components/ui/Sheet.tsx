@@ -19,10 +19,12 @@ export function Sheet({
 }: SheetProps) {
   const [prevOpen, setPrevOpen] = useState(open);
   const [isClosing, setIsClosing] = useState(false);
+  const [isOpening, setIsOpening] = useState(true);
 
   if (open !== prevOpen) {
     setPrevOpen(open);
     if (!open && prevOpen) setIsClosing(true);
+    else if (open && !prevOpen) setIsOpening(true);
   }
 
   useEffect(() => {
@@ -59,12 +61,15 @@ export function Sheet({
         onAnimationEnd={(e) => {
           if (e.target !== e.currentTarget) return;
           if (isClosing) setIsClosing(false);
-          else onOpenEnd?.();
+          else {
+            setIsOpening(false);
+            onOpenEnd?.();
+          }
         }}
         className={cn(
           "absolute inset-x-0 bottom-0 bg-ink-900 rounded-t-2xl border-t border-white/5",
           "pb-[env(safe-area-inset-bottom)]",
-          "will-change-transform",
+          (isOpening || isClosing) && "will-change-transform",
           isClosing ? "animate-sheet-slide-down" : "animate-sheet-slide-up",
         )}
       >
