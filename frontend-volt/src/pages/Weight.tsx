@@ -177,7 +177,7 @@ export default function Weight() {
               </Card>
             );
           })}
-          <div className="flex pt-4 justify-center gap-2">
+          <div className="flex pt-6 justify-center gap-2">
             <Button
               size="sm"
               disabled={page === 1}
