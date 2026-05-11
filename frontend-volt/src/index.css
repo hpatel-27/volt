@@ -43,6 +43,29 @@
   /* Radius scale — rounded but not soft */
   --radius-card: 1rem;
   --radius-card-lg: 1.5rem;
+
+  /* Sheet animations */
+  --animate-sheet-slide-up: sheet-slide-up 250ms ease-out;
+  --animate-sheet-slide-down: sheet-slide-down 250ms ease-in forwards;
+  --animate-sheet-fade-in: sheet-fade-in 250ms ease-out;
+  --animate-sheet-fade-out: sheet-fade-out 250ms ease-in forwards;
+
+  @keyframes sheet-slide-up {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  @keyframes sheet-slide-down {
+    from { transform: translateY(0); }
+    to { transform: translateY(100%); }
+  }
+  @keyframes sheet-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes sheet-fade-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
 }
 
 @layer base {
@@ -81,4 +104,10 @@
     text-transform: uppercase;
     color: var(--color-bone-500);
   }
+
+  
+  /* input[type=number]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  } */
 }
