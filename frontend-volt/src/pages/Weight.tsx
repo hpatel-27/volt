@@ -58,7 +58,8 @@ export default function Weight() {
         <h1 className="font-display text-2xl font-bold">Weight</h1>
         <button
           onClick={openSheet}
-          className="w-10 h-10 rounded-full transition bg-volt-500 hover:bg-volt-600 text-ink-950 font-bold text-xl flex items-center justify-center cursor-pointer"
+          className="w-10 h-10 rounded-full bg-volt-500 hover:bg-volt-600 active:bg-volt-700 text-ink-950
+                     font-bold text-xl flex items-center justify-center cursor-pointer transition"
         >
           <Plus />
         </button>
