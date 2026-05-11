@@ -2,10 +2,11 @@ import { Card } from "../components/ui/Card";
 import { Spinner } from "../components/ui/Spinner";
 import { useWeights } from "../api/weights";
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
 import { WeightEntrySheet } from "../components/weight/WeightEntrySheet";
 import { todayLocalIso, yesterdayLocalIso } from "../lib/date";
 import { cn } from "../lib/cn";
+import { Button } from "../components/ui/Button";
 
 function formatWhen(dateIso: string): string {
   const date = dateIso.slice(0, 10);
@@ -32,14 +33,19 @@ function formatDelta(delta: number): {
 }
 
 export default function Weight() {
+  const LIMIT = 10;
+
   const listFilters = ["7D", "30D", "90D", "All"];
   const [filter, setFilter] = useState("7D");
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sheetKey, setSheetKey] = useState(0);
-  const weightsQuery = useWeights({ page, limit });
-
+  const weightsQuery = useWeights({ page, limit: LIMIT });
+  const totalPages =
+    weightsQuery.data?.total !== undefined &&
+    weightsQuery.data?.limit !== undefined
+      ? Math.ceil(weightsQuery.data?.total / weightsQuery.data?.limit)
+      : 1;
   const openSheet = () => {
     setSheetKey((k) => k + 1);
     setSheetOpen(true);
@@ -171,6 +177,26 @@ export default function Weight() {
               </Card>
             );
           })}
+          <div className="flex pt-4 justify-center gap-2">
+            <Button
+              size="sm"
+              disabled={page === 1}
+              onClick={() => setPage((p) => p - 1)}
+              className="hover:bg-volt-600 hover:text-ink-950 hover:font-semibold active:bg-volt-700 cursor-pointer transition"
+            >
+              <ChevronLeft />
+              Prev
+            </Button>
+            <Button
+              size="sm"
+              disabled={page === totalPages}
+              onClick={() => setPage((p) => p + 1)}
+              className="hover:bg-volt-600 hover:text-ink-950 hover:font-semibold active:bg-volt-700 cursor-pointer transition"
+            >
+              Next
+              <ChevronRight />
+            </Button>
+          </div>
         </div>
       )}
     </div>
