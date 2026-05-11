@@ -12,6 +12,11 @@ export type WeightsPage = {
   limit: number;
 };
 
+export type WeightsRange = {
+  weights: Weight[];
+  total: number;
+};
+
 export type CreateWeightInput = {
   amount: number;
   date?: string;
