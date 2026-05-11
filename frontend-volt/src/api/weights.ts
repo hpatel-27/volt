@@ -35,11 +35,13 @@ const BASE = `${import.meta.env.VITE_API_BASE_URL}/weights`;
  *   list(p)   → ["weights", "list", { page, limit }]
  *   details() → ["weights", "detail"]
  *   detail(id)→ ["weights", "detail", id]
+ *   latest()  → ["weights", "latest"]
  *
  *   invalidateQueries({ queryKey: weightKeys.all })     → every weights query
  *   invalidateQueries({ queryKey: weightKeys.lists() }) → every list (any page/limit), leaves details alone
  *   invalidateQueries({ queryKey: weightKeys.list(p) }) → only that specific page+limit
  *   invalidateQueries({ queryKey: weightKeys.detail(5) }) → only weight #5's detail
+ *   invalidateQueries({ queryKey: weightKeys.latest() }) → only latest weight
  *
  * ## How to choose a level when invalidating
  * Pick the narrowest level that covers every cache entry the write affects.
@@ -59,7 +61,25 @@ export const weightKeys = {
     [...weightKeys.lists(), params] as const,
   details: () => [...weightKeys.all, "detail"] as const,
   detail: (id: number) => [...weightKeys.details(), id] as const,
+  latest: () => [...weightKeys.all, "latest"] as const,
 };
+
+export function useLatestWeight() {
+  const FIRST_PAGE = 1;
+  const FIRST_ENTRY = 1;
+
+  const authedFetch = useFetch();
+  return useQuery({
+    queryKey: weightKeys.latest(),
+    queryFn: async () => {
+      const url = `${BASE}?page=${FIRST_PAGE}&limit=${FIRST_ENTRY}`;
+      const data = await authedFetch<WeightsPage>(url);
+      if (!data) throw new Error("Expected latest weight, got empty response");
+      return data;
+    },
+    select: (data) => data.weights[0],
+  });
+}
 
 export function useWeights(params: { page: number; limit: number }) {
   const authedFetch = useFetch();
@@ -101,8 +121,10 @@ export function useCreateWeight() {
       if (!data) throw new Error("Expected created weight, got empty response");
       return data;
     },
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: weightKeys.lists() }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: weightKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: weightKeys.latest() });
+    },
   });
 }
 
@@ -126,6 +148,7 @@ export function useUpdateWeight() {
       queryClient.invalidateQueries({
         queryKey: weightKeys.detail(variables.id),
       });
+      queryClient.invalidateQueries({ queryKey: weightKeys.latest() });
     },
   });
 }
@@ -142,6 +165,7 @@ export function useDeleteWeight() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: weightKeys.lists() });
       queryClient.removeQueries({ queryKey: weightKeys.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: weightKeys.latest() });
     },
   });
 }

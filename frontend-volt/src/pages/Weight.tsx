@@ -1,6 +1,6 @@
 import { Card } from "../components/ui/Card";
 import { Spinner } from "../components/ui/Spinner";
-import { useWeights } from "../api/weights";
+import { useLatestWeight, useWeights } from "../api/weights";
 import { useState } from "react";
 import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
 import { WeightEntrySheet } from "../components/weight/WeightEntrySheet";
@@ -41,6 +41,7 @@ export default function Weight() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sheetKey, setSheetKey] = useState(0);
   const weightsQuery = useWeights({ page, limit: LIMIT });
+  const latestWeight = useLatestWeight();
   const totalPages =
     weightsQuery.data?.total !== undefined &&
     weightsQuery.data?.limit !== undefined
@@ -72,9 +73,7 @@ export default function Weight() {
       <div>
         <div className="text-caption">Current</div>
         <div className="flex items-baseline gap-2 mt-1">
-          <span className="text-display">
-            {weightsQuery.data?.weights[0]?.amount}
-          </span>
+          <span className="text-display">{latestWeight.data?.amount}</span>
           <span className="text-bone-500 font-medium">lbs</span>
         </div>
         <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-volt-500/10 border border-volt-500/20 text-volt-500 text-xs font-semibold">
