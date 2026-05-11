@@ -6,6 +6,16 @@ import type {
   UpdateWeightInput,
 } from "../types/weight.dto.js";
 
+// Return all of a user's weights whose `date` falls within [from, to].
+async function getWeightsByRange(userId: number, from: Date, to: Date) {
+  const weights = await prisma.weight.findMany({
+    where: { userId, date: { gte: from, lte: to } },
+    orderBy: { date: "asc" },
+  });
+
+  return { weights, total: weights.length };
+}
+
 // Take a userId and return all the user's logged weights
 async function getAllWeights(userId: number, page: number, limit: number) {
   // Find the weights for the user
@@ -84,6 +94,7 @@ async function deleteWeight(userId: number, weightId: number) {
 
 export {
   getAllWeights,
+  getWeightsByRange,
   getWeightById,
   createWeight,
   updateWeight,

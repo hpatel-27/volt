@@ -8,12 +8,41 @@ import type {
 async function getAllWeights(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
+
+  const { from, to } = req.query;
+
+  // Range mode: both from and to provided -> return all weights in that window, no pagination.
+  // Used by the chart to plot every entry in the active filter range (7D / 30D / 90D / All).
+  if (from !== undefined || to !== undefined) {
+    if (typeof from !== "string" || typeof to !== "string") {
+      return res
+        .status(400)
+        .json({ error: "from and to must both be provided as strings" });
+    }
+    const fromDate = new Date(from);
+    const toDate = new Date(to);
+    if (Number.isNaN(fromDate.getTime()) || Number.isNaN(toDate.getTime())) {
+      return res
+        .status(400)
+        .json({ error: "from and to must be valid ISO date strings" });
+    }
+    if (fromDate > toDate) {
+      return res
+        .status(400)
+        .json({ error: "from must be on or before to" });
+    }
+
+    const weights = await weightService.getWeightsByRange(
+      userId,
+      fromDate,
+      toDate,
+    );
+    return res.json(weights);
+  }
+
+  // Default mode: paginated list
   const { page, limit } = req.pagination!;
-
-  // Get all the weights for the user that made the request
   const weights = await weightService.getAllWeights(userId, page, limit);
-
-  // This could be an empty list of weights
   res.json(weights);
 }
 
