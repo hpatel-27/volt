@@ -29,3 +29,5 @@ export type UpdateWeightInput = {
 
 export type UpdateWeightVariables = { id: number; input: UpdateWeightInput };
 export type DeleteWeightVariables = { id: number };
+
+export type WeightFilter = "7D" | "30D" | "90D" | "All";
