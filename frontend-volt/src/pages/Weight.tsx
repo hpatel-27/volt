@@ -7,6 +7,7 @@ import { WeightEntrySheet } from "../components/weight/WeightEntrySheet";
 import { todayLocalIso, yesterdayLocalIso } from "../lib/date";
 import { cn } from "../lib/cn";
 import { Button } from "../components/ui/Button";
+import type { WeightFilter } from "../types/weight";
 
 function formatWhen(dateIso: string): string {
   const date = dateIso.slice(0, 10);
@@ -35,8 +36,8 @@ function formatDelta(delta: number): {
 export default function Weight() {
   const LIMIT = 10;
 
-  const listFilters = ["7D", "30D", "90D", "All"];
-  const [filter, setFilter] = useState("7D");
+  const listFilters: WeightFilter[] = ["7D", "30D", "90D", "All"];
+  const [filter, setFilter] = useState<WeightFilter>("7D");
   const [page, setPage] = useState(1);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sheetKey, setSheetKey] = useState(0);
