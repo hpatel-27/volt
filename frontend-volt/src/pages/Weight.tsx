@@ -1,13 +1,14 @@
 import { Card } from "../components/ui/Card";
 import { Spinner } from "../components/ui/Spinner";
-import { useLatestWeight, useWeights } from "../api/weights";
+import { useLatestWeight, useWeights, useWeightsRange } from "../api/weights";
 import { useState } from "react";
 import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
 import { WeightEntrySheet } from "../components/weight/WeightEntrySheet";
-import { todayLocalIso, yesterdayLocalIso } from "../lib/date";
+import { filterToRange, todayLocalIso, yesterdayLocalIso } from "../lib/date";
 import { cn } from "../lib/cn";
 import { Button } from "../components/ui/Button";
 import type { WeightFilter } from "../types/weight";
+import WeightsChart from "../components/weight/WeightsChart";
 
 function formatWhen(dateIso: string): string {
   const date = dateIso.slice(0, 10);
@@ -48,6 +49,9 @@ export default function Weight() {
     weightsQuery.data?.limit !== undefined
       ? Math.ceil(weightsQuery.data?.total / weightsQuery.data?.limit)
       : 1;
+  const dateRange = filterToRange(filter);
+  const weightsRangeQuery = useWeightsRange(dateRange);
+
   const openSheet = () => {
     setSheetKey((k) => k + 1);
     setSheetOpen(true);
@@ -104,7 +108,15 @@ export default function Weight() {
       </div>
 
       <Card className="h-44 p-4">
-        <svg
+        {weightsRangeQuery.isPending ? (
+          <Spinner />
+        ) : weightsRangeQuery.data ? (
+          <WeightsChart
+            weights={weightsRangeQuery.data.weights}
+            total={weightsRangeQuery.data.total}
+          />
+        ) : null}
+        {/* <svg
           viewBox="0 0 300 130"
           className="w-full h-full"
           preserveAspectRatio="none"
@@ -136,7 +148,7 @@ export default function Weight() {
             strokeLinejoin="round"
           />
           <circle cx="300" cy="85" r="5" fill="var(--color-volt-500)" />
-        </svg>
+        </svg> */}
       </Card>
 
       <div className="text-caption">Entries</div>
