@@ -5,7 +5,11 @@ import * as weightController from "../controllers/weight.controller.js";
 import { userMiddleware } from "../middleware/user.middleware.js";
 import { parseIntParam } from "../middleware/param.middleware.js";
 import { paginationMiddleware } from "../middleware/pagination.middleware.js";
-import { parseDate, parseOptionalDate } from "../middleware/date.middleware.js";
+import {
+  parseDate,
+  parseOptionalDate,
+  parseDateRange,
+} from "../middleware/date.middleware.js";
 
 // Get all of a user's weights with pagination
 router.get(
@@ -13,6 +17,14 @@ router.get(
   userMiddleware,
   paginationMiddleware,
   weightController.getAllWeights,
+);
+
+// Get all of a user's weights in a date range
+router.get(
+  "/range",
+  userMiddleware,
+  parseDateRange,
+  weightController.getWeightsByRange,
 );
 
 // Get a weight entry by its ID

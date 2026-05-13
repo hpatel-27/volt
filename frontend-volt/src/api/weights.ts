@@ -103,7 +103,7 @@ export function useWeightsRange(params: { from: string; to: string }) {
   return useQuery({
     queryKey: weightKeys.range(params),
     queryFn: async () => {
-      const url = `${BASE}?from=${encodeURIComponent(params.from)}&to=${encodeURIComponent(params.to)}`;
+      const url = `${BASE}/range?from=${encodeURIComponent(params.from)}&to=${encodeURIComponent(params.to)}`;
       const data = await authedFetch<WeightsRange>(url);
       if (!data) throw new Error("Expected weights range, got empty response");
       return data;
