@@ -109,7 +109,7 @@ export default function Weight() {
 
       <Card className="h-44 p-4">
         {weightsRangeQuery.isPending ? (
-          <Spinner />
+          <Spinner fullscreen />
         ) : weightsRangeQuery.data ? (
           <WeightsChart
             weights={weightsRangeQuery.data.weights}
