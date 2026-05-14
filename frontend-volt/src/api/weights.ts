@@ -6,6 +6,7 @@ import type {
   DeleteWeightVariables,
   Weight,
   WeightsPage,
+  WeightsRange,
 } from "../types/weight";
 
 const BASE = `${import.meta.env.VITE_API_BASE_URL}/weights`;
@@ -62,6 +63,9 @@ export const weightKeys = {
   details: () => [...weightKeys.all, "detail"] as const,
   detail: (id: number) => [...weightKeys.details(), id] as const,
   latest: () => [...weightKeys.all, "latest"] as const,
+  ranges: () => [...weightKeys.all, "range"] as const,
+  range: (params: { from: string; to: string }) =>
+    [...weightKeys.ranges(), params] as const,
 };
 
 export function useLatestWeight() {
@@ -89,6 +93,19 @@ export function useWeights(params: { page: number; limit: number }) {
       const url = `${BASE}?page=${params.page}&limit=${params.limit}`;
       const data = await authedFetch<WeightsPage>(url);
       if (!data) throw new Error("Expected weights page, got empty response");
+      return data;
+    },
+  });
+}
+
+export function useWeightsRange(params: { from: string; to: string }) {
+  const authedFetch = useFetch();
+  return useQuery({
+    queryKey: weightKeys.range(params),
+    queryFn: async () => {
+      const url = `${BASE}/range?from=${encodeURIComponent(params.from)}&to=${encodeURIComponent(params.to)}`;
+      const data = await authedFetch<WeightsRange>(url);
+      if (!data) throw new Error("Expected weights range, got empty response");
       return data;
     },
   });

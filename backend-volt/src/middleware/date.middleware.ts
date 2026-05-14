@@ -49,3 +49,39 @@ export const parseOptionalDate = (
   res.locals.date = isoDate;
   next();
 };
+
+export const parseDateRange = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  const { from, to } = req.query;
+  if (from === undefined || to === undefined) {
+    return res
+      .status(400)
+      .json({ error: "The FROM and TO dates must both be provided" });
+  }
+
+  if (typeof from !== "string" || typeof to !== "string") {
+    return res.status(400).json({
+      error: "The FROM and TO dates must both be provided as strings",
+    });
+  }
+
+  const fromDate = new Date(from);
+  const toDate = new Date(to);
+  if (Number.isNaN(fromDate.getTime()) || Number.isNaN(toDate.getTime())) {
+    return res
+      .status(400)
+      .json({ error: "The FROM and TO dates must be valid ISO date strings" });
+  }
+  if (fromDate > toDate) {
+    return res
+      .status(400)
+      .json({ error: "The FROM date must be on or before TO" });
+  }
+
+  res.locals.fromDate = fromDate;
+  res.locals.toDate = toDate;
+  next();
+};

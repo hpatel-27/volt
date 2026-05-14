@@ -8,13 +8,25 @@ import type {
 async function getAllWeights(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
+
   const { page, limit } = req.pagination!;
-
-  // Get all the weights for the user that made the request
   const weights = await weightService.getAllWeights(userId, page, limit);
-
-  // This could be an empty list of weights
   res.json(weights);
+}
+
+// Range mode: both from and to provided -> return all weights in that window, no pagination.
+// Used by the chart to plot every entry in the active filter range (7D / 30D / 90D / All).
+async function getWeightsByRange(req: Request, res: Response) {
+  const user = req.user!;
+  const userId = user.id;
+  const { fromDate, toDate } = res.locals;
+
+  const weights = await weightService.getWeightsByRange(
+    userId,
+    fromDate,
+    toDate,
+  );
+  return res.json(weights);
 }
 
 async function getWeightById(req: Request, res: Response) {
@@ -105,6 +117,7 @@ async function deleteWeight(req: Request, res: Response) {
 
 export {
   getAllWeights,
+  getWeightsByRange,
   getWeightById,
   createWeight,
   updateWeight,
