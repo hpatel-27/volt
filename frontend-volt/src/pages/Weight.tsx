@@ -8,7 +8,14 @@ import { filterToRange, todayLocalIso, yesterdayLocalIso } from "../lib/date";
 import { cn } from "../lib/cn";
 import { Button } from "../components/ui/Button";
 import type { WeightFilter } from "../types/weight";
-import WeightsChart from "../components/weight/WeightsChart";
+import WeightsChart from "@/components/weight/WeightsChart";
+
+const FILTER_LABELS: Record<WeightFilter, string> = {
+  "7D": "last 7 days",
+  "30D": "last 30 days",
+  "90D": "last 90 days",
+  All: "all time",
+};
 
 function formatWhen(dateIso: string): string {
   const date = dateIso.slice(0, 10);
@@ -29,8 +36,8 @@ function formatDelta(delta: number): {
   tone: "good" | "neutral";
 } {
   if (delta < 0)
-    return { label: `▼ ${Math.abs(delta).toFixed(1)}`, tone: "good" };
-  if (delta > 0) return { label: `▲ ${delta.toFixed(1)}`, tone: "neutral" };
+    return { label: `▼ ${Math.abs(delta).toFixed(1)} lbs`, tone: "good" };
+  if (delta > 0) return { label: `▲ ${delta.toFixed(1)} lbs`, tone: "neutral" };
   return { label: "0.0", tone: "neutral" };
 }
 
@@ -82,9 +89,26 @@ export default function Weight() {
           <span className="text-display">{latestWeight.data?.amount}</span>
           <span className="text-bone-500 font-medium">lbs</span>
         </div>
-        <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-volt-500/10 border border-volt-500/20 text-volt-500 text-xs font-semibold">
-          ▼ 1.2 lbs · last 7 days
-        </div>
+        {(() => {
+          const rangeWeights = weightsRangeQuery.data?.weights ?? [];
+          if (rangeWeights.length < 2) return null;
+          const delta =
+            rangeWeights[rangeWeights.length - 1].amount -
+            rangeWeights[0].amount;
+          const { label, tone } = formatDelta(delta);
+          return (
+            <div
+              className={cn(
+                "mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold",
+                tone === "good"
+                  ? "bg-volt-500/10 border border-volt-500/20 text-volt-500"
+                  : "bg-ink-800 border border-ink-700 text-bone-500",
+              )}
+            >
+              {label} · {FILTER_LABELS[filter]}
+            </div>
+          );
+        })()}
       </div>
 
       <div className="flex gap-2">
@@ -107,48 +131,12 @@ export default function Weight() {
         ))}
       </div>
 
-      <Card className="h-44 p-4">
+      <Card className="h-44 p-4 pt-6">
         {weightsRangeQuery.isPending ? (
           <Spinner fullscreen />
         ) : weightsRangeQuery.data ? (
-          <WeightsChart
-            weights={weightsRangeQuery.data.weights}
-            total={weightsRangeQuery.data.total}
-          />
+          <WeightsChart weights={weightsRangeQuery.data.weights} />
         ) : null}
-        {/* <svg
-          viewBox="0 0 300 130"
-          className="w-full h-full"
-          preserveAspectRatio="none"
-        >
-          <defs>
-            <linearGradient id="wg" x1="0" x2="0" y1="0" y2="1">
-              <stop
-                offset="0%"
-                stopColor="var(--color-volt-500)"
-                stopOpacity="0.4"
-              />
-              <stop
-                offset="100%"
-                stopColor="var(--color-volt-500)"
-                stopOpacity="0"
-              />
-            </linearGradient>
-          </defs>
-          <path
-            d="M 0 30 L 50 40 L 100 25 L 150 50 L 200 70 L 250 60 L 300 85 L 300 130 L 0 130 Z"
-            fill="url(#wg)"
-          />
-          <path
-            d="M 0 30 L 50 40 L 100 25 L 150 50 L 200 70 L 250 60 L 300 85"
-            fill="none"
-            stroke="var(--color-volt-500)"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <circle cx="300" cy="85" r="5" fill="var(--color-volt-500)" />
-        </svg> */}
       </Card>
 
       <div className="text-caption">Entries</div>
