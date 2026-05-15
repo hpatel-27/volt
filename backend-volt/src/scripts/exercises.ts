@@ -29,11 +29,15 @@ async function seedExercises() {
 
     for (let i = 0; i < exercises.length; i += batchSize) {
       const batch = exercises.slice(i, i + batchSize);
+      const transformed = batch.map(({ id, ...rest }) => ({
+        ...rest,
+        slug: id,
+      }));
       console.log(
         `Inserting batch ${Math.floor(i / batchSize) + 1} / ${Math.ceil(exercises.length / batchSize)}...`,
       );
       await prisma.exercise.createMany({
-        data: batch,
+        data: transformed,
       });
       insertedCount += batch.length;
       console.log(
