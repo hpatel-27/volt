@@ -32,7 +32,7 @@ async function getWeightsByRange(req: Request, res: Response) {
 async function getWeightById(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
-  const weightId = res.locals.weightId as number;
+  const weightId = res.locals.weightId as string;
 
   const weight = await weightService.getWeightById(userId, weightId);
   res.json(weight);
@@ -73,7 +73,7 @@ async function createWeight(req: Request, res: Response) {
 async function updateWeight(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
-  const weightId = res.locals.weightId as number;
+  const weightId = res.locals.weightId as string;
   const { amount } = req.body;
 
   // The date middleware guarantees the date is valid if it exists
@@ -109,7 +109,7 @@ async function updateWeight(req: Request, res: Response) {
 async function deleteWeight(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
-  const weightId = res.locals.weightId as number;
+  const weightId = res.locals.weightId as string;
 
   await weightService.deleteWeight(userId, weightId);
   return res.status(204).send();

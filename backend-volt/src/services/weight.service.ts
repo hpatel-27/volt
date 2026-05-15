@@ -7,7 +7,7 @@ import type {
 } from "../types/weight.dto.js";
 
 // Return all of a user's weights whose `date` falls within [from, to].
-async function getWeightsByRange(userId: number, from: Date, to: Date) {
+async function getWeightsByRange(userId: string, from: Date, to: Date) {
   const weights = await prisma.weight.findMany({
     where: { userId, date: { gte: from, lte: to } },
     orderBy: { date: "asc" },
@@ -17,7 +17,7 @@ async function getWeightsByRange(userId: number, from: Date, to: Date) {
 }
 
 // Take a userId and return all the user's logged weights
-async function getAllWeights(userId: number, page: number, limit: number) {
+async function getAllWeights(userId: string, page: number, limit: number) {
   // Find the weights for the user
   const [weights, total] = await prisma.$transaction([
     prisma.weight.findMany({
@@ -32,7 +32,7 @@ async function getAllWeights(userId: number, page: number, limit: number) {
   return { weights, total, page, limit };
 }
 
-async function getWeightById(userId: number, weightId: number) {
+async function getWeightById(userId: string, weightId: string) {
   const weight = await prisma.weight.findFirst({
     where: { id: weightId, userId },
   });
@@ -51,8 +51,8 @@ async function createWeight(data: CreateWeightInput) {
 }
 
 async function updateWeight(
-  userId: number,
-  weightId: number,
+  userId: string,
+  weightId: string,
   data: UpdateWeightInput,
 ) {
   try {
@@ -74,7 +74,7 @@ async function updateWeight(
   }
 }
 
-async function deleteWeight(userId: number, weightId: number) {
+async function deleteWeight(userId: string, weightId: string) {
   try {
     // Delete the weight entry
     await prisma.weight.delete({
