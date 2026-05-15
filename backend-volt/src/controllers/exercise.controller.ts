@@ -31,11 +31,13 @@ async function createExercise(req: Request, res: Response) {
       .json({ error: "Exercise ID is required and must be a string" });
   }
 
-  if (!req.body.slug || typeof req.body.slug !== "string") {
+  const exerciseSlug = req.body.slug;
+  if (!exerciseSlug || typeof exerciseSlug !== "string") {
     return res
       .status(400)
       .json({ error: "Exercise slug is required and must be a string" });
   }
+  const cleanedSlug = exerciseSlug.toLowerCase();
 
   if (!req.body.name || typeof req.body.name !== "string") {
     return res
@@ -117,7 +119,7 @@ async function createExercise(req: Request, res: Response) {
 
   const exerciseData: CreateExerciseInput = {
     id: req.body.id,
-    slug: req.body.slug,
+    slug: cleanedSlug,
     name: req.body.name,
     force: req.body.force,
     level: req.body.level,
