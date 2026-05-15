@@ -14,12 +14,12 @@ async function getExercises(req: Request, res: Response) {
 }
 
 async function getExerciseById(req: Request, res: Response) {
-  const exerciseId = req.params.exerciseId;
-  if (!exerciseId || typeof exerciseId !== "string") {
+  const slug = req.params.slug;
+  if (!slug || typeof slug !== "string") {
     return res.status(400).json({ error: "Exercise ID is required" });
   }
 
-  const exercise = await exerciseService.getExerciseById(exerciseId);
+  const exercise = await exerciseService.getExerciseById(slug);
   res.json(exercise);
 }
 
@@ -30,6 +30,13 @@ async function createExercise(req: Request, res: Response) {
       .status(400)
       .json({ error: "Exercise ID is required and must be a string" });
   }
+
+  if (!req.body.slug || typeof req.body.slug !== "string") {
+    return res
+      .status(400)
+      .json({ error: "Exercise slug is required and must be a string" });
+  }
+
   if (!req.body.name || typeof req.body.name !== "string") {
     return res
       .status(400)
@@ -110,6 +117,7 @@ async function createExercise(req: Request, res: Response) {
 
   const exerciseData: CreateExerciseInput = {
     id: req.body.id,
+    slug: req.body.slug,
     name: req.body.name,
     force: req.body.force,
     level: req.body.level,
@@ -128,8 +136,8 @@ async function createExercise(req: Request, res: Response) {
 
 async function updateExercise(req: Request, res: Response) {
   // Validate exercise ID
-  const exerciseId = req.params.exerciseId;
-  if (!exerciseId || typeof exerciseId !== "string") {
+  const slug = req.params.slug;
+  if (!slug || typeof slug !== "string") {
     return res.status(400).json({ error: "Exercise ID is required" });
   }
 
@@ -246,19 +254,19 @@ async function updateExercise(req: Request, res: Response) {
   }
 
   const updatedExercise = await exerciseService.updateExercise(
-    exerciseId,
+    slug,
     exerciseData,
   );
   return res.json(updatedExercise);
 }
 
 async function deleteExercise(req: Request, res: Response) {
-  const exerciseId = req.params.exerciseId;
+  const slug = req.params.slug;
 
-  if (!exerciseId || typeof exerciseId !== "string") {
+  if (!slug || typeof slug !== "string") {
     return res.status(400).json({ error: "Exercise ID is required" });
   }
-  await exerciseService.deleteExercise(exerciseId);
+  await exerciseService.deleteExercise(slug);
   res.status(204).send(); // No content
 }
 

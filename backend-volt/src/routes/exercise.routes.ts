@@ -9,8 +9,8 @@ import { paginationMiddleware } from "../middleware/pagination.middleware.js";
 // via query parameters, e.g. /exercises?page=2&limit=10
 router.get("/", paginationMiddleware, exerciseController.getExercises);
 
-// Get a specific exercise by ID, e.g. /exercises/123
-router.get("/:exerciseId", exerciseController.getExerciseById);
+// Get a specific exercise by slug, e.g. /exercises/barbell-bench-press
+router.get("/:slug", exerciseController.getExerciseById);
 
 router.post(
   "/",
@@ -20,14 +20,14 @@ router.post(
 );
 
 router.patch(
-  "/:exerciseId",
+  "/:slug",
   userMiddleware,
   requireAdmin,
   exerciseController.updateExercise,
 );
 
 router.delete(
-  "/:exerciseId",
+  "/:slug",
   userMiddleware,
   requireAdmin,
   exerciseController.deleteExercise,

@@ -25,14 +25,14 @@ async function getExercises(page: number, limit: number) {
   return { exercises, total, page, limit };
 }
 
-// Get a specific exercise by ID (its name). This allows clients to fetch details about a specific exercise.
-async function getExerciseById(id: string) {
+// Get a specific exercise by slug (its name). This allows clients to fetch details about a specific exercise.
+async function getExerciseById(slug: string) {
   const exercise = await prisma.exercise.findUnique({
-    where: { id },
+    where: { slug },
   });
 
   if (!exercise) {
-    throw new NotFoundError(`No exercise found with ID: ${id}`);
+    throw new NotFoundError(`No exercise found with slug: ${slug}`);
   }
   return exercise;
 }
@@ -55,10 +55,10 @@ async function createExercise(data: CreateExerciseInput) {
   }
 }
 
-async function updateExercise(id: string, data: UpdateExerciseInput) {
+async function updateExercise(slug: string, data: UpdateExerciseInput) {
   try {
     const exercise = await prisma.exercise.update({
-      where: { id },
+      where: { slug },
       data,
     });
     return exercise;
@@ -73,10 +73,10 @@ async function updateExercise(id: string, data: UpdateExerciseInput) {
   }
 }
 
-async function deleteExercise(id: string) {
+async function deleteExercise(slug: string) {
   try {
     await prisma.exercise.delete({
-      where: { id },
+      where: { slug },
     });
     return;
   } catch (error) {
