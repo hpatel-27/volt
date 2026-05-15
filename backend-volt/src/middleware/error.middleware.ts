@@ -1,5 +1,9 @@
 import type { Request, Response, NextFunction } from "express";
-import { NotFoundError, DuplicateEntryError } from "../errors.js";
+import {
+  NotFoundError,
+  DuplicateEntryError,
+  BadRequestError,
+} from "../errors.js";
 
 // Centralized Express error handler. Mounted last in server.ts so it catches
 // anything thrown (or passed to next()) from routes above it.
@@ -15,7 +19,7 @@ export function errorMiddleware(
   console.error(`Request ID: ${req.id}`, err);
 
   // Existing custom errors
-  const errors = [NotFoundError, DuplicateEntryError];
+  const errors = [NotFoundError, DuplicateEntryError, BadRequestError];
   for (const e of errors) {
     if (err instanceof e) {
       return res
