@@ -9,8 +9,8 @@ import { NotFoundError } from "../../../src/errors.js";
 
 // Unique clerkId so this test user doesn't collide with real users
 const TEST_CLERK_ID = "integration_test_meal_service_user";
-let testUserId: number;
-let logId: number;
+let testUserId: string;
+let logId: string;
 
 beforeAll(async () => {
   // Upsert a test user — same pattern as userMiddleware
@@ -42,8 +42,10 @@ describe("getAllMeals", () => {
   });
 
   it("throws NotFoundError when log not found", async () => {
-    await expect(mealService.getAllMeals(999999, testUserId)).rejects.toThrow(
-      new NotFoundError(`Log with id: ${999999} not found.`),
+    await expect(
+      mealService.getAllMeals("non-existent-log-uuid", testUserId),
+    ).rejects.toThrow(
+      new NotFoundError(`Log with id: non-existent-log-uuid not found.`),
     );
   });
 
@@ -106,7 +108,7 @@ describe("getAllMeals", () => {
 });
 
 describe("getMealById", () => {
-  let mealId: number;
+  let mealId: string;
   beforeAll(async () => {
     const mealData: Prisma.MealUncheckedCreateInput = {
       nutritionLogId: logId,
@@ -125,14 +127,22 @@ describe("getMealById", () => {
 
   it("throws NotFoundError when log not found", async () => {
     await expect(
-      mealService.getMealById(999999, testUserId, mealId),
-    ).rejects.toThrow(new NotFoundError(`Meal with id: ${mealId} not found.`));
+      mealService.getMealById("non-existent-log-uuid", testUserId, mealId),
+    ).rejects.toThrow(
+      new NotFoundError(`Meal with id: ${mealId} not found.`),
+    );
   });
 
   it("throws NotFoundError when meal not found", async () => {
     await expect(
-      mealService.getMealById(logId, testUserId, 777777),
-    ).rejects.toThrow(new NotFoundError(`Meal with id: ${777777} not found.`));
+      mealService.getMealById(
+        logId,
+        testUserId,
+        "non-existent-meal-uuid",
+      ),
+    ).rejects.toThrow(
+      new NotFoundError(`Meal with id: non-existent-meal-uuid not found.`),
+    );
   });
 
   it("returns the meal with the given id", async () => {
@@ -162,7 +172,7 @@ describe("createMeal", () => {
     };
 
     await expect(
-      mealService.createMeal(999999, testUserId, mealData),
+      mealService.createMeal("non-existent-log-uuid", testUserId, mealData),
     ).rejects.toThrow(
       new NotFoundError("Log associated to this meal does not exist."),
     );
@@ -205,7 +215,12 @@ describe("updateMeal", () => {
 
     // Fake logId and fake mealId
     await expect(
-      mealService.updateMeal(999999, testUserId, 1232, mealData),
+      mealService.updateMeal(
+        "non-existent-log-uuid",
+        testUserId,
+        "non-existent-meal-uuid",
+        mealData,
+      ),
     ).rejects.toThrow(new NotFoundError("Meal not found."));
   });
 
@@ -222,7 +237,9 @@ describe("updateMeal", () => {
     await mealService.createMeal(logId, testUserId, mealData);
 
     await expect(
-      mealService.updateMeal(logId, testUserId, -2348923, { protein: 14 }),
+      mealService.updateMeal(logId, testUserId, "non-existent-meal-uuid", {
+        protein: 14,
+      }),
     ).rejects.toThrow(new NotFoundError("Meal not found."));
   });
 
@@ -266,7 +283,11 @@ describe("deleteMeal", () => {
   it("throws NotFoundError when log not found", async () => {
     // fake logId and fake mealId
     await expect(
-      mealService.deleteMeal(999999, testUserId, 23423),
+      mealService.deleteMeal(
+        "non-existent-log-uuid",
+        testUserId,
+        "non-existent-meal-uuid",
+      ),
     ).rejects.toThrow(new NotFoundError("Meal not found."));
   });
 
@@ -283,7 +304,7 @@ describe("deleteMeal", () => {
     await mealService.createMeal(logId, testUserId, mealData);
 
     await expect(
-      mealService.deleteMeal(logId, testUserId, -2348923),
+      mealService.deleteMeal(logId, testUserId, "non-existent-meal-uuid"),
     ).rejects.toThrow(new NotFoundError("Meal not found."));
   });
 

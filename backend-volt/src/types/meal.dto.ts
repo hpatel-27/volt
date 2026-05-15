@@ -1,5 +1,5 @@
 export interface CreateMealInput {
-  nutritionLogId: number;
+  nutritionLogId: string;
   name: string;
   calories: number;
   protein: number;
