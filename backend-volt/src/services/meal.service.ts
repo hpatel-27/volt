@@ -3,7 +3,7 @@ import { Prisma } from "../generated/prisma/client.js";
 import { NotFoundError } from "../errors.js";
 import type { CreateMealInput, UpdateMealInput } from "../types/meal.dto.js";
 
-async function getAllMeals(logId: number, userId: number) {
+async function getAllMeals(logId: string, userId: string) {
   const log = await prisma.nutritionLog.findUnique({
     where: { id: logId, userId },
     include: { meals: true },
@@ -16,7 +16,7 @@ async function getAllMeals(logId: number, userId: number) {
   return { meals: log.meals };
 }
 
-async function getMealById(logId: number, userId: number, mealId: number) {
+async function getMealById(logId: string, userId: string, mealId: string) {
   const meal = await prisma.meal.findFirst({
     where: { id: mealId, nutritionLogId: logId, nutritionLog: { userId } },
   });
@@ -29,8 +29,8 @@ async function getMealById(logId: number, userId: number, mealId: number) {
 }
 
 async function createMeal(
-  logId: number,
-  userId: number,
+  logId: string,
+  userId: string,
   data: CreateMealInput,
 ) {
   return await prisma.$transaction(async (tx) => {
@@ -47,9 +47,9 @@ async function createMeal(
 }
 
 async function updateMeal(
-  logId: number,
-  userId: number,
-  mealId: number,
+  logId: string,
+  userId: string,
+  mealId: string,
   data: UpdateMealInput,
 ) {
   try {
@@ -69,7 +69,7 @@ async function updateMeal(
   }
 }
 
-async function deleteMeal(logId: number, userId: number, mealId: number) {
+async function deleteMeal(logId: string, userId: string, mealId: string) {
   try {
     await prisma.meal.delete({
       where: { id: mealId, nutritionLogId: logId, nutritionLog: { userId } },

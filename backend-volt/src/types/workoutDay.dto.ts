@@ -1,5 +1,5 @@
 export interface CreateWorkoutDayInput {
-  workoutPlanId: number;
+  workoutPlanId: string;
   name: string;
   order: number;
 }

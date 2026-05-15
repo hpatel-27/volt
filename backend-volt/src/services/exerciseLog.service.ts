@@ -6,7 +6,7 @@ import type {
   UpdateExerciseLogInput,
 } from "../types/exerciseLog.dto.js";
 
-async function getAllExerciseLogs(logId: number, userId: number) {
+async function getAllExerciseLogs(logId: string, userId: string) {
   const workoutLog = await prisma.workoutLog.findUnique({
     where: { id: logId, userId },
     include: {
@@ -27,9 +27,9 @@ async function getAllExerciseLogs(logId: number, userId: number) {
 }
 
 async function getExerciseLogById(
-  logId: number,
-  userId: number,
-  exerciseLogId: number,
+  logId: string,
+  userId: string,
+  exerciseLogId: string,
 ) {
   const exerciseLog = await prisma.exerciseLog.findFirst({
     where: {
@@ -51,8 +51,8 @@ async function getExerciseLogById(
 }
 
 async function createExerciseLog(
-  logId: number,
-  userId: number,
+  logId: string,
+  userId: string,
   data: CreateExerciseLogInput,
 ) {
   return await prisma.$transaction(async (tx) => {
@@ -78,9 +78,9 @@ async function createExerciseLog(
 }
 
 async function updateExerciseLog(
-  logId: number,
-  userId: number,
-  exerciseLogId: number,
+  logId: string,
+  userId: string,
+  exerciseLogId: string,
   data: UpdateExerciseLogInput,
 ) {
   try {
@@ -109,9 +109,9 @@ async function updateExerciseLog(
 }
 
 async function deleteExerciseLog(
-  logId: number,
-  userId: number,
-  exerciseLogId: number,
+  logId: string,
+  userId: string,
+  exerciseLogId: string,
 ) {
   try {
     await prisma.exerciseLog.delete({

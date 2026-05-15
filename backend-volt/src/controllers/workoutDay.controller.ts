@@ -8,7 +8,7 @@ import type {
 async function getAllWorkoutDays(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
-  const planId = res.locals.planId as number;
+  const planId = res.locals.planId as string;
 
   const days = await workoutDayService.getAllWorkoutDays(planId, userId);
   res.json(days);
@@ -17,8 +17,8 @@ async function getAllWorkoutDays(req: Request, res: Response) {
 async function getWorkoutDayById(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
-  const planId = res.locals.planId as number;
-  const dayId = res.locals.dayId as number;
+  const planId = res.locals.planId as string;
+  const dayId = res.locals.dayId as string;
 
   const day = await workoutDayService.getWorkoutDayById(planId, userId, dayId);
   res.json(day);
@@ -27,7 +27,7 @@ async function getWorkoutDayById(req: Request, res: Response) {
 async function createWorkoutDay(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
-  const planId = res.locals.planId as number;
+  const planId = res.locals.planId as string;
   const { name, order } = req.body;
 
   if (name === undefined || typeof name !== "string" || name.length < 1) {
@@ -55,8 +55,8 @@ async function createWorkoutDay(req: Request, res: Response) {
 async function updateWorkoutDay(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
-  const planId = res.locals.planId as number;
-  const dayId = res.locals.dayId as number;
+  const planId = res.locals.planId as string;
+  const dayId = res.locals.dayId as string;
   const { name, order } = req.body;
 
   const data: UpdateWorkoutDayInput = {};
@@ -95,8 +95,8 @@ async function updateWorkoutDay(req: Request, res: Response) {
 async function deleteWorkoutDay(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
-  const planId = res.locals.planId as number;
-  const dayId = res.locals.dayId as number;
+  const planId = res.locals.planId as string;
+  const dayId = res.locals.dayId as string;
 
   await workoutDayService.deleteWorkoutDay(planId, userId, dayId);
   return res.status(204).send();

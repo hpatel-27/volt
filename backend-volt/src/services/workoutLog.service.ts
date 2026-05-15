@@ -6,7 +6,7 @@ import type {
   UpdateWorkoutLogInput,
 } from "../types/workoutLog.dto.js";
 
-async function getAllWorkoutLogs(userId: number, page: number, limit: number) {
+async function getAllWorkoutLogs(userId: string, page: number, limit: number) {
   const [workoutLogs, total] = await prisma.$transaction([
     prisma.workoutLog.findMany({
       where: { userId },
@@ -20,7 +20,7 @@ async function getAllWorkoutLogs(userId: number, page: number, limit: number) {
   return { workoutLogs, total, page, limit };
 }
 
-async function getWorkoutLogById(userId: number, logId: number) {
+async function getWorkoutLogById(userId: string, logId: string) {
   const workoutLog = await prisma.workoutLog.findUnique({
     where: { id: logId, userId },
     include: {
@@ -41,7 +41,7 @@ async function getWorkoutLogById(userId: number, logId: number) {
   return workoutLog;
 }
 
-async function createWorkoutLog(userId: number, data: CreateWorkoutLogInput) {
+async function createWorkoutLog(userId: string, data: CreateWorkoutLogInput) {
   if (data.workoutDayId) {
     return await prisma.$transaction(async (tx) => {
       // Verify the workout day exists and belongs to the user
@@ -69,8 +69,8 @@ async function createWorkoutLog(userId: number, data: CreateWorkoutLogInput) {
 }
 
 async function updateWorkoutLog(
-  userId: number,
-  logId: number,
+  userId: string,
+  logId: string,
   data: UpdateWorkoutLogInput,
 ) {
   // If updating workoutDayId to a non-null value, verify it belongs to the user
@@ -123,7 +123,7 @@ async function updateWorkoutLog(
   }
 }
 
-async function deleteWorkoutLog(userId: number, logId: number) {
+async function deleteWorkoutLog(userId: string, logId: string) {
   try {
     await prisma.workoutLog.delete({
       where: { id: logId, userId },

@@ -1,5 +1,5 @@
 export interface CreateExerciseLogInput {
-  workoutLogId: number;
+  workoutLogId: string;
   exerciseId: string;
   notes?: string;
 }

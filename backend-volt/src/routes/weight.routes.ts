@@ -3,7 +3,7 @@ const router = express.Router();
 
 import * as weightController from "../controllers/weight.controller.js";
 import { userMiddleware } from "../middleware/user.middleware.js";
-import { parseIntParam } from "../middleware/param.middleware.js";
+import { parseUuidParam } from "../middleware/param.middleware.js";
 import { paginationMiddleware } from "../middleware/pagination.middleware.js";
 import {
   parseDate,
@@ -31,7 +31,7 @@ router.get(
 router.get(
   "/:weightId",
   userMiddleware,
-  parseIntParam("weightId"),
+  parseUuidParam("weightId"),
   weightController.getWeightById,
 );
 
@@ -42,7 +42,7 @@ router.post("/", userMiddleware, parseDate, weightController.createWeight);
 router.patch(
   "/:weightId",
   userMiddleware,
-  parseIntParam("weightId"),
+  parseUuidParam("weightId"),
   parseOptionalDate,
   weightController.updateWeight,
 );
@@ -51,7 +51,7 @@ router.patch(
 router.delete(
   "/:weightId",
   userMiddleware,
-  parseIntParam("weightId"),
+  parseUuidParam("weightId"),
   weightController.deleteWeight,
 );
 

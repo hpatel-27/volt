@@ -8,7 +8,7 @@ import type {
 
 // Take a userId and return all the user's logged nutrition logs
 async function getAllNutritionLogs(
-  userId: number,
+  userId: string,
   page: number,
   limit: number,
 ) {
@@ -26,9 +26,24 @@ async function getAllNutritionLogs(
   return { nutritionLogs, total, page, limit };
 }
 
-async function getNutritionLogById(userId: number, logId: number) {
+async function getNutritionLogById(userId: string, logId: string) {
   const nutritionLog = await prisma.nutritionLog.findUnique({
     where: { id: logId, userId },
+    include: { meals: true },
+  });
+
+  if (!nutritionLog) {
+    throw new NotFoundError("Nutrition log not found.");
+  }
+
+  return nutritionLog;
+}
+
+// Look up a nutrition log by the composite unique key (userId, date).
+// The /:date URL param is YYYY-MM-DD; Prisma coerces it to a Date for @db.Date columns.
+async function getNutritionLogByDate(userId: string, date: string) {
+  const nutritionLog = await prisma.nutritionLog.findUnique({
+    where: { userId_date: { userId, date: new Date(date) } },
     include: { meals: true },
   });
 
@@ -66,8 +81,8 @@ async function createNutritionLog(data: CreateNutritionLogInput) {
 // parameter to allow for future extensibility and to maintain consistency with
 // other update functions in our services.
 async function updateNutritionLog(
-  logId: number,
-  userId: number,
+  logId: string,
+  userId: string,
   data: UpdateNutritionLogInput,
 ) {
   try {
@@ -97,10 +112,9 @@ async function updateNutritionLog(
   }
 }
 
-// Delete a nutrition log, this also deletes all meals associated with the log
-// due to the cascading delete behavior we set up in our Prisma schema
-// We require both the logId and userId to ensure that a user can only delete their own logs
-async function deleteNutritionLog(logId: number, userId: number) {
+// Delete a nutrition log by its UUID id.
+// This also deletes all meals associated with the log due to cascading delete.
+async function deleteNutritionLog(logId: string, userId: string) {
   try {
     await prisma.nutritionLog.delete({
       where: { id: logId, userId },
@@ -117,10 +131,31 @@ async function deleteNutritionLog(logId: number, userId: number) {
   }
 }
 
+// Delete a nutrition log by (userId, date) composite unique key.
+// Used by DELETE /nutrition/:date.
+async function deleteNutritionLogByDate(userId: string, date: string) {
+  try {
+    await prisma.nutritionLog.delete({
+      where: { userId_date: { userId, date: new Date(date) } },
+    });
+    return;
+  } catch (error: unknown) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2025"
+    ) {
+      throw new NotFoundError("Nutrition log not found.", { cause: error });
+    }
+    throw error;
+  }
+}
+
 export {
   getAllNutritionLogs,
   getNutritionLogById,
+  getNutritionLogByDate,
   createNutritionLog,
   updateNutritionLog,
   deleteNutritionLog,
+  deleteNutritionLogByDate,
 };

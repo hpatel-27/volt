@@ -6,7 +6,7 @@ import type {
   UpdateWorkoutPlanInput,
 } from "../types/workoutPlan.dto.js";
 
-async function getAllWorkoutPlans(userId: number, page: number, limit: number) {
+async function getAllWorkoutPlans(userId: string, page: number, limit: number) {
   const [workoutPlans, total] = await prisma.$transaction([
     prisma.workoutPlan.findMany({
       where: { userId },
@@ -19,7 +19,7 @@ async function getAllWorkoutPlans(userId: number, page: number, limit: number) {
   return { workoutPlans, total, page, limit };
 }
 
-async function getWorkoutPlanById(userId: number, planId: number) {
+async function getWorkoutPlanById(userId: string, planId: string) {
   const workoutPlan = await prisma.workoutPlan.findUnique({
     where: { id: planId, userId },
     include: {
@@ -48,8 +48,8 @@ async function createWorkoutPlan(data: CreateWorkoutPlanInput) {
 }
 
 async function updateWorkoutPlan(
-  userId: number,
-  planId: number,
+  userId: string,
+  planId: string,
   data: UpdateWorkoutPlanInput,
 ) {
   try {
@@ -80,7 +80,7 @@ async function updateWorkoutPlan(
   }
 }
 
-async function deleteWorkoutPlan(userId: number, planId: number) {
+async function deleteWorkoutPlan(userId: string, planId: string) {
   try {
     await prisma.workoutPlan.delete({
       where: { id: planId, userId },

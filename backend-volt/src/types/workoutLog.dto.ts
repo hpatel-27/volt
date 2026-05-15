@@ -1,10 +1,10 @@
 export interface CreateWorkoutLogInput {
-  userId: number;
+  userId: string;
   date?: string;
-  workoutDayId?: number;
+  workoutDayId?: string;
 }
 
 export interface UpdateWorkoutLogInput {
   date?: string;
-  workoutDayId?: number | null;
+  workoutDayId?: string | null;
 }

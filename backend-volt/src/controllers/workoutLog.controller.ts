@@ -17,7 +17,7 @@ async function getAllWorkoutLogs(req: Request, res: Response) {
 async function getWorkoutLogById(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
-  const logId = res.locals.logId as number;
+  const logId = res.locals.logId as string;
 
   const log = await workoutLogService.getWorkoutLogById(userId, logId);
   res.json(log);
@@ -32,14 +32,10 @@ async function createWorkoutLog(req: Request, res: Response) {
   const data: CreateWorkoutLogInput = { userId, date: isoDate };
 
   if (workoutDayId !== undefined) {
-    if (
-      typeof workoutDayId !== "number" ||
-      workoutDayId < 1 ||
-      !Number.isInteger(workoutDayId)
-    ) {
+    if (typeof workoutDayId !== "string" || workoutDayId.length < 1) {
       return res
         .status(400)
-        .json({ error: "workoutDayId must be a positive integer." });
+        .json({ error: "workoutDayId must be a UUID string." });
     }
     data.workoutDayId = workoutDayId;
   }
@@ -51,7 +47,7 @@ async function createWorkoutLog(req: Request, res: Response) {
 async function updateWorkoutLog(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
-  const logId = res.locals.logId as number;
+  const logId = res.locals.logId as string;
   const isoDate = res.locals.date;
   const { workoutDayId } = req.body;
 
@@ -64,14 +60,10 @@ async function updateWorkoutLog(req: Request, res: Response) {
   if (workoutDayId !== undefined) {
     if (workoutDayId === null) {
       data.workoutDayId = null;
-    } else if (
-      typeof workoutDayId !== "number" ||
-      workoutDayId < 1 ||
-      !Number.isInteger(workoutDayId)
-    ) {
+    } else if (typeof workoutDayId !== "string" || workoutDayId.length < 1) {
       return res
         .status(400)
-        .json({ error: "workoutDayId must be a positive integer or null." });
+        .json({ error: "workoutDayId must be a UUID string or null." });
     } else {
       data.workoutDayId = workoutDayId;
     }
@@ -94,7 +86,7 @@ async function updateWorkoutLog(req: Request, res: Response) {
 async function deleteWorkoutLog(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
-  const logId = res.locals.logId as number;
+  const logId = res.locals.logId as string;
 
   await workoutLogService.deleteWorkoutLog(userId, logId);
   return res.status(204).send();

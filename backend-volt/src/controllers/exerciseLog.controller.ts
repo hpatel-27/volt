@@ -8,7 +8,7 @@ import type {
 async function getAllExerciseLogs(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
-  const logId = res.locals.logId as number;
+  const logId = res.locals.logId as string;
 
   const exerciseLogs = await exerciseLogService.getAllExerciseLogs(
     logId,
@@ -20,8 +20,8 @@ async function getAllExerciseLogs(req: Request, res: Response) {
 async function getExerciseLogById(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
-  const logId = res.locals.logId as number;
-  const exerciseLogId = res.locals.exerciseLogId as number;
+  const logId = res.locals.logId as string;
+  const exerciseLogId = res.locals.exerciseLogId as string;
 
   const exerciseLog = await exerciseLogService.getExerciseLogById(
     logId,
@@ -34,7 +34,7 @@ async function getExerciseLogById(req: Request, res: Response) {
 async function createExerciseLog(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
-  const logId = res.locals.logId as number;
+  const logId = res.locals.logId as string;
   const { exerciseId, notes } = req.body;
 
   if (
@@ -70,8 +70,8 @@ async function createExerciseLog(req: Request, res: Response) {
 async function updateExerciseLog(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
-  const logId = res.locals.logId as number;
-  const exerciseLogId = res.locals.exerciseLogId as number;
+  const logId = res.locals.logId as string;
+  const exerciseLogId = res.locals.exerciseLogId as string;
   const { notes } = req.body;
 
   const data: UpdateExerciseLogInput = {};
@@ -103,8 +103,8 @@ async function updateExerciseLog(req: Request, res: Response) {
 async function deleteExerciseLog(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
-  const logId = res.locals.logId as number;
-  const exerciseLogId = res.locals.exerciseLogId as number;
+  const logId = res.locals.logId as string;
+  const exerciseLogId = res.locals.exerciseLogId as string;
 
   await exerciseLogService.deleteExerciseLog(logId, userId, exerciseLogId);
   return res.status(204).send();

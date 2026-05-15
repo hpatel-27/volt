@@ -1,5 +1,5 @@
 export interface CreateWeightInput {
-  userId: number;
+  userId: string;
   amount: number;
   date: string; // ISO 8601 format
 }

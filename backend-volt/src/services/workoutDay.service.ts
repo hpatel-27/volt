@@ -6,7 +6,7 @@ import type {
   UpdateWorkoutDayInput,
 } from "../types/workoutDay.dto.js";
 
-async function getAllWorkoutDays(planId: number, userId: number) {
+async function getAllWorkoutDays(planId: string, userId: string) {
   const plan = await prisma.workoutPlan.findUnique({
     where: { id: planId, userId },
     include: {
@@ -22,9 +22,9 @@ async function getAllWorkoutDays(planId: number, userId: number) {
 }
 
 async function getWorkoutDayById(
-  planId: number,
-  userId: number,
-  dayId: number,
+  planId: string,
+  userId: string,
+  dayId: string,
 ) {
   const day = await prisma.workoutDay.findFirst({
     where: { id: dayId, workoutPlanId: planId, workoutPlan: { userId } },
@@ -44,8 +44,8 @@ async function getWorkoutDayById(
 }
 
 async function createWorkoutDay(
-  planId: number,
-  userId: number,
+  planId: string,
+  userId: string,
   data: CreateWorkoutDayInput,
 ) {
   return await prisma.$transaction(async (tx) => {
@@ -61,9 +61,9 @@ async function createWorkoutDay(
 }
 
 async function updateWorkoutDay(
-  planId: number,
-  userId: number,
-  dayId: number,
+  planId: string,
+  userId: string,
+  dayId: string,
   data: UpdateWorkoutDayInput,
 ) {
   try {
@@ -94,9 +94,9 @@ async function updateWorkoutDay(
 }
 
 async function deleteWorkoutDay(
-  planId: number,
-  userId: number,
-  dayId: number,
+  planId: string,
+  userId: string,
+  dayId: string,
 ) {
   try {
     await prisma.workoutDay.delete({

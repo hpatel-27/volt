@@ -7,9 +7,9 @@ import type {
 } from "../types/setLog.dto.js";
 
 async function getAllSetLogs(
-  logId: number,
-  exerciseLogId: number,
-  userId: number,
+  logId: string,
+  exerciseLogId: string,
+  userId: string,
 ) {
   const exerciseLog = await prisma.exerciseLog.findFirst({
     where: {
@@ -30,10 +30,10 @@ async function getAllSetLogs(
 }
 
 async function getSetById(
-  logId: number,
-  exerciseLogId: number,
-  setId: number,
-  userId: number,
+  logId: string,
+  exerciseLogId: string,
+  setId: string,
+  userId: string,
 ) {
   const set = await prisma.setLog.findFirst({
     where: {
@@ -54,9 +54,9 @@ async function getSetById(
 }
 
 async function createSetLog(
-  logId: number,
-  exerciseLogId: number,
-  userId: number,
+  logId: string,
+  exerciseLogId: string,
+  userId: string,
   data: CreateSetLogInput,
 ) {
   return await prisma.$transaction(async (tx) => {
@@ -76,10 +76,10 @@ async function createSetLog(
 }
 
 async function updateSetLog(
-  logId: number,
-  exerciseLogId: number,
-  userId: number,
-  setId: number,
+  logId: string,
+  exerciseLogId: string,
+  userId: string,
+  setId: string,
   data: UpdateSetLogInput,
 ) {
   try {
@@ -107,10 +107,10 @@ async function updateSetLog(
 }
 
 async function deleteSetLog(
-  logId: number,
-  exerciseLogId: number,
-  userId: number,
-  setId: number,
+  logId: string,
+  exerciseLogId: string,
+  userId: string,
+  setId: string,
 ) {
   try {
     await prisma.setLog.delete({

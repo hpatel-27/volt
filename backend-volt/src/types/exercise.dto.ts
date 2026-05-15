@@ -1,5 +1,6 @@
 export interface CreateExerciseInput {
   id: string;
+  slug: string;
   name: string;
   force?: string;
   level?: string;

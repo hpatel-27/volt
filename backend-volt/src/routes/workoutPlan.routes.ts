@@ -3,7 +3,7 @@ const router = express.Router();
 
 import * as workoutPlanController from "../controllers/workoutPlan.controller.js";
 import { userMiddleware } from "../middleware/user.middleware.js";
-import { parseIntParam } from "../middleware/param.middleware.js";
+import { parseUuidParam } from "../middleware/param.middleware.js";
 import { paginationMiddleware } from "../middleware/pagination.middleware.js";
 import workoutDayRouter from "./workoutDay.routes.js";
 
@@ -19,7 +19,7 @@ router.get(
 router.get(
   "/:planId",
   userMiddleware,
-  parseIntParam("planId"),
+  parseUuidParam("planId"),
   workoutPlanController.getWorkoutPlanById,
 );
 
@@ -30,7 +30,7 @@ router.post("/", userMiddleware, workoutPlanController.createWorkoutPlan);
 router.patch(
   "/:planId",
   userMiddleware,
-  parseIntParam("planId"),
+  parseUuidParam("planId"),
   workoutPlanController.updateWorkoutPlan,
 );
 
@@ -38,7 +38,7 @@ router.patch(
 router.delete(
   "/:planId",
   userMiddleware,
-  parseIntParam("planId"),
+  parseUuidParam("planId"),
   workoutPlanController.deleteWorkoutPlan,
 );
 
@@ -46,7 +46,7 @@ router.delete(
 router.use(
   "/:planId/days",
   userMiddleware,
-  parseIntParam("planId"),
+  parseUuidParam("planId"),
   workoutDayRouter,
 );
 
