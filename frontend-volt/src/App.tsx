@@ -56,7 +56,7 @@ export function App() {
           <Route path="/log" element={<Log />} />
           <Route path="/exercises" element={<Exercises />} />
           <Route path="/nutrition" element={<Nutrition />} />
-          <Route path="/nutrition/:logId" element={<NutritionLog />} />
+          <Route path="/nutrition/:date" element={<NutritionLog />} />
           <Route path="/weight" element={<Weight />} />
           <Route path="/profile" element={<Profile />} />
         </Route>
