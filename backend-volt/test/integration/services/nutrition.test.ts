@@ -8,7 +8,7 @@ import { NotFoundError, DuplicateEntryError } from "../../../src/errors.js";
 
 // Unique clerkId so this test user doesn't collide with real users
 const TEST_CLERK_ID = "integration_test_nutrition_service_user";
-let testUserId: number;
+let testUserId: string;
 
 beforeAll(async () => {
   // Upsert a test user — same pattern as userMiddleware
@@ -81,10 +81,10 @@ describe("getAllNutritionLogs", () => {
   });
 });
 
-// getNutritionLogById
+// getNutritionLogByDate
 
-describe("getNutritionLogById", () => {
-  let logId: number;
+describe("getNutritionLogByDate", () => {
+  let logId: string;
 
   beforeAll(async () => {
     const log = await prisma.nutritionLog.create({
@@ -98,7 +98,7 @@ describe("getNutritionLogById", () => {
       carbs: 30,
       fat: 10,
     };
-    const meal = await prisma.meal.create({ data: mealData });
+    await prisma.meal.create({ data: mealData });
     logId = log.id;
   });
 
@@ -107,16 +107,16 @@ describe("getNutritionLogById", () => {
   });
 
   it("returns the log when it exists for the user", async () => {
-    const result = await nutritionService.getNutritionLogById(
+    const result = await nutritionService.getNutritionLogByDate(
       testUserId,
-      logId,
+      "2026-02-01",
     );
     expect(result.id).toBe(logId);
     expect(result.userId).toBe(testUserId);
     expect(new Date(result.date).toISOString()).toBe(
       new Date("2026-02-01T00:00:00.000Z").toISOString(),
     );
-    // Meals should be included when we fetch a log by ID
+    // Meals should be included when we fetch a log by date
     expect(result.meals?.length).toBe(1);
     const meal = result.meals[0];
     expect(meal?.name).toBe("Test Meal");
@@ -127,15 +127,15 @@ describe("getNutritionLogById", () => {
   });
 
   it("throws NotFoundError for a log that belongs to a different user", async () => {
-    const wrongUserId = testUserId + 9999;
+    const wrongUserId = "non-existent-user-id";
     await expect(
-      nutritionService.getNutritionLogById(wrongUserId, logId),
+      nutritionService.getNutritionLogByDate(wrongUserId, "2026-02-01"),
     ).rejects.toThrow(NotFoundError);
   });
 
-  it("throws NotFoundError for a log ID that does not exist", async () => {
+  it("throws NotFoundError for a date that does not exist", async () => {
     await expect(
-      nutritionService.getNutritionLogById(testUserId, 999999999),
+      nutritionService.getNutritionLogByDate(testUserId, "2099-12-31"),
     ).rejects.toThrow(NotFoundError);
   });
 });
@@ -168,7 +168,7 @@ describe("createNutritionLog", () => {
   });
 });
 
-// updateNutritionLog
+// updateNutritionLog (by UUID id)
 describe("updateNutritionLog", () => {
   beforeEach(async () => {
     await prisma.nutritionLog.deleteMany({ where: { userId: testUserId } });
@@ -177,9 +177,13 @@ describe("updateNutritionLog", () => {
   it("throws a NotFoundError when log to update is not found", async () => {
     const newDate = new Date("2026-04-15T00:00:00.000Z");
     await expect(
-      nutritionService.updateNutritionLog(99999999, testUserId, {
-        date: newDate,
-      }),
+      nutritionService.updateNutritionLog(
+        "non-existent-log-uuid",
+        testUserId,
+        {
+          date: newDate,
+        },
+      ),
     ).rejects.toThrow(NotFoundError);
   });
 
@@ -239,44 +243,47 @@ describe("updateNutritionLog", () => {
   });
 });
 
-// deleteNutritionLog
+// deleteNutritionLogByDate
 
-describe("deleteNutritionLog", () => {
+describe("deleteNutritionLogByDate", () => {
   beforeEach(async () => {
     await prisma.nutritionLog.deleteMany({ where: { userId: testUserId } });
   });
 
-  it("deletes an existing log and returns undefined", async () => {
-    const log = await prisma.nutritionLog.create({
+  it("deletes an existing log by date and returns undefined", async () => {
+    await prisma.nutritionLog.create({
       data: { userId: testUserId, date: new Date("2026-05-01T00:00:00.000Z") },
     });
 
-    const result = await nutritionService.deleteNutritionLog(
-      log.id,
+    const result = await nutritionService.deleteNutritionLogByDate(
       testUserId,
+      "2026-05-01",
     );
     expect(result).toBeUndefined();
 
     // Confirm it's actually gone from the DB
     const gone = await prisma.nutritionLog.findUnique({
-      where: { id: log.id },
+      where: { userId_date: { userId: testUserId, date: new Date("2026-05-01T00:00:00.000Z") } },
     });
     expect(gone).toBeNull();
   });
 
   it("throws NotFoundError when trying to delete a log that doesn't exist", async () => {
     await expect(
-      nutritionService.deleteNutritionLog(999999999, testUserId),
+      nutritionService.deleteNutritionLogByDate(testUserId, "2099-12-31"),
     ).rejects.toThrow(NotFoundError);
   });
 
   it("throws NotFoundError when log exists but belongs to a different user", async () => {
-    const log = await prisma.nutritionLog.create({
+    await prisma.nutritionLog.create({
       data: { userId: testUserId, date: new Date("2026-05-01T00:00:00.000Z") },
     });
 
     await expect(
-      nutritionService.deleteNutritionLog(log.id, 3254354),
+      nutritionService.deleteNutritionLogByDate(
+        "non-existent-user-id",
+        "2026-05-01",
+      ),
     ).rejects.toThrow(NotFoundError);
   });
 });
