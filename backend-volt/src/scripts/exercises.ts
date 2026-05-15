@@ -1,6 +1,22 @@
 import "dotenv/config";
 import { prisma } from "../db.js";
 
+// TODO(human): define the shape of a single exercise as it comes from the
+// remote JSON (note: the remote uses `id` where our DB uses `slug`).
+type RemoteExercise = {
+  id: string;
+  name: string;
+  force?: string; // pull, push, static
+  level?: string; // beginner, intermediate, expert
+  mechanic?: string; // isolation, compound
+  equipment?: string;
+  category?: string;
+  primaryMuscles?: string[];
+  secondaryMuscles?: string[];
+  instructions?: string[];
+  images?: string[];
+};
+
 async function seedExercises() {
   try {
     console.log("Fetching exercises from GitHub repository...");
@@ -14,7 +30,7 @@ async function seedExercises() {
     }
 
     // Exercises data
-    const exercises = await response.json();
+    const exercises = (await response.json()) as RemoteExercise[];
     console.log(
       `Fetched ${exercises.length} exercises. Seeding into database...`,
     );
