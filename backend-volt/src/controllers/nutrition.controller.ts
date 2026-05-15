@@ -23,16 +23,10 @@ async function getAllNutritionLogs(req: Request, res: Response) {
 async function getNutritionLogsByRange(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
-  const locals = res.locals!;
 
-  // Add a limit on the date range to prevent abuse (14 days)
+  const locals = res.locals;
   const fromDate = locals.fromDate!;
   const toDate = locals.toDate!;
-  const diffMs = toDate.getTime() - fromDate.getTime();
-  const maxMs = 14 * 24 * 60 * 60 * 1000; // 14 days
-  if (diffMs > maxMs) {
-    throw new BadRequestError("Date range is limited to a maximum of 14 days.");
-  }
 
   const logs = await nutritionService.getNutritionLogsByRange(
     userId,

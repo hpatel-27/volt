@@ -23,7 +23,7 @@ router.get(
 router.get(
   "/range",
   userMiddleware,
-  parseDateRange,
+  parseDateRange(14),
   nutritionController.getNutritionLogsByRange,
 );
 // Get a single nutrition log by its date (YYYY-MM-DD), this includes full meal details

@@ -50,38 +50,42 @@ export const parseOptionalDate = (
   next();
 };
 
-export const parseDateRange = (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  const { from, to } = req.query;
-  if (from === undefined || to === undefined) {
-    return res
-      .status(400)
-      .json({ error: "The FROM and TO dates must both be provided" });
-  }
+export const parseDateRange =
+  (maxRange: number) => (req: Request, res: Response, next: NextFunction) => {
+    const { from, to } = req.query;
+    if (from === undefined || to === undefined) {
+      return res
+        .status(400)
+        .json({ error: "The FROM and TO dates must both be provided" });
+    }
 
-  if (typeof from !== "string" || typeof to !== "string") {
-    return res.status(400).json({
-      error: "The FROM and TO dates must both be provided as strings",
-    });
-  }
+    if (typeof from !== "string" || typeof to !== "string") {
+      return res.status(400).json({
+        error: "The FROM and TO dates must both be provided as strings",
+      });
+    }
 
-  const fromDate = new Date(from);
-  const toDate = new Date(to);
-  if (Number.isNaN(fromDate.getTime()) || Number.isNaN(toDate.getTime())) {
-    return res
-      .status(400)
-      .json({ error: "The FROM and TO dates must be valid ISO date strings" });
-  }
-  if (fromDate > toDate) {
-    return res
-      .status(400)
-      .json({ error: "The FROM date must be on or before TO" });
-  }
+    const fromDate = new Date(from);
+    const toDate = new Date(to);
+    if (Number.isNaN(fromDate.getTime()) || Number.isNaN(toDate.getTime())) {
+      return res.status(400).json({
+        error: "The FROM and TO dates must be valid ISO date strings",
+      });
+    }
+    if (fromDate > toDate) {
+      return res
+        .status(400)
+        .json({ error: "The FROM date must be on or before TO" });
+    }
+    const diffMs = toDate.getTime() - fromDate.getTime();
+    const maxMs = maxRange * 24 * 60 * 60 * 1000; // maxRange days
+    if (diffMs > maxMs) {
+      return res
+        .status(400)
+        .json({ error: "Date range is limited to a maximum of 14 days." });
+    }
 
-  res.locals.fromDate = fromDate;
-  res.locals.toDate = toDate;
-  next();
-};
+    res.locals.fromDate = fromDate;
+    res.locals.toDate = toDate;
+    next();
+  };
