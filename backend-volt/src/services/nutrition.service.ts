@@ -26,6 +26,16 @@ async function getAllNutritionLogs(
   return { nutritionLogs, total, page, limit };
 }
 
+// Return all of a user's nutrition logs whose `date` falls within [from, to].
+async function getNutritionLogsByRange(userId: string, from: Date, to: Date) {
+  const logs = await prisma.nutritionLog.findMany({
+    where: { userId, date: { gte: from, lte: to } },
+    orderBy: { date: "asc" },
+  });
+
+  return { logs, total: logs.length };
+}
+
 async function getNutritionLogById(userId: string, logId: string) {
   const nutritionLog = await prisma.nutritionLog.findUnique({
     where: { id: logId, userId },
@@ -152,6 +162,7 @@ async function deleteNutritionLogByDate(userId: string, date: string) {
 
 export {
   getAllNutritionLogs,
+  getNutritionLogsByRange,
   getNutritionLogById,
   getNutritionLogByDate,
   createNutritionLog,

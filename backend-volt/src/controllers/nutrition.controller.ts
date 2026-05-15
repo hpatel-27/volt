@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import * as nutritionService from "../services/nutrition.service.js";
 import type { CreateNutritionLogInput } from "../types/nutrition.dto.js";
+import { BadRequestError } from "../errors.js";
 
 // Return all nutrition logs for the user that made the request
 // Use pagination to limit the number of logs returned at once
@@ -15,6 +16,30 @@ async function getAllNutritionLogs(req: Request, res: Response) {
     limit,
   );
   res.json(nutritionLogs);
+}
+
+// Range mode: both from and to provided -> return all nutrition logs in that window, no pagination.
+// Used by the day strip on the nutrition page.
+async function getNutritionLogsByRange(req: Request, res: Response) {
+  const user = req.user!;
+  const userId = user.id;
+  const locals = res.locals!;
+
+  // Add a limit on the date range to prevent abuse (14 days)
+  const fromDate = locals.fromDate!;
+  const toDate = locals.toDate!;
+  const diffMs = toDate.getTime() - fromDate.getTime();
+  const maxMs = 14 * 24 * 60 * 60 * 1000; // 14 days
+  if (diffMs > maxMs) {
+    throw new BadRequestError("Date range is limited to a maximum of 14 days.");
+  }
+
+  const logs = await nutritionService.getNutritionLogsByRange(
+    userId,
+    fromDate,
+    toDate,
+  );
+  return res.json(logs);
 }
 
 // Return a single nutrition log by its date (YYYY-MM-DD), this includes full meal details
@@ -72,6 +97,7 @@ async function deleteNutritionLog(req: Request, res: Response) {
 
 export {
   getAllNutritionLogs,
+  getNutritionLogsByRange,
   getNutritionLogByDate,
   createNutritionLog,
   updateNutritionLog,
