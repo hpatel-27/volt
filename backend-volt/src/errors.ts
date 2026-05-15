@@ -14,4 +14,12 @@ class DuplicateEntryError extends Error {
   }
 }
 
-export { NotFoundError, DuplicateEntryError };
+class BadRequestError extends Error {
+  statusCode: number = 400;
+  constructor(message: string, options?: ErrorOptions) {
+    super(message, options);
+    this.name = "BadRequestError";
+  }
+}
+
+export { NotFoundError, DuplicateEntryError, BadRequestError };
