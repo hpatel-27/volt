@@ -4,7 +4,12 @@ import { useLatestWeight, useWeights, useWeightsRange } from "../api/weights";
 import { useState } from "react";
 import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
 import { WeightEntrySheet } from "../components/weight/WeightEntrySheet";
-import { filterToRange, todayLocalIso, yesterdayLocalIso } from "../lib/date";
+import {
+  filterToRange,
+  formatVerboseDate,
+  todayLocalIso,
+  yesterdayLocalIso,
+} from "../lib/date";
 import { cn } from "../lib/cn";
 import { Button } from "../components/ui/Button";
 import type { WeightFilter } from "../types/weight";
@@ -22,13 +27,7 @@ function formatWhen(dateIso: string): string {
   if (date === todayLocalIso()) return "Today";
   if (date === yesterdayLocalIso()) return "Yesterday";
 
-  const [year, month, day] = date.split("-").map(Number);
-  const d = new Date(year, month - 1, day); // multi arg form is local time
-  const verboseDate = d.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  });
-  return verboseDate;
+  return formatVerboseDate(dateIso);
 }
 
 function formatDelta(delta: number): {
@@ -53,7 +52,8 @@ export default function Weight() {
   const latestWeight = useLatestWeight();
   const totalPages =
     weightsQuery.data?.total !== undefined &&
-    weightsQuery.data?.limit !== undefined
+    weightsQuery.data?.limit !== undefined &&
+    weightsQuery.data?.total !== 0
       ? Math.ceil(weightsQuery.data?.total / weightsQuery.data?.limit)
       : 1;
   const dateRange = filterToRange(filter);

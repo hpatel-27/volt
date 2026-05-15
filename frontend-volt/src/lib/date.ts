@@ -44,3 +44,13 @@ export function filterToRange(filter: WeightFilter) {
   }
   return { from, to };
 }
+
+export function formatVerboseDate(date: string) {
+  const [year, month, day] = date.split("-").map(Number);
+  const localDate = new Date(year, month - 1, day); // multi arg form is local time
+  const verboseDate = localDate.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
+  return verboseDate;
+}
