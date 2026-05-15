@@ -7,9 +7,9 @@ import type {
 } from "../types/workoutDayExercise.dto.js";
 
 async function getAllWorkoutDayExercises(
-  planId: number,
-  dayId: number,
-  userId: number,
+  planId: string,
+  dayId: string,
+  userId: string,
 ) {
   const day = await prisma.workoutDay.findFirst({
     where: { id: dayId, workoutPlanId: planId, workoutPlan: { userId } },
@@ -29,10 +29,10 @@ async function getAllWorkoutDayExercises(
 }
 
 async function getWorkoutDayExerciseById(
-  planId: number,
-  dayId: number,
-  dayExerciseId: number,
-  userId: number,
+  planId: string,
+  dayId: string,
+  dayExerciseId: string,
+  userId: string,
 ) {
   const dayExercise = await prisma.workoutDayExercise.findFirst({
     where: {
@@ -53,9 +53,9 @@ async function getWorkoutDayExerciseById(
 }
 
 async function createWorkoutDayExercise(
-  planId: number,
-  dayId: number,
-  userId: number,
+  planId: string,
+  dayId: string,
+  userId: string,
   data: CreateWorkoutDayExerciseInput,
 ) {
   return await prisma.$transaction(async (tx) => {
@@ -81,10 +81,10 @@ async function createWorkoutDayExercise(
 }
 
 async function updateWorkoutDayExercise(
-  planId: number,
-  dayId: number,
-  userId: number,
-  dayExerciseId: number,
+  planId: string,
+  dayId: string,
+  userId: string,
+  dayExerciseId: string,
   data: UpdateWorkoutDayExerciseInput,
 ) {
   try {
@@ -112,10 +112,10 @@ async function updateWorkoutDayExercise(
 }
 
 async function deleteWorkoutDayExercise(
-  planId: number,
-  dayId: number,
-  userId: number,
-  dayExerciseId: number,
+  planId: string,
+  dayId: string,
+  userId: string,
+  dayExerciseId: string,
 ) {
   try {
     await prisma.workoutDayExercise.delete({

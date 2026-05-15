@@ -1,5 +1,5 @@
 export interface CreateSetLogInput {
-  exerciseLogId: number;
+  exerciseLogId: string;
   setNumber: number;
   reps: number;
   weight: number;

@@ -8,8 +8,8 @@ import type {
 async function getAllWorkoutDayExercises(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
-  const planId = res.locals.planId as number;
-  const dayId = res.locals.dayId as number;
+  const planId = res.locals.planId as string;
+  const dayId = res.locals.dayId as string;
 
   const exercises = await workoutDayExerciseService.getAllWorkoutDayExercises(
     planId,
@@ -22,9 +22,9 @@ async function getAllWorkoutDayExercises(req: Request, res: Response) {
 async function getWorkoutDayExerciseById(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
-  const planId = res.locals.planId as number;
-  const dayId = res.locals.dayId as number;
-  const dayExerciseId = res.locals.dayExerciseId as number;
+  const planId = res.locals.planId as string;
+  const dayId = res.locals.dayId as string;
+  const dayExerciseId = res.locals.dayExerciseId as string;
 
   const exercise = await workoutDayExerciseService.getWorkoutDayExerciseById(
     planId,
@@ -38,8 +38,8 @@ async function getWorkoutDayExerciseById(req: Request, res: Response) {
 async function createWorkoutDayExercise(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
-  const planId = res.locals.planId as number;
-  const dayId = res.locals.dayId as number;
+  const planId = res.locals.planId as string;
+  const dayId = res.locals.dayId as string;
   const { exerciseId, order } = req.body;
 
   if (
@@ -80,9 +80,9 @@ async function createWorkoutDayExercise(req: Request, res: Response) {
 async function updateWorkoutDayExercise(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
-  const planId = res.locals.planId as number;
-  const dayId = res.locals.dayId as number;
-  const dayExerciseId = res.locals.dayExerciseId as number;
+  const planId = res.locals.planId as string;
+  const dayId = res.locals.dayId as string;
+  const dayExerciseId = res.locals.dayExerciseId as string;
   const { order } = req.body;
 
   const data: UpdateWorkoutDayExerciseInput = {};
@@ -115,9 +115,9 @@ async function updateWorkoutDayExercise(req: Request, res: Response) {
 async function deleteWorkoutDayExercise(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
-  const planId = res.locals.planId as number;
-  const dayId = res.locals.dayId as number;
-  const dayExerciseId = res.locals.dayExerciseId as number;
+  const planId = res.locals.planId as string;
+  const dayId = res.locals.dayId as string;
+  const dayExerciseId = res.locals.dayExerciseId as string;
 
   await workoutDayExerciseService.deleteWorkoutDayExercise(
     planId,

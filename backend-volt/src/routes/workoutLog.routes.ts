@@ -3,7 +3,7 @@ const router = express.Router();
 
 import * as workoutLogController from "../controllers/workoutLog.controller.js";
 import { userMiddleware } from "../middleware/user.middleware.js";
-import { parseIntParam } from "../middleware/param.middleware.js";
+import { parseUuidParam } from "../middleware/param.middleware.js";
 import { paginationMiddleware } from "../middleware/pagination.middleware.js";
 import { parseDate, parseOptionalDate } from "../middleware/date.middleware.js";
 import exerciseLogRouter from "./exerciseLog.routes.js";
@@ -20,7 +20,7 @@ router.get(
 router.get(
   "/:logId",
   userMiddleware,
-  parseIntParam("logId"),
+  parseUuidParam("logId"),
   workoutLogController.getWorkoutLogById,
 );
 
@@ -36,7 +36,7 @@ router.post(
 router.patch(
   "/:logId",
   userMiddleware,
-  parseIntParam("logId"),
+  parseUuidParam("logId"),
   parseOptionalDate,
   workoutLogController.updateWorkoutLog,
 );
@@ -45,7 +45,7 @@ router.patch(
 router.delete(
   "/:logId",
   userMiddleware,
-  parseIntParam("logId"),
+  parseUuidParam("logId"),
   workoutLogController.deleteWorkoutLog,
 );
 
@@ -53,7 +53,7 @@ router.delete(
 router.use(
   "/:logId/exercises",
   userMiddleware,
-  parseIntParam("logId"),
+  parseUuidParam("logId"),
   exerciseLogRouter,
 );
 

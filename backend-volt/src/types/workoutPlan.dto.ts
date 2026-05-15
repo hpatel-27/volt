@@ -1,5 +1,5 @@
 export interface CreateWorkoutPlanInput {
-  userId: number;
+  userId: string;
   name: string;
 }
 

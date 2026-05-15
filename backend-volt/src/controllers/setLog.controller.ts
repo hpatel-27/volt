@@ -8,8 +8,8 @@ import type {
 async function getAllSetLogs(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
-  const logId = res.locals.logId as number;
-  const exerciseLogId = res.locals.exerciseLogId as number;
+  const logId = res.locals.logId as string;
+  const exerciseLogId = res.locals.exerciseLogId as string;
 
   const sets = await setLogService.getAllSetLogs(logId, exerciseLogId, userId);
   res.json(sets);
@@ -18,9 +18,9 @@ async function getAllSetLogs(req: Request, res: Response) {
 async function getSetById(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
-  const logId = res.locals.logId as number;
-  const exerciseLogId = res.locals.exerciseLogId as number;
-  const setId = res.locals.setId as number;
+  const logId = res.locals.logId as string;
+  const exerciseLogId = res.locals.exerciseLogId as string;
+  const setId = res.locals.setId as string;
 
   const set = await setLogService.getSetById(
     logId,
@@ -34,8 +34,8 @@ async function getSetById(req: Request, res: Response) {
 async function createSetLog(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
-  const logId = res.locals.logId as number;
-  const exerciseLogId = res.locals.exerciseLogId as number;
+  const logId = res.locals.logId as string;
+  const exerciseLogId = res.locals.exerciseLogId as string;
   const { setNumber, reps, weight } = req.body;
 
   if (
@@ -85,9 +85,9 @@ async function createSetLog(req: Request, res: Response) {
 async function updateSetLog(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
-  const logId = res.locals.logId as number;
-  const exerciseLogId = res.locals.exerciseLogId as number;
-  const setId = res.locals.setId as number;
+  const logId = res.locals.logId as string;
+  const exerciseLogId = res.locals.exerciseLogId as string;
+  const setId = res.locals.setId as string;
   const { setNumber, reps, weight } = req.body;
 
   const data: UpdateSetLogInput = {};
@@ -142,9 +142,9 @@ async function updateSetLog(req: Request, res: Response) {
 async function deleteSetLog(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
-  const logId = res.locals.logId as number;
-  const exerciseLogId = res.locals.exerciseLogId as number;
-  const setId = res.locals.setId as number;
+  const logId = res.locals.logId as string;
+  const exerciseLogId = res.locals.exerciseLogId as string;
+  const setId = res.locals.setId as string;
 
   await setLogService.deleteSetLog(logId, exerciseLogId, userId, setId);
   return res.status(204).send();

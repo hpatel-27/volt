@@ -21,7 +21,7 @@ async function getAllWorkoutPlans(req: Request, res: Response) {
 async function getWorkoutPlanById(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
-  const planId = res.locals.planId as number;
+  const planId = res.locals.planId as string;
 
   const workoutPlan = await workoutPlanService.getWorkoutPlanById(
     userId,
@@ -49,7 +49,7 @@ async function createWorkoutPlan(req: Request, res: Response) {
 async function updateWorkoutPlan(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
-  const planId = res.locals.planId as number;
+  const planId = res.locals.planId as string;
   const { name } = req.body;
 
   const data: UpdateWorkoutPlanInput = {};
@@ -78,7 +78,7 @@ async function updateWorkoutPlan(req: Request, res: Response) {
 async function deleteWorkoutPlan(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
-  const planId = res.locals.planId as number;
+  const planId = res.locals.planId as string;
 
   await workoutPlanService.deleteWorkoutPlan(userId, planId);
   return res.status(204).send();
