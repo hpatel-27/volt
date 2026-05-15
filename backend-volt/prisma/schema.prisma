@@ -8,7 +8,7 @@ generator client {
 }
 
 model User {
-  id            Int        @id @default(autoincrement())
+  id            String     @id @default(uuid())
   clerkId       String     @unique
   email         String?    @unique
   firstName     String?    // null until updated in profile
@@ -27,7 +27,8 @@ model User {
 }
 
 model Exercise {
-  id               String   @id // e.g., "Alternate_Incline_Dumbbell_Curl"
+  id               String  @id @default(uuid())
+  slug             String  @unique  // e.g., "Alternate_Incline_Dumbbell_Curl"
   name             String
   force            String? // pull, push, static
   level            String? // beginner, intermediate, expert
@@ -48,8 +49,8 @@ model Exercise {
 
 // User's weight in pounds
 model Weight {
-  id        Int      @id @default(autoincrement())
-  userId    Int
+  id        String   @id @default(uuid())
+  userId    String
   date      DateTime @default(now())
   amount    Float    // pounds
 
@@ -60,10 +61,10 @@ model Weight {
 
 // A named workout plan, e.g. "PPL", "Bro Split", "My Custom Split"
 model WorkoutPlan {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @default(uuid())
   createdAt DateTime @default(now())
   name      String
-  userId    Int
+  userId    String
   user      User     @relation(fields: [userId], references: [id])
 
   workoutDays WorkoutDay[]
@@ -73,10 +74,10 @@ model WorkoutPlan {
 
 // A single day within a plan, e.g. "Push", "Pull", "Legs"
 model WorkoutDay {
-  id            Int         @id @default(autoincrement())
+  id            String      @id @default(uuid())
   name          String
   order         Int // order within the plan
-  workoutPlanId Int
+  workoutPlanId String
   workoutPlan   WorkoutPlan @relation(fields: [workoutPlanId], references: [id], onDelete: Cascade)
 
   exercises   WorkoutDayExercise[]
@@ -87,9 +88,9 @@ model WorkoutDay {
 
 // Exercises assigned to a workout day template
 model WorkoutDayExercise {
-  id           Int        @id @default(autoincrement())
+  id           String     @id @default(uuid())
   order        Int
-  workoutDayId Int
+  workoutDayId String
   exerciseId   String
   workoutDay   WorkoutDay @relation(fields: [workoutDayId], references: [id], onDelete: Cascade)
   exercise     Exercise   @relation(fields: [exerciseId], references: [id])
@@ -99,10 +100,10 @@ model WorkoutDayExercise {
 
 // A recorded workout session
 model WorkoutLog {
-  id           Int         @id @default(autoincrement())
+  id           String      @id @default(uuid())
   date         DateTime    @default(now())
-  userId       Int
-  workoutDayId Int? // nullable — user may log an ad-hoc session
+  userId       String
+  workoutDayId String? // nullable — user may log an ad-hoc session
   user         User        @relation(fields: [userId], references: [id])
   workoutDay   WorkoutDay? @relation(fields: [workoutDayId], references: [id], onDelete: SetNull)
 
@@ -113,9 +114,9 @@ model WorkoutLog {
 
 // One exercise performed within a workout session
 model ExerciseLog {
-  id           Int        @id @default(autoincrement())
+  id           String     @id @default(uuid())
   exerciseId   String
-  workoutLogId Int
+  workoutLogId String
   notes        String?
   exercise     Exercise   @relation(fields: [exerciseId], references: [id])
   workoutLog   WorkoutLog @relation(fields: [workoutLogId], references: [id], onDelete: Cascade)
@@ -127,11 +128,11 @@ model ExerciseLog {
 
 // An individual set: set number, reps performed, weight used
 model SetLog {
-  id            Int         @id @default(autoincrement())
+  id            String      @id @default(uuid())
   setNumber     Int
   reps          Int
   weight        Float // in lbs
-  exerciseLogId Int
+  exerciseLogId String
   exerciseLog   ExerciseLog @relation(fields: [exerciseLogId], references: [id], onDelete: Cascade)
 
   @@map("set_logs")
@@ -139,9 +140,9 @@ model SetLog {
 
 // A daily nutrition record for a user
 model NutritionLog {
-  id     Int      @id @default(autoincrement())
-  userId Int
-  date   DateTime @default(now())
+  id     String   @id @default(uuid())
+  userId String
+  date   DateTime @default(now()) @db.Date
   user   User     @relation(fields: [userId], references: [id])
 
   meals Meal[]
@@ -152,8 +153,8 @@ model NutritionLog {
 
 // An individual meal entry within a nutrition log
 model Meal {
-  id             Int          @id @default(autoincrement())
-  nutritionLogId Int
+  id             String          @id @default(uuid())
+  nutritionLogId String
   name           String
   calories       Float
   protein        Float // grams
