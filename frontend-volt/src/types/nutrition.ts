@@ -18,3 +18,11 @@ export type NutritionRange = {
   nutritionLogs: NutritionLog[];
   total: number;
 };
+
+export type CreateNutritionInput = {
+  date: string;
+};
+
+export type DeleteNutritionVariables = { date: string };
+
+export type DayStripItem = { date: string; log?: NutritionLog };

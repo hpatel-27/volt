@@ -1,10 +1,13 @@
 import useFetch from "@/hooks/useFetch";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
+  CreateNutritionInput,
+  DeleteNutritionVariables,
   NutritionLog,
   NutritionPage,
   NutritionRange,
 } from "@/types/nutrition";
+import { FetchError } from "@/lib/errors";
 
 const BASE = `${import.meta.env.VITE_API_BASE_URL}/nutrition-logs`;
 
@@ -52,11 +55,63 @@ export function useNutritionDetail(date: string) {
   return useQuery({
     queryKey: nutritionKeys.detail(date),
     queryFn: async () => {
-      const url = `${BASE}/${date}`;
-      const data = await authedFetch<NutritionLog>(url);
-      if (!data)
-        throw new Error("Expected nutrition detail, got empty response");
+      try {
+        const url = `${BASE}/${date}`;
+        const data = await authedFetch<NutritionLog>(url);
+        return data;
+      } catch (err) {
+        // Return null when looking at a specific nutrition log that doesn't exist
+        // so we know to render an empty log page, which we can save if the user
+        // wants to create a meal for it
+        if (err instanceof FetchError && err.status === 404) return null;
+        throw err;
+      }
+    },
+  });
+}
+
+export function useCreateNutrition() {
+  const authedFetch = useFetch();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: CreateNutritionInput) => {
+      const data = await authedFetch<NutritionLog>(BASE, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(input),
+      });
+      if (!data) throw new Error("Expected created weight, got empty response");
       return data;
+    },
+    // On success takes up to 3 parameters (data returned from mutationFn,
+    // variables passed to mutate, context object)
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: nutritionKeys.lists() });
+      queryClient.invalidateQueries({
+        queryKey: nutritionKeys.detail(variables.date),
+      });
+    },
+  });
+}
+
+export function useDeleteNutrition() {
+  const authedFetch = useFetch();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ date }: DeleteNutritionVariables) => {
+      const url = `${BASE}/${date}`;
+      await authedFetch(url, { method: "DELETE" });
+    },
+    // On success takes up to 3 parameters (data returned from mutationFn,
+    // variables passed to mutate, context object)
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: nutritionKeys.lists() });
+      queryClient.invalidateQueries({
+        queryKey: nutritionKeys.detail(variables.date),
+      });
+      queryClient.invalidateQueries({ queryKey: nutritionKeys.ranges() });
     },
   });
 }
