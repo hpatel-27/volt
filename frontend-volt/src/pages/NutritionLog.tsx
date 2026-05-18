@@ -44,9 +44,9 @@ const toneBg = {
 export default function NutritionLog() {
   const { logId } = useParams();
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pt-4">
       <header className="flex items-center gap-3">
-        <Link to="/app/nutrition" className="text-bone-300">
+        <Link to="/nutrition" className="text-bone-300">
           ←
         </Link>
         <h1 className="flex-1 font-display text-lg font-bold">{logId}</h1>
