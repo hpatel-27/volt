@@ -15,7 +15,7 @@ export type NutritionPage = {
 };
 
 export type NutritionRange = {
-  nutritionLogs: NutritionLog[];
+  logs: NutritionLog[];
   total: number;
 };
 
@@ -25,4 +25,5 @@ export type CreateNutritionInput = {
 
 export type DeleteNutritionVariables = { date: string };
 
-export type DayStripItem = { date: string; log?: NutritionLog };
+export type DayStripSelected = { selectedDate: string };
+export type DayStripProps = { props: DayStripSelected };
