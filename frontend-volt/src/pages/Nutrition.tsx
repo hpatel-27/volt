@@ -24,10 +24,9 @@ export default function Nutrition() {
     pageQuery.data?.total !== 0
       ? Math.ceil(pageQuery.data?.total / pageQuery.data?.limit)
       : 1;
-  console.log(pageQuery.data);
-  console.log(totalPages);
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pt-4">
       <header className="flex items-center justify-between">
         <div>
           <div className="text-caption">
@@ -58,9 +57,13 @@ export default function Nutrition() {
 
       {/* <div className="text-caption">Past 6 days</div> */}
       <div className="space-y-2 pt-6">
+        <span className="text-caption">Other Entries</span>
         {past.map((d) => (
           <Link key={d.id} to={`/nutrition/${d.id}`}>
-            <Card interactive className="flex items-center justify-between p-4">
+            <Card
+              interactive
+              className="flex items-center justify-between p-4 mt-2"
+            >
               <div className="text-sm font-semibold">{d.date}</div>
               <div className="font-mono text-sm">{d.kcal} kcal</div>
             </Card>
