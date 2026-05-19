@@ -2,6 +2,7 @@ import { prisma } from "../db.js";
 import { Prisma } from "../generated/prisma/client.js";
 import { NotFoundError } from "../errors.js";
 import type { CreateMealInput, UpdateMealInput } from "../types/meal.dto.js";
+import { findOrCreateNutritionLogByDate } from "./nutrition.service.js";
 
 async function getAllMeals(logId: string, userId: string) {
   const log = await prisma.nutritionLog.findUnique({
@@ -28,22 +29,9 @@ async function getMealById(logId: string, userId: string, mealId: string) {
   return meal;
 }
 
-async function createMeal(
-  logId: string,
-  userId: string,
-  data: CreateMealInput,
-) {
-  return await prisma.$transaction(async (tx) => {
-    // Check log existence and ownership
-    const existingLog = await tx.nutritionLog.findUnique({
-      where: { id: logId, userId },
-    });
-    if (!existingLog) {
-      throw new NotFoundError("Log associated to this meal does not exist.");
-    }
-
-    return await tx.meal.create({ data });
-  });
+async function createMeal(data: CreateMealInput) {
+  const meal = await prisma.meal.create({ data });
+  return meal;
 }
 
 async function updateMeal(

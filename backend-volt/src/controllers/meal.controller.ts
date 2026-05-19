@@ -67,10 +67,13 @@ async function createMeal(req: Request, res: Response) {
     return res.status(400).json({ error: "Fat is a required parameter." });
   }
 
-  const logId = await resolveLogId(userId, date);
+  const log = await nutritionService.findOrCreateNutritionLogByDate(
+    userId,
+    date,
+  );
 
   const mealData: CreateMealInput = {
-    nutritionLogId: logId,
+    nutritionLogId: log.id,
     name,
     calories,
     protein,
@@ -78,7 +81,7 @@ async function createMeal(req: Request, res: Response) {
     fat,
   };
 
-  const newMeal = await mealService.createMeal(logId, userId, mealData);
+  const newMeal = await mealService.createMeal(mealData);
   res.status(201).json(newMeal);
 }
 

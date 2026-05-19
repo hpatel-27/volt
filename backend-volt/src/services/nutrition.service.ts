@@ -92,6 +92,8 @@ async function getNutritionLogByDate(userId: string, date: string) {
   return nutritionLog;
 }
 
+// @deprecated
+// NOW DEPRECATED AND REPLACED WITH A FIND_OR_CREATE_NUTRITION_LOG FN
 // Create a new nutrition log for the user, this initially only includes
 // the date and an empty list of meals
 async function createNutritionLog(data: CreateNutritionLogInput) {
@@ -112,6 +114,19 @@ async function createNutritionLog(data: CreateNutritionLogInput) {
     }
     throw error;
   }
+}
+
+// Find a nutrition log by (userId, date), or create one if it does not exist.
+// Used by POST /nutrition-logs/:date/meals so the user can log a meal without
+// having to explicitly create the parent log first.
+async function findOrCreateNutritionLogByDate(userId: string, date: string) {
+  const log = await prisma.nutritionLog.upsert({
+    where: { userId_date: { userId, date: new Date(date) } },
+    create: { userId, date: new Date(date) },
+    // DON'T UPDATE
+    update: {},
+  });
+  return log;
 }
 
 // The date is the only field that can be updated, as meals are managed through a
@@ -194,6 +209,7 @@ export {
   getNutritionLogById,
   getNutritionLogByDate,
   createNutritionLog,
+  findOrCreateNutritionLogByDate,
   updateNutritionLog,
   deleteNutritionLog,
   deleteNutritionLogByDate,
