@@ -43,7 +43,7 @@ export function Button({
     <button
       {...rest}
       className={cn(
-        "inline-flex items-center justify-center transition-colors",
+        "inline-flex items-center justify-center transition-colors leading-none",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-volt-500/60",
         "disabled:opacity-40 disabled:cursor-not-allowed",
         variants[variant],
