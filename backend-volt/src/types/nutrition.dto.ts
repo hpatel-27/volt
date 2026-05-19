@@ -8,3 +8,10 @@ export interface CreateNutritionLogInput {
 export interface UpdateNutritionLogInput {
   date?: string; // ISO 8601 format
 }
+
+export type Totals = {
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+};

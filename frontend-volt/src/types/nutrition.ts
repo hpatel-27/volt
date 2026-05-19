@@ -8,10 +8,24 @@ export type NutritionLog = {
 };
 
 export type NutritionPage = {
-  nutritionLogs: NutritionLog[];
+  nutritionLogs: NutritionLogSummary[];
   total: number;
   page: number;
   limit: number;
+};
+
+export type Totals = {
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+};
+
+export type NutritionLogSummary = {
+  id: string;
+  date: string;
+  totals: Totals;
+  mealCount?: number;
 };
 
 export type NutritionRange = {
