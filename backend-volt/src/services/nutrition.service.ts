@@ -3,6 +3,7 @@ import { Prisma } from "../generated/prisma/client.js";
 import { DuplicateEntryError, NotFoundError } from "../errors.js";
 import type {
   CreateNutritionLogInput,
+  Totals,
   UpdateNutritionLogInput,
 } from "../types/nutrition.dto.js";
 
@@ -13,15 +14,42 @@ async function getAllNutritionLogs(
   limit: number,
 ) {
   // Find the nutrition logs for the user
-  const [nutritionLogs, total] = await prisma.$transaction([
-    prisma.nutritionLog.findMany({
+  const { nutritionLogs, total } = await prisma.$transaction(async (tx) => {
+    const pageLogs = await tx.nutritionLog.findMany({
       where: { userId },
       skip: (page - 1) * limit,
       take: limit,
       orderBy: { date: "desc" },
-    }),
-    prisma.nutritionLog.count({ where: { userId } }),
-  ]);
+    });
+    const total = await tx.nutritionLog.count({ where: { userId } });
+    const mealGroups = await tx.meal.groupBy({
+      by: ["nutritionLogId"],
+      where: { nutritionLogId: { in: pageLogs.map((l) => l.id) } },
+      _sum: { calories: true, protein: true, carbs: true, fat: true },
+    });
+
+    const totalsByLogId = new Map<string, Totals>();
+    mealGroups.forEach((group) => {
+      totalsByLogId.set(group.nutritionLogId, {
+        calories: group._sum.calories ?? 0,
+        protein: group._sum.protein ?? 0,
+        carbs: group._sum.carbs ?? 0,
+        fat: group._sum.fat ?? 0,
+      });
+    });
+
+    const nutritionLogs = pageLogs.map((l) => ({
+      id: l.id,
+      date: l.date,
+      totals: totalsByLogId.get(l.id) ?? {
+        calories: 0,
+        protein: 0,
+        carbs: 0,
+        fat: 0,
+      },
+    }));
+    return { nutritionLogs, total };
+  });
   // An empty list of nutrition logs is still a valid response, so we return it as is
   return { nutritionLogs, total, page, limit };
 }
