@@ -24,7 +24,6 @@ const DayStrip = ({ selectedDate }: DayStripSelected) => {
   const to = dates[dates.length - 1];
 
   const rangeQuery = useNutritionRange({ from, to });
-  console.log(rangeQuery.data);
   const logsByDate = useMemo(() => {
     const map = new Map<string, NutritionLog>();
     rangeQuery.data?.logs.forEach((log) => log && map.set(log.date, log));
