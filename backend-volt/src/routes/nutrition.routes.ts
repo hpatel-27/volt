@@ -26,6 +26,13 @@ router.get(
   parseDateRange(14),
   nutritionController.getNutritionLogsByRange,
 );
+// Get today's nutrition log summary (or null if none exists yet).
+// Registered before /:date so "today" is not interpreted as a date param.
+router.get(
+  "/today",
+  userMiddleware,
+  nutritionController.getTodayNutritionLog,
+);
 // Get a single nutrition log by its date (YYYY-MM-DD), this includes full meal details
 router.get(
   "/:date",

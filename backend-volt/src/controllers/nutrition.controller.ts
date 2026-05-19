@@ -36,6 +36,25 @@ async function getNutritionLogsByRange(req: Request, res: Response) {
   return res.json(logs);
 }
 
+// YYYY-MM-DD format check — client sends its local "today" so we respect the user's timezone
+const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+
+// Return today's nutrition log as a summary (with totals), or null if the user has not
+// logged anything today yet. The client passes its local date via ?date=YYYY-MM-DD so can
+// handle this separately compared to getting a nutrition log by date
+async function getTodayNutritionLog(req: Request, res: Response) {
+  const user = req.user!;
+  const userId = user.id;
+  const { date } = req.query;
+
+  if (typeof date !== "string" || !DATE_REGEX.test(date)) {
+    throw new BadRequestError("date query param must be in YYYY-MM-DD format");
+  }
+
+  const summary = await nutritionService.getTodayNutritionLog(userId, date);
+  res.json(summary);
+}
+
 // Return a single nutrition log by its date (YYYY-MM-DD), this includes full meal details
 async function getNutritionLogByDate(req: Request, res: Response) {
   const user = req.user!;
@@ -92,6 +111,7 @@ async function deleteNutritionLog(req: Request, res: Response) {
 export {
   getAllNutritionLogs,
   getNutritionLogsByRange,
+  getTodayNutritionLog,
   getNutritionLogByDate,
   createNutritionLog,
   updateNutritionLog,

@@ -4,6 +4,7 @@ import type {
   CreateNutritionInput,
   DeleteNutritionVariables,
   NutritionLog,
+  NutritionLogSummary,
   NutritionPage,
   NutritionRange,
 } from "@/types/nutrition";
@@ -21,7 +22,20 @@ export const nutritionKeys = {
   ranges: () => [...nutritionKeys.all, "range"] as const,
   range: (params: { from: string; to: string }) =>
     [...nutritionKeys.ranges(), params] as const,
+  today: () => [...nutritionKeys.all, "today"] as const,
 };
+
+export function useNutritionToday(date: string) {
+  const authedFetch = useFetch();
+  return useQuery({
+    queryKey: nutritionKeys.today(),
+    queryFn: async () => {
+      const url = `${BASE}/today?date=${encodeURIComponent(date)}`;
+      // Server returns the summary or `null` (raw JSON null) when no log exists.
+      return await authedFetch<NutritionLogSummary | null>(url);
+    },
+  });
+}
 
 export function useNutritionLogs(params: { page: number; limit: number }) {
   const authedFetch = useFetch();

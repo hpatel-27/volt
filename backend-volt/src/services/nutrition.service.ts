@@ -77,6 +77,31 @@ async function getNutritionLogById(userId: string, logId: string) {
   return nutritionLog;
 }
 
+// Return today's nutrition log as a summary (id, date, totals), or null if the user
+// has not logged anything today. `date` is the user's local YYYY-MM-DD.
+async function getTodayNutritionLog(userId: string, date: string) {
+  const log = await prisma.nutritionLog.findUnique({
+    where: { userId_date: { userId, date: new Date(date) } },
+    include: { meals: true },
+  });
+  if (!log) return null;
+
+  // Aggregate log's meals
+  const totals = log.meals.reduce(
+    (prev, current) => {
+      return {
+        calories: prev.calories + current.calories,
+        protein: prev.protein + current.protein,
+        carbs: prev.carbs + current.carbs,
+        fat: prev.fat + current.fat,
+      };
+    },
+    { calories: 0, protein: 0, carbs: 0, fat: 0 },
+  );
+
+  return { id: log.id, date, totals };
+}
+
 // Look up a nutrition log by the composite unique key (userId, date).
 // The /:date URL param is YYYY-MM-DD; Prisma coerces it to a Date for @db.Date columns.
 async function getNutritionLogByDate(userId: string, date: string) {
@@ -205,6 +230,7 @@ async function deleteNutritionLogByDate(userId: string, date: string) {
 
 export {
   getAllNutritionLogs,
+  getTodayNutritionLog,
   getNutritionLogsByRange,
   getNutritionLogById,
   getNutritionLogByDate,

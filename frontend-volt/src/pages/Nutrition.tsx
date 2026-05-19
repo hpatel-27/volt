@@ -2,7 +2,7 @@ import { Link, useOutletContext } from "react-router";
 import type { NutritionOutletContext } from "@/components/layout/NutritionLayout";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
-import { useNutritionLogs, useNutritionRange } from "@/api/nutrition";
+import { useNutritionLogs, useNutritionToday } from "@/api/nutrition";
 import { useState } from "react";
 import { formatVerboseDate, todayLocalIso } from "@/lib/date";
 import { ChevronLeft, ChevronRight, Plus, Utensils } from "lucide-react";
@@ -20,7 +20,7 @@ export default function Nutrition() {
       ? Math.ceil(pageQuery.data?.total / pageQuery.data?.limit)
       : 1;
   const todayIso = todayLocalIso();
-  const todayQuery = useNutritionRange({ from: todayIso, to: todayIso });
+  const todayQuery = useNutritionToday(todayIso);
   const { openMealSheet } = useOutletContext<NutritionOutletContext>();
   console.log(todayQuery.data);
   return (
@@ -48,9 +48,7 @@ export default function Nutrition() {
           <div className="text-caption mb-2">Today</div>
           <div className="flex items-baseline gap-2">
             <span className="text-stat font-display text-sky-500">
-              {todayQuery.data?.logs.length !== 0
-                ? todayQuery.data?.logs[0].date
-                : 0}
+              {todayQuery.data?.totals.calories}
             </span>
             <span className="text-bone-500 text-xs">/ {2500} kcal</span>
           </div>
@@ -71,7 +69,9 @@ export default function Nutrition() {
                 <div className="text-sm font-semibold">
                   {formatVerboseDate(day.date)}
                 </div>
-                <div className="font-mono text-sm">{0} kcal</div>
+                <div className="font-mono text-sm">
+                  {day.totals.calories} kcal
+                </div>
               </Card>
             </Link>
           ))}
