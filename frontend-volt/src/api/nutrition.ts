@@ -108,7 +108,7 @@ export function useDeleteNutrition() {
     // variables passed to mutate, context object)
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: nutritionKeys.lists() });
-      queryClient.invalidateQueries({
+      queryClient.removeQueries({
         queryKey: nutritionKeys.detail(variables.date),
       });
       queryClient.invalidateQueries({ queryKey: nutritionKeys.ranges() });
