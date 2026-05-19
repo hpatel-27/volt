@@ -1,4 +1,5 @@
-import { Link } from "react-router";
+import { Link, useOutletContext } from "react-router";
+import type { NutritionOutletContext } from "@/components/layout/NutritionLayout";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { useNutritionLogs, useNutritionRange } from "@/api/nutrition";
@@ -19,12 +20,8 @@ export default function Nutrition() {
       ? Math.ceil(pageQuery.data?.total / pageQuery.data?.limit)
       : 1;
   const todayIso = todayLocalIso();
-  // Workout to get summarized nutrition data for a dynamic "today"
-  // Currently i haven't gotten around to updating the API to return
-  // a summary of the meals for a day instead of all the actual meals
-  // but that will make it easy to display the calories info for the
-  // index nutrition page
   const todayQuery = useNutritionRange({ from: todayIso, to: todayIso });
+  const { openMealSheet } = useOutletContext<NutritionOutletContext>();
   console.log(todayQuery.data);
   return (
     <div className="space-y-4 pt-4">
@@ -39,7 +36,7 @@ export default function Nutrition() {
           variant="sky"
           size="sm"
           className="cursor-pointer active:bg-sky-700"
-          onClick={() => console.log("clicked main meal log button")}
+          onClick={openMealSheet}
         >
           <Plus className="w-4 h-4 shrink-0 translate-y-px" />
           <span className="">Meal</span>
@@ -52,7 +49,7 @@ export default function Nutrition() {
           <div className="flex items-baseline gap-2">
             <span className="text-stat font-display text-sky-500">
               {todayQuery.data?.logs.length !== 0
-                ? todayQuery.data?.logs[0]?.id
+                ? todayQuery.data?.logs[0].date
                 : 0}
             </span>
             <span className="text-bone-500 text-xs">/ {2500} kcal</span>
@@ -114,9 +111,10 @@ export default function Nutrition() {
             variant="sky"
             size="sm"
             className="cursor-pointer active:bg-sky-700"
-            onClick={() => console.log("clicked empty state button")}
+            onClick={openMealSheet}
           >
-            <span>Log a meal</span>
+            <Plus className="w-4 h-4 shrink-0 translate-y-px" />
+            <span>Meal</span>
           </Button>
         </div>
       )}
