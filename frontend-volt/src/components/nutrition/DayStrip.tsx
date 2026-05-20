@@ -33,7 +33,7 @@ const DayStrip = ({ selectedDate }: DayStripSelected) => {
   const atToday = offset === 0;
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 py-4 px-2">
       <button
         type="button"
         onClick={() => setOffset((o) => o + STRIP_SIZE)}
