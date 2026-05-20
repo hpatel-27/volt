@@ -22,7 +22,6 @@ export default function Nutrition() {
   const todayIso = todayLocalIso();
   const todayQuery = useNutritionToday(todayIso);
   const { openMealSheet } = useOutletContext<NutritionOutletContext>();
-  console.log(todayQuery.data);
   return (
     <div className="space-y-4 pt-4">
       <header className="flex items-center justify-between">
@@ -61,7 +60,7 @@ export default function Nutrition() {
         <div className="space-y-2 pt-6">
           <span className="text-caption">Other Entries</span>
           {pageQuery.data?.nutritionLogs.map((day) => (
-            <Link key={day.id} to={`/nutrition/${day.id}`}>
+            <Link key={day.id} to={`/nutrition/${day.date}`}>
               <Card
                 interactive
                 className="flex items-center justify-between p-4 mt-2"
