@@ -26,9 +26,11 @@ async function getAllNutritionLogs(
       by: ["nutritionLogId"],
       where: { nutritionLogId: { in: pageLogs.map((l) => l.id) } },
       _sum: { calories: true, protein: true, carbs: true, fat: true },
+      _count: true,
     });
 
     const totalsByLogId = new Map<string, Totals>();
+    const countsByLogId = new Map<string, number>();
     mealGroups.forEach((group) => {
       totalsByLogId.set(group.nutritionLogId, {
         calories: group._sum.calories ?? 0,
@@ -36,6 +38,7 @@ async function getAllNutritionLogs(
         carbs: group._sum.carbs ?? 0,
         fat: group._sum.fat ?? 0,
       });
+      countsByLogId.set(group.nutritionLogId, group._count);
     });
 
     const nutritionLogs = pageLogs.map((l) => ({
@@ -47,6 +50,8 @@ async function getAllNutritionLogs(
         carbs: 0,
         fat: 0,
       },
+      // A log with zero meals never appears in mealGroups, so default to 0.
+      mealCount: countsByLogId.get(l.id) ?? 0,
     }));
     return { nutritionLogs, total };
   });
@@ -99,7 +104,12 @@ async function getTodayNutritionLog(userId: string, date: string) {
     { calories: 0, protein: 0, carbs: 0, fat: 0 },
   );
 
-  return { id: log.id, date: date.slice(0, 10), totals };
+  return {
+    id: log.id,
+    date: date.slice(0, 10),
+    totals,
+    mealCount: log.meals.length,
+  };
 }
 
 // Look up a nutrition log by the composite unique key (userId, date).
