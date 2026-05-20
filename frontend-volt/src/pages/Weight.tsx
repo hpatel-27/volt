@@ -65,7 +65,7 @@ export default function Weight() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 py-4 px-2">
       <header className="flex items-center justify-between">
         <h1 className="font-display text-2xl font-bold">Weight</h1>
         <button
