@@ -1,18 +1,22 @@
 import { useParams, Link, useOutletContext } from "react-router";
+import { useEffect, useState } from "react";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { Spinner } from "../components/ui/Spinner";
+import { ProgressRing } from "../components/ui/ProgressRing";
 import { useNutritionDetail } from "@/api/nutrition";
 import type { NutritionOutletContext } from "@/components/layout/NutritionLayout";
-import { formatVerboseDate } from "@/lib/date";
-import { ArrowLeft, Plus, Utensils } from "lucide-react";
+import { formatRelativeDate } from "@/lib/date";
+import { ArrowLeft, Plus } from "lucide-react";
 import type { Meal } from "@/types/meal";
+import { cn } from "@/lib/cn";
 
+// TODO: lift to user settings / shared nutrition config — duplicated in Nutrition.tsx
 const GOALS = {
-  calories: 2400,
-  protein: 180,
-  carbs: 240,
-  fat: 70,
+  calories: 2100,
+  protein: 140, // 560 calories
+  carbs: 210, // 840 calories
+  fat: 50, // 450 calories
 };
 
 function totalsFromMeals(meals: Meal[]) {
@@ -27,10 +31,31 @@ function totalsFromMeals(meals: Meal[]) {
   );
 }
 
+const MACROS = [
+  {
+    key: "protein",
+    label: "Protein",
+    color: "text-volt-500",
+    bar: "bg-volt-500",
+  },
+  { key: "carbs", label: "Carbs", color: "text-sky-500", bar: "bg-sky-500" },
+  { key: "fat", label: "Fat", color: "text-blaze-500", bar: "bg-blaze-500" },
+] as const;
+
 export default function NutritionLog() {
   const { date } = useParams<{ date: string }>();
   const { openMealSheet } = useOutletContext<NutritionOutletContext>();
   const detailQuery = useNutritionDetail(date!);
+
+  // Drives the mount animation: bars/ring render at 0, then ease to their real
+  // value on the next frame. Keyed off the loaded log so it replays per day.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    if (detailQuery.data) {
+      const id = requestAnimationFrame(() => setMounted(true));
+      return () => cancelAnimationFrame(id);
+    }
+  }, [detailQuery.data]);
 
   if (detailQuery.isLoading) {
     return (
@@ -44,82 +69,81 @@ export default function NutritionLog() {
   const meals = log?.meals ?? [];
   const totals = totalsFromMeals(meals);
   const remaining = Math.max(GOALS.calories - totals.calories, 0);
-  const caloriePct =
-    GOALS.calories > 0
-      ? Math.min((totals.calories / GOALS.calories) * 100, 100)
-      : 0;
-
-  const macroBars = [
-    {
-      label: "Protein",
-      value: totals.protein,
-      goal: GOALS.protein,
-      color: "bg-volt-500",
-    },
-    {
-      label: "Carbs",
-      value: totals.carbs,
-      goal: GOALS.carbs,
-      color: "bg-sky-500",
-    },
-    { label: "Fat", value: totals.fat, goal: GOALS.fat, color: "bg-blaze-500" },
-  ];
+  const over = totals.calories > GOALS.calories;
 
   return (
-    <div className="space-y-4 pt-4">
+    <div className="space-y-6 pt-4">
       <header className="flex items-center gap-3">
-        <Link to="/nutrition" className="text-bone-300">
-          <ArrowLeft className="w-4 h-4" />
+        <Link
+          to="/nutrition"
+          className="grid h-9 w-9 place-items-center rounded-xl text-bone-300 transition-colors hover:bg-ink-800 hover:text-bone-50"
+        >
+          <ArrowLeft className="h-4 w-4" />
         </Link>
-        <h1 className="flex-1 font-display text-lg font-bold">
-          {date ? formatVerboseDate(date) : "Nutrition Log"}
-        </h1>
+        <div className="flex-1">
+          <div className="text-caption text-bone-500">Nutrition</div>
+          <h1 className="font-display text-xl font-bold leading-tight">
+            {date ? formatRelativeDate(date) : "Log"}
+          </h1>
+        </div>
         <Button
-          variant="sky"
           size="sm"
-          className="cursor-pointer active:bg-sky-700"
+          variant="sky"
+          leading={<Plus className="h-4 w-4" />}
           onClick={openMealSheet}
         >
-          <Plus className="w-4 h-4 shrink-0 translate-y-px" />
-          <span>Meal</span>
+          Meal
         </Button>
       </header>
 
-      <Card className="bg-linear-to-br from-sky-500/15 via-ink-900 to-ink-900 border-sky-500/20 flex items-center gap-5">
-        <div
-          className="w-32 h-32 rounded-full grid place-items-center shrink-0"
-          style={{
-            background: `conic-gradient(var(--color-sky-500) ${caloriePct}%, rgba(255,255,255,0.08) 0)`,
-          }}
+      {/* Hero — the calorie ring dominates; everything else is supporting detail. */}
+      <Card className="flex flex-col items-center gap-6 m-4 py-8">
+        <ProgressRing
+          value={mounted ? totals.calories : 0}
+          max={GOALS.calories}
+          size={196}
+          stroke={14}
+          color={over ? "blaze" : "sky"}
         >
-          <div className="w-[calc(100%-16px)] h-[calc(100%-16px)] rounded-full bg-ink-900 flex flex-col items-center justify-center">
-            <span className="text-[10px] uppercase tracking-wider text-bone-500 font-semibold">
-              Left
-            </span>
-            <span className="font-display text-2xl font-bold text-sky-400">
-              {remaining}
-            </span>
-            <span className="text-[10px] text-bone-500 font-mono">
-              / {GOALS.calories.toLocaleString()}
-            </span>
-          </div>
-        </div>
-        <div className="flex-1 space-y-3">
-          {macroBars.map((m) => {
-            const pct =
-              m.goal > 0 ? Math.min((m.value / m.goal) * 100, 100) : 0;
+          <span className="text-caption text-bone-500">
+            {over ? "Over by" : "Remaining"}
+          </span>
+          <span
+            className={cn(
+              "font-display text-3xl font-bold leading-none",
+              over ? "text-blaze-500" : "text-bone-50",
+            )}
+          >
+            {over ? totals.calories - GOALS.calories : remaining}
+          </span>
+          <span className="font-mono text-xs text-bone-500 pt-2">
+            {totals.calories.toLocaleString()} /{" "}
+            {GOALS.calories.toLocaleString()} kcal
+          </span>
+        </ProgressRing>
+
+        <div className="grid w-full grid-cols-3 gap-3">
+          {MACROS.map((m) => {
+            const value = totals[m.key];
+            const goal = GOALS[m.key];
+            const pct = goal > 0 ? Math.min((value / goal) * 100, 100) : 0;
             return (
-              <div key={m.label}>
-                <div className="flex justify-between mb-1">
-                  <span className="text-caption">{m.label}</span>
-                  <span className="text-xs font-mono">
-                    {m.value} / {m.goal}g
+              <div key={m.key} className="space-y-2">
+                <div className="flex items-baseline justify-between">
+                  <span className="text-caption text-bone-500">{m.label}</span>
+                </div>
+                <div className="flex items-baseline gap-1">
+                  <span className={`font-display text-lg font-bold ${m.color}`}>
+                    {value}
+                  </span>
+                  <span className="font-mono text-[11px] text-bone-500">
+                    /{goal}g
                   </span>
                 </div>
-                <div className="h-1.5 rounded-full bg-ink-800 overflow-hidden">
+                <div className="h-1 overflow-hidden rounded-full bg-ink-800">
                   <div
-                    className={`h-full ${m.color}`}
-                    style={{ width: `${pct}%` }}
+                    className={`h-full rounded-full ${m.bar} transition-[width] duration-700 ease-out`}
+                    style={{ width: mounted ? `${pct}%` : "0%" }}
                   />
                 </div>
               </div>
@@ -129,34 +153,56 @@ export default function NutritionLog() {
       </Card>
 
       {meals.length > 0 ? (
-        <div className="space-y-2 pt-2">
-          <span className="text-caption">Meals</span>
-          {meals.map((m) => (
-            <Card key={m.id} className="flex items-center gap-3 p-4 mt-2">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-sky-500/10 text-sky-500">
-                <Utensils className="w-5 h-5" />
-              </div>
-              <div className="flex-1">
-                <div className="text-sm font-semibold">{m.name}</div>
-                <div className="text-xs text-bone-500 font-mono mt-0.5">
-                  Protein {m.protein}g · Carbs {m.carbs}g · Fat {m.fat}g
+        <div>
+          <div className="mb-3 flex items-baseline justify-between">
+            <span className="text-caption text-bone-500">Meals</span>
+            <span className="font-mono text-xs text-bone-500">
+              {meals.length}
+            </span>
+          </div>
+          <div className="space-y-px overflow-hidden rounded-2xl border border-white/5">
+            {meals.map((m) => (
+              <div
+                key={m.id}
+                className="flex items-center gap-4 bg-ink-900 px-4 py-3.5 transition-colors hover:bg-ink-850 cursor-pointer"
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-semibold text-bone-50">
+                    {m.name}
+                  </div>
+                  <div className="mt-1 flex gap-3 font-mono text-[11px] text-bone-500">
+                    <span className="text-volt-500">{m.protein}g Protein</span>
+                    <span className="text-sky-500">{m.carbs}g Carbs</span>
+                    <span className="text-blaze-500">{m.fat}g Fat</span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className="font-display text-lg font-bold text-bone-50">
+                    {m.calories}
+                  </span>
+                  <span className="ml-1 text-caption text-bone-500">kcal</span>
                 </div>
               </div>
-              <div className="font-mono text-sm font-semibold">
-                {m.calories} Cal
-              </div>
-            </Card>
-          ))}
+            ))}
+          </div>
         </div>
       ) : (
-        <div className="flex flex-col items-center text-center py-12 gap-2">
-          <Utensils className="w-10 h-10 text-bone-500" />
-          <p className="font-display text-base font-semibold text-bone-500">
-            No meals logged yet.
+        <div className="flex flex-col items-center gap-3 py-16 text-center">
+          <p className="font-display text-base font-semibold text-bone-50">
+            Nothing logged yet
           </p>
-          <p className="text-caption max-w-xs">
-            Tap "Meal" to log your first meal for this day.
+          <p className="text-caption max-w-60 text-bone-500 normal-case tracking-normal">
+            Add your first meal to start filling the ring for this day.
           </p>
+          <Button
+            size="sm"
+            variant="sky"
+            leading={<Plus className="h-4 w-4" />}
+            onClick={openMealSheet}
+            className="mt-1"
+          >
+            Add meal
+          </Button>
         </div>
       )}
     </div>
