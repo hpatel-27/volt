@@ -31,8 +31,8 @@ Defined in `src/index.css` via Tailwind v4 `@theme`. Same tokens duplicated in `
 | `bone-300` | `#A1A1AA` | Secondary text |
 | `bone-500` | `#71717A` | Muted text / captions |
 | `volt-500` | `#C6FF3D` | Workouts, progress, success, primary CTA |
-| `blaze-500` | `#FF3B30` | PRs, intensity, destructive, warnings |
-| `sky-500` | `#5AC8FA` | Nutrition, recovery, analytics |
+| `blaze-500` | `#F31E4B` | PRs, intensity, destructive, warnings |
+| `sky-500` | `#2E8BFF` | Nutrition, recovery, analytics |
 
 **Accent rule:** an accent appears on (a) primary CTA, (b) one hero stat, (c) progress fills. Everything else stays bone/ink.
 
@@ -128,5 +128,6 @@ Bottom-tab order: **Home · Workouts · Log (center, raised, volt) · Nutrition 
 | 2026-04-26 | Static `mockups.html` precedes React port | Lets us iterate on look without wrestling component APIs first. Will be deleted once screens are in React. |
 | 2026-04-26 | Nutrition log auto-creates on first meal | Removes a meaningless step — users think in meals, not "log objects". |
 | 2026-04-29 | Landing page is the exception to "one accent per screen" | Marketing surface, not an app screen — showcases all three domain accents (volt/sky/blaze) so each is advertised once. Rule still holds for every authenticated screen. |
+| 2026-05-20 | Retuned `sky` → Electric Azure (`#2E8BFF`) and `blaze` → Crimson Rose (`#F31E4B`) | Old values were iOS system cyan/red — pale and "default OS" on OLED black. Saturated azure reads more "tech premium"; crimson reads "PR/intensity" over "error dialog". `volt` unchanged. |
 
 Append new rows when a non-trivial decision is made — short reason, not a essay.
