@@ -47,8 +47,8 @@ export default function NutritionLog() {
   const { openMealSheet } = useOutletContext<NutritionOutletContext>();
   const detailQuery = useNutritionDetail(date!);
 
-  // Drives the mount animation: bars/ring render at 0, then ease to their real
-  // value on the next frame. Keyed off the loaded log so it replays per day.
+  // Bars/ring render at 0, then ease to their real
+  // value on the next frame. Key off loaded log to replay per day.
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     if (detailQuery.data) {
@@ -96,7 +96,7 @@ export default function NutritionLog() {
         </Button>
       </header>
 
-      {/* Hero — the calorie ring dominates; everything else is supporting detail. */}
+      {/* The calorie ring should dominate, everything else is supporting detail. */}
       <Card className="flex flex-col items-center gap-6 m-4 py-8">
         <ProgressRing
           value={mounted ? totals.calories : 0}
