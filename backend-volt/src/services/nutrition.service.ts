@@ -40,7 +40,7 @@ async function getAllNutritionLogs(
 
     const nutritionLogs = pageLogs.map((l) => ({
       id: l.id,
-      date: l.date,
+      date: l.date.toISOString().split("T")[0], // Format date as YYYY-MM-DD
       totals: totalsByLogId.get(l.id) ?? {
         calories: 0,
         protein: 0,
@@ -99,7 +99,7 @@ async function getTodayNutritionLog(userId: string, date: string) {
     { calories: 0, protein: 0, carbs: 0, fat: 0 },
   );
 
-  return { id: log.id, date, totals };
+  return { id: log.id, date: date.slice(0, 10), totals };
 }
 
 // Look up a nutrition log by the composite unique key (userId, date).
