@@ -55,3 +55,11 @@ export function formatVerboseDate(date: string) {
   });
   return verboseDate;
 }
+
+/** "Today" / "Yesterday" / "May 19" — relative labels read more human than a bare date. */
+export function formatRelativeDate(date: string) {
+  const iso = date.slice(0, 10);
+  if (iso === todayLocalIso()) return "Today";
+  if (iso === yesterdayLocalIso()) return "Yesterday";
+  return formatVerboseDate(iso);
+}
