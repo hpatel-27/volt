@@ -52,15 +52,15 @@ const DayStrip = ({ selectedDate }: DayStripSelected) => {
               key={iso}
               to={`/nutrition/${iso}`}
               className={cn(
-                "flex flex-col items-center rounded-lg px-2 py-1 text-xs",
+                "flex flex-col items-center rounded-lg px-2 py-1 text-xs hover:bg-ink-700 transition",
                 isSelected &&
-                  "bg-sky-500 text-ink-950 font-semibold hover:bg-sky-600 active:bg-sky-700 transition",
+                  "bg-sky-500 text-ink-950 font-semibold hover:bg-sky-600 active:bg-sky-700",
               )}
             >
               <span>{weekdayLetter(iso)}</span>
               <span className="font-mono">{dayNumber(iso)}</span>
               {/* Dot indicator goes here */}
-              {log ? <span>Dot</span> : null}
+              {log?.date && <p>.</p>}
             </Link>
           );
         })}
@@ -70,7 +70,10 @@ const DayStrip = ({ selectedDate }: DayStripSelected) => {
         type="button"
         onClick={() => setOffset((o) => Math.max(0, o - STRIP_SIZE))}
         disabled={atToday}
-        className="p-1 cursor-pointer disabled:opacity-30"
+        className={cn(
+          "p-1 disabled:opacity-30",
+          atToday ? "cursor-not-allowed" : "cursor-pointer",
+        )}
         aria-label="Next week"
       >
         <ChevronRight className="w-5 h-5" />
