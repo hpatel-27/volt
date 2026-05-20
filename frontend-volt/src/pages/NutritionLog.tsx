@@ -156,9 +156,6 @@ export default function NutritionLog() {
         <div>
           <div className="mb-3 flex items-baseline justify-between">
             <span className="text-caption text-bone-500">Meals</span>
-            <span className="font-mono text-xs text-bone-500">
-              {meals.length}
-            </span>
           </div>
           <div className="space-y-px overflow-hidden rounded-2xl border border-white/5">
             {meals.map((m) => (
