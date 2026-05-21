@@ -68,6 +68,7 @@ export function useMealCreate() {
       queryClient.invalidateQueries({
         queryKey: nutritionKeys.ranges(),
       });
+      queryClient.invalidateQueries({ queryKey: nutritionKeys.today() });
       queryClient.invalidateQueries({
         queryKey: nutritionKeys.detail(variables.date),
       });
@@ -104,6 +105,9 @@ export function useMealUpdate() {
         queryKey: nutritionKeys.ranges(),
       });
       queryClient.invalidateQueries({
+        queryKey: nutritionKeys.today(),
+      });
+      queryClient.invalidateQueries({
         queryKey: mealKeys.list(variables.date),
       });
       queryClient.invalidateQueries({
@@ -134,6 +138,7 @@ export function useMealDelete() {
       queryClient.invalidateQueries({
         queryKey: nutritionKeys.ranges(),
       });
+      queryClient.invalidateQueries({ queryKey: nutritionKeys.today() });
       queryClient.invalidateQueries({
         queryKey: nutritionKeys.detail(variables.date),
       });
