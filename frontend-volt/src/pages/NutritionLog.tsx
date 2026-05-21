@@ -7,7 +7,7 @@ import { ProgressRing } from "../components/ui/ProgressRing";
 import { useNutritionDetail } from "@/api/nutrition";
 import type { NutritionOutletContext } from "@/components/layout/NutritionLayout";
 import { formatRelativeDate } from "@/lib/date";
-import { ArrowLeft, Plus } from "lucide-react";
+import { ArrowLeft, ChevronRight, Plus } from "lucide-react";
 import type { Meal } from "@/types/meal";
 import { cn } from "@/lib/cn";
 
@@ -90,7 +90,7 @@ export default function NutritionLog() {
           size="sm"
           variant="sky"
           leading={<Plus className="h-4 w-4" />}
-          onClick={openMealSheet}
+          onClick={() => openMealSheet()}
         >
           Meal
         </Button>
@@ -159,9 +159,11 @@ export default function NutritionLog() {
           </div>
           <div className="space-y-px overflow-hidden rounded-2xl border border-white/5">
             {meals.map((m) => (
-              <div
+              <button
                 key={m.id}
-                className="flex items-center gap-4 bg-ink-900 px-4 py-3.5 transition-colors hover:bg-ink-850 cursor-pointer"
+                type="button"
+                onClick={() => openMealSheet(m)}
+                className="flex w-full items-center gap-4 bg-ink-900 px-4 py-3.5 text-left transition-colors hover:bg-ink-850 focus-visible:outline-none focus-visible:bg-ink-850"
               >
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm font-semibold text-bone-50">
@@ -179,7 +181,8 @@ export default function NutritionLog() {
                   </span>
                   <span className="ml-1 text-caption text-bone-500">kcal</span>
                 </div>
-              </div>
+                <ChevronRight className="h-4 w-4 shrink-0 text-bone-600" />
+              </button>
             ))}
           </div>
         </div>
@@ -195,7 +198,7 @@ export default function NutritionLog() {
             size="sm"
             variant="sky"
             leading={<Plus className="h-4 w-4" />}
-            onClick={openMealSheet}
+            onClick={() => openMealSheet()}
             className="mt-1"
           >
             Add meal

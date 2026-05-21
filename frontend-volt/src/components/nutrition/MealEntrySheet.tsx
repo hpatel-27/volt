@@ -2,30 +2,72 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { Sheet } from "../ui/Sheet";
 import { Button } from "../ui/Button";
-import { useMealCreate } from "@/api/meal";
-import type { CreateMealVariables } from "@/types/meal";
+import { useMealCreate, useMealDelete, useMealUpdate } from "@/api/meal";
+import type {
+  CreateMealVariables,
+  Meal,
+  UpdateMealVariables,
+} from "@/types/meal";
 
 interface MealEntrySheetProps {
   open: boolean;
   onClose: () => void;
   date: string;
+  // If meal provided, edit that meal; null/undefined, create a new one.
+  meal?: Meal | null;
 }
 
-export function MealEntrySheet({ open, onClose, date }: MealEntrySheetProps) {
+export function MealEntrySheet({
+  open,
+  onClose,
+  date,
+  meal,
+}: MealEntrySheetProps) {
+  const isEdit = !!meal;
+
   const [name, setName] = useState("");
   const [calories, setCalories] = useState("");
   const [protein, setProtein] = useState("");
   const [carbs, setCarbs] = useState("");
   const [fat, setFat] = useState("");
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const nameRef = useRef<HTMLInputElement>(null);
-  const createMeal = useMealCreate();
 
-  function resetForm() {
-    setName("");
-    setCalories("");
-    setProtein("");
-    setCarbs("");
-    setFat("");
+  const createMeal = useMealCreate();
+  const updateMeal = useMealUpdate();
+  const deleteMeal = useMealDelete();
+  const isPending = createMeal.isPending || updateMeal.isPending;
+
+  // Sync form to the sheet's purpose when it opens, or when it switches
+  // to a different meal while open. This uses the render-time "adjust state on
+  // prop change" pattern (see Sheet.tsx).
+  const [prevOpen, setPrevOpen] = useState(false);
+  const [prevMealId, setPrevMealId] = useState<string | null>(null);
+  const mealId = meal?.id ?? null;
+
+  if (open && (!prevOpen || prevMealId !== mealId)) {
+    setPrevOpen(true);
+    setPrevMealId(mealId);
+    setConfirmingDelete(false);
+
+    // Prefill from existing meal or reset to "" for new entry
+    if (meal) {
+      setName(meal.name);
+      setCalories(String(meal.calories));
+      setProtein(String(meal.protein));
+      setCarbs(String(meal.carbs));
+      setFat(String(meal.fat));
+    } else {
+      setName("");
+      setCalories("");
+      setProtein("");
+      setCarbs("");
+      setFat("");
+    }
+  }
+
+  if (!open && prevOpen) {
+    setPrevOpen(false);
   }
 
   function parseNonNegative(value: string): number | null {
@@ -60,27 +102,52 @@ export function MealEntrySheet({ open, onClose, date }: MealEntrySheetProps) {
       return;
     }
 
-    const variables: CreateMealVariables = {
-      date,
-      meal: {
-        name: name.trim(),
-        calories: caloriesNum,
-        protein: proteinNum,
-        carbs: carbsNum,
-        fat: fatNum,
-      },
+    const fields = {
+      name: name.trim(),
+      calories: caloriesNum,
+      protein: proteinNum,
+      carbs: carbsNum,
+      fat: fatNum,
     };
 
+    if (isEdit && meal) {
+      const variables: UpdateMealVariables = {
+        date,
+        mealId: meal.id,
+        patch: fields,
+      };
+      updateMeal.mutate(variables, {
+        onSuccess: () => {
+          toast.success("Meal updated.");
+          onClose();
+        },
+        onError: () => toast.error("Could not update meal. Please try again."),
+      });
+      return;
+    }
+
+    const variables: CreateMealVariables = { date, meal: fields };
     createMeal.mutate(variables, {
       onSuccess: () => {
         toast.success("Meal logged!");
-        resetForm();
         onClose();
       },
-      onError: () => {
-        toast.error("Could not log meal. Please try again.");
-      },
+      onError: () => toast.error("Could not log meal. Please try again."),
     });
+  }
+
+  function handleDelete() {
+    if (!meal) return;
+    deleteMeal.mutate(
+      { date, mealId: meal.id },
+      {
+        onSuccess: () => {
+          toast.success("Meal deleted.");
+          onClose();
+        },
+        onError: () => toast.error("Could not delete meal. Please try again."),
+      },
+    );
   }
 
   return (
@@ -88,7 +155,7 @@ export function MealEntrySheet({ open, onClose, date }: MealEntrySheetProps) {
       open={open}
       onClose={onClose}
       onOpenEnd={() => nameRef.current?.focus()}
-      title="Log Meal"
+      title={isEdit ? "Edit Meal" : "Log Meal"}
     >
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
@@ -135,11 +202,47 @@ export function MealEntrySheet({ open, onClose, date }: MealEntrySheetProps) {
           variant="primary"
           size="lg"
           full
-          disabled={createMeal.isPending}
+          disabled={isPending}
         >
-          {createMeal.isPending ? "Saving..." : "Save"}
+          {isPending ? "Saving..." : isEdit ? "Save changes" : "Save"}
         </Button>
       </form>
+
+      {/* Delete in edit mode only */}
+      {isEdit &&
+        (confirmingDelete ? (
+          <div className="mt-4 flex items-center justify-between gap-3 border-t border-white/5 pt-4">
+            <span className="text-sm text-bone-300">Delete this meal?</span>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setConfirmingDelete(false)}
+                disabled={deleteMeal.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="danger"
+                size="sm"
+                onClick={handleDelete}
+                disabled={deleteMeal.isPending}
+              >
+                {deleteMeal.isPending ? "Deleting..." : "Delete"}
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setConfirmingDelete(true)}
+            className="mt-4 w-full border-t border-white/5 pt-4 text-center text-sm font-medium text-blaze-400 transition-colors hover:text-blaze-500"
+          >
+            Delete meal
+          </button>
+        ))}
     </Sheet>
   );
 }

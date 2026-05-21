@@ -45,7 +45,7 @@ export default function Nutrition() {
           size="sm"
           variant="sky"
           leading={<Plus className="h-4 w-4" />}
-          onClick={openMealSheet}
+          onClick={() => openMealSheet()}
         >
           Meal
         </Button>
@@ -148,7 +148,7 @@ export default function Nutrition() {
             size="sm"
             variant="sky"
             leading={<Plus className="h-4 w-4" />}
-            onClick={openMealSheet}
+            onClick={() => openMealSheet()}
             className="mt-1"
           >
             Add meal
