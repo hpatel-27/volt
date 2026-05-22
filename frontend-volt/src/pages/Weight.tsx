@@ -12,7 +12,7 @@ import {
 } from "../lib/date";
 import { cn } from "../lib/cn";
 import { Button } from "../components/ui/Button";
-import type { WeightFilter } from "../types/weight";
+import type { Weight as WeightEntry, WeightFilter } from "../types/weight";
 import WeightsChart from "@/components/weight/WeightsChart";
 
 const FILTER_LABELS: Record<WeightFilter, string> = {
@@ -48,6 +48,7 @@ export default function Weight() {
   const [page, setPage] = useState(1);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sheetKey, setSheetKey] = useState(0);
+  const [editingWeight, setEditingWeight] = useState<WeightEntry | null>(null);
   const weightsQuery = useWeights({ page, limit: LIMIT });
   const latestWeight = useLatestWeight();
   const totalPages =
@@ -59,7 +60,10 @@ export default function Weight() {
   const dateRange = filterToRange(filter);
   const weightsRangeQuery = useWeightsRange(dateRange);
 
-  const openSheet = () => {
+  // No argument = log a new weight. Pass an entry = open the sheet to edit it.
+  // Bumping the key remounts the sheet so its fields re-initialize from editingWeight`.
+  const openSheet = (weight?: WeightEntry) => {
+    setEditingWeight(weight ?? null);
     setSheetKey((k) => k + 1);
     setSheetOpen(true);
   };
@@ -69,7 +73,7 @@ export default function Weight() {
       <header className="flex items-center justify-between">
         <h1 className="font-display text-2xl font-bold">Weight</h1>
         <button
-          onClick={openSheet}
+          onClick={() => openSheet()}
           className="w-10 h-10 rounded-full bg-volt-500 hover:bg-volt-600 active:bg-volt-700 text-ink-950
                      font-bold text-xl flex items-center justify-center cursor-pointer transition"
         >
@@ -81,12 +85,15 @@ export default function Weight() {
         key={sheetKey}
         open={sheetOpen}
         onClose={() => setSheetOpen(false)}
+        weight={editingWeight}
       />
 
       <div>
         <div className="text-caption">Current</div>
         <div className="flex items-baseline gap-2 mt-1">
-          <span className="text-display">{latestWeight.data?.amount}</span>
+          <span className="text-display">
+            {latestWeight.data ? latestWeight.data.amount.toFixed(1) : "—"}
+          </span>
           <span className="text-bone-500 font-medium">lbs</span>
         </div>
         {(() => {
@@ -149,55 +156,66 @@ export default function Weight() {
           No entries yet — tap + to log your first weight.
         </div>
       ) : (
-        <div className="space-y-2">
-          {weightsQuery.data?.weights.map((w, i, arr) => {
-            const previous = arr[i + 1];
-            const delta = previous ? w.amount - previous.amount : 0;
-            const { label, tone } = formatDelta(delta);
-            return (
-              <Card
-                key={w.id}
-                className="p-3 flex items-center justify-between"
-              >
-                <div>
-                  <div className="text-sm font-semibold font-mono">
-                    {w.amount.toFixed(1)} lbs
-                  </div>
-                  <div className="text-xs text-bone-500">
-                    {formatWhen(w.date)}
-                  </div>
-                </div>
-                <span
-                  className={
-                    "text-xs font-semibold " +
-                    (tone === "good" ? "text-volt-500" : "text-bone-500")
-                  }
+        <div>
+          <div className="space-y-px overflow-hidden rounded-2xl border border-white/5">
+            {weightsQuery.data?.weights.map((w, i, arr) => {
+              const previous = arr[i + 1];
+              const delta = previous ? w.amount - previous.amount : 0;
+              const { label, tone } = formatDelta(delta);
+              return (
+                <button
+                  key={w.id}
+                  type="button"
+                  onClick={() => openSheet(w)}
+                  className="flex w-full items-center gap-4 bg-ink-900 px-4 py-3.5 text-left transition-colors hover:bg-ink-850 focus-visible:outline-none focus-visible:bg-ink-850 cursor-pointer"
                 >
-                  {label}
-                </span>
-              </Card>
-            );
-          })}
-          <div className="flex pt-6 justify-center gap-2">
-            <Button
-              size="sm"
-              disabled={page === 1}
-              onClick={() => setPage((p) => p - 1)}
-              className="hover:bg-volt-600 hover:text-ink-950 hover:font-semibold active:bg-volt-700 cursor-pointer transition"
-            >
-              <ChevronLeft />
-              Prev
-            </Button>
-            <Button
-              size="sm"
-              disabled={page === totalPages}
-              onClick={() => setPage((p) => p + 1)}
-              className="hover:bg-volt-600 hover:text-ink-950 hover:font-semibold active:bg-volt-700 cursor-pointer transition"
-            >
-              Next
-              <ChevronRight />
-            </Button>
+                  <div className="flex-1">
+                    <div className="font-mono text-sm font-semibold text-bone-50">
+                      {w.amount.toFixed(1)} lbs
+                    </div>
+                    <div className="text-caption text-bone-500 mt-0.5">
+                      {formatWhen(w.date)}
+                    </div>
+                  </div>
+                  <span
+                    className={cn(
+                      "font-mono text-xs font-semibold",
+                      tone === "good" ? "text-volt-500" : "text-bone-500",
+                    )}
+                  >
+                    {label}
+                  </span>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-bone-600" />
+                </button>
+              );
+            })}
           </div>
+
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 pt-6">
+              <Button
+                size="sm"
+                variant="ghost"
+                disabled={page === 1}
+                leading={<ChevronLeft className="h-4 w-4" />}
+                onClick={() => setPage((p) => p - 1)}
+              >
+                Prev
+              </Button>
+              <span className="px-2 font-mono text-xs text-bone-500">
+                {page} / {totalPages}
+              </span>
+              <Button
+                size="sm"
+                variant="ghost"
+                disabled={page === totalPages}
+                trailing={<ChevronRight className="h-4 w-4" />}
+                onClick={() => setPage((p) => p + 1)}
+              >
+                Next
+              </Button>
+            </div>
+          )}
         </div>
       )}
     </div>
