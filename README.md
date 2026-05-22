@@ -30,17 +30,27 @@
 ```
 volt/
 ├── frontend-volt/        # React 19 + Vite + Tailwind frontend
+│   └── src/
+│       ├── api/          # Typed fetch clients per resource
+│       ├── components/   # UI primitives + feature components (layout, nutrition, weight, ui)
+│       ├── hooks/        # Custom React hooks
+│       ├── lib/          # Helpers (cn, date, errors, queryClient)
+│       ├── pages/        # Route-level page components
+│       ├── types/        # Shared frontend types
+│       └── App.tsx       # Root component + routing
 └── backend-volt/         # Express 5 + Prisma + PostgreSQL API
     ├── src/
     │   ├── controllers/  # Request handlers
     │   ├── services/     # Business logic + Prisma queries
     │   ├── routes/       # Express routers
     │   ├── middleware/   # Auth (Clerk), user upsert, pagination, param parsing
-    │   ├── errors/       # Custom error classes
+    │   ├── types/        # Request/response DTOs + pagination types
+    │   ├── scripts/      # DB seeding (exercises)
+    │   ├── errors.ts     # Custom error classes
+    │   ├── app.ts        # Express app setup
     │   └── server.ts     # App entry point
-    ├── prisma/
-    │   └── schema.prisma # Data models
-    └── scripts/          # DB seeding (exercises)
+    └── prisma/
+        └── schema.prisma # Data models
 ```
 
 ---
@@ -51,14 +61,17 @@ All routes are prefixed with `/api/v1`. Auth-protected routes require a valid Cl
 
 ### Weights `🔒 Auth required`
 
-| Method   | Endpoint             | Description                        |
-|----------|----------------------|------------------------------------|
-| `GET`    | `/weights`           | Get all weight entries (paginated) |
-| `POST`   | `/weights`           | Create a new weight entry          |
-| `PATCH`  | `/weights/:weightId` | Update a weight entry by ID        |
-| `DELETE` | `/weights/:weightId` | Delete a weight entry by ID        |
+| Method   | Endpoint             | Description                                  |
+|----------|----------------------|----------------------------------------------|
+| `GET`    | `/weights`           | Get all weight entries (paginated)           |
+| `GET`    | `/weights/range`     | Get all weight entries (within a date range) |
+| `GET`    | `/weights`           | Get all weight entries (paginated)           |
+| `POST`   | `/weights`           | Create a new weight entry                    |
+| `PATCH`  | `/weights/:weightId` | Update a weight entry by ID                  |
+| `DELETE` | `/weights/:weightId` | Delete a weight entry by ID                  |
 
 **Query params for `GET /weights`:** `page`, `limit`
+**Query params for `GET /weights/range`:** `from`, `to`
 
 **Body for `POST /weights`:**
 ```json
@@ -77,14 +90,14 @@ All routes are prefixed with `/api/v1`. Auth-protected routes require a valid Cl
 | Method   | Endpoint                  | Description                        |
 |----------|---------------------------|------------------------------------|
 | `GET`    | `/exercises`              | List all exercises (paginated)     |
-| `GET`    | `/exercises/:exerciseId`  | Get a single exercise by ID        |
+| `GET`    | `/exercises/:slug`        | Get a single exercise by ID        |
 | `POST`   | `/exercises`              | Create an exercise (admin only)    |
-| `PATCH`  | `/exercises/:exerciseId`  | Update an exercise (admin only)    |
-| `DELETE` | `/exercises/:exerciseId`  | Delete an exercise (admin only)    |
+| `PATCH`  | `/exercises/:slug`        | Update an exercise (admin only)    |
+| `DELETE` | `/exercises/:slug`        | Delete an exercise (admin only)    |
 
 **Query params for `GET /exercises`:** `page`, `limit`
 
-**Example:** `GET /api/v1/exercises/Barbell_Deadlift`
+**Example:** `GET /api/v1/exercises/barbell_deadlift`
 
 ---
 
@@ -93,15 +106,21 @@ All routes are prefixed with `/api/v1`. Auth-protected routes require a valid Cl
 | Method   | Endpoint             | Description                                       |
 |----------|----------------------|---------------------------------------------------|
 | `GET`    | `/nutrition`         | List nutrition logs as summaries (paginated)      |
-| `GET`    | `/nutrition/:logId`  | Get a single log with full meal details           |
+| `GET`    | `/nutrition/range`   | List nutrition logs in a date range               |
+| `GET`    | `/nutrition/today`   | Today's nutrition log summary                     |
+| `GET`    | `/nutrition/:date`   | Get a single log by date with full meal details   |
 | `POST`   | `/nutrition`         | Create a new nutrition log                        |
-| `PATCH`  | `/nutrition/:logId`  | Update a nutrition log (e.g. change date)         |
-| `DELETE` | `/nutrition/:logId`  | Delete a nutrition log                            |
+| `PATCH`  | `/nutrition/:date`   | Update a nutrition log (e.g. returns 405)*        |
+| `DELETE` | `/nutrition/:date`   | Delete a nutrition log                            |
 
 **Body for `POST /nutrition`:**
 ```json
 { "date": "2025-01-15" }
 ```
+
+** Note: `PATCH /nutrition/:date`**
+- The only field to update for a nutrition log currently is the date, which is unique across a user's logs. 
+- Changing the date would cause unnecessary issues, so the route exists for forward extensibility, but at this time simply returns a 405. 
 
 ---
 
