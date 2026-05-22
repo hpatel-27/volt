@@ -6,6 +6,12 @@ import type {
   Totals,
   UpdateNutritionLogInput,
 } from "../types/nutrition.dto.js";
+import {
+  sumMealTotals,
+  toNutritionDto,
+  toNutritionMealDto,
+  toNutritionSummaryDto,
+} from "../mappers/nutrition.mapper.js";
 
 // Take a userId and return all the user's logged nutrition logs
 async function getAllNutritionLogs(
@@ -41,18 +47,18 @@ async function getAllNutritionLogs(
       countsByLogId.set(group.nutritionLogId, group._count);
     });
 
-    const nutritionLogs = pageLogs.map((l) => ({
-      id: l.id,
-      date: l.date.toISOString().split("T")[0], // Format date as YYYY-MM-DD
-      totals: totalsByLogId.get(l.id) ?? {
-        calories: 0,
-        protein: 0,
-        carbs: 0,
-        fat: 0,
-      },
-      // A log with zero meals never appears in mealGroups, so default to 0.
-      mealCount: countsByLogId.get(l.id) ?? 0,
-    }));
+    const nutritionLogs = pageLogs.map((l) =>
+      toNutritionSummaryDto(
+        l,
+        totalsByLogId.get(l.id) ?? {
+          calories: 0,
+          protein: 0,
+          carbs: 0,
+          fat: 0,
+        },
+        countsByLogId.get(l.id) ?? 0,
+      ),
+    );
     return { nutritionLogs, total };
   });
   // An empty list of nutrition logs is still a valid response, so we return it as is
@@ -61,11 +67,12 @@ async function getAllNutritionLogs(
 
 // Return all of a user's nutrition logs whose `date` falls within [from, to].
 async function getNutritionLogsByRange(userId: string, from: Date, to: Date) {
-  const logs = await prisma.nutritionLog.findMany({
+  const rawLogs = await prisma.nutritionLog.findMany({
     where: { userId, date: { gte: from, lte: to } },
     orderBy: { date: "asc" },
   });
 
+  const logs = rawLogs.map((l) => toNutritionDto(l));
   return { logs, total: logs.length };
 }
 
@@ -78,8 +85,7 @@ async function getNutritionLogById(userId: string, logId: string) {
   if (!nutritionLog) {
     throw new NotFoundError("Nutrition log not found.");
   }
-
-  return nutritionLog;
+  return toNutritionMealDto(nutritionLog);
 }
 
 // Return today's nutrition log as a summary (id, date, totals), or null if the user
@@ -92,24 +98,8 @@ async function getTodayNutritionLog(userId: string, date: string) {
   if (!log) return null;
 
   // Aggregate log's meals
-  const totals = log.meals.reduce(
-    (prev, current) => {
-      return {
-        calories: prev.calories + current.calories,
-        protein: prev.protein + current.protein,
-        carbs: prev.carbs + current.carbs,
-        fat: prev.fat + current.fat,
-      };
-    },
-    { calories: 0, protein: 0, carbs: 0, fat: 0 },
-  );
-
-  return {
-    id: log.id,
-    date: date.slice(0, 10),
-    totals,
-    mealCount: log.meals.length,
-  };
+  const totals = sumMealTotals(log.meals);
+  return toNutritionSummaryDto(log, totals, log.meals.length);
 }
 
 // Look up a nutrition log by the composite unique key (userId, date).
@@ -123,8 +113,7 @@ async function getNutritionLogByDate(userId: string, date: string) {
   if (!nutritionLog) {
     throw new NotFoundError("Nutrition log not found.");
   }
-
-  return nutritionLog;
+  return toNutritionMealDto(nutritionLog);
 }
 
 // @deprecated
@@ -136,7 +125,7 @@ async function createNutritionLog(data: CreateNutritionLogInput) {
     const newNutritionLog = await prisma.nutritionLog.create({
       data,
     });
-    return newNutritionLog;
+    return toNutritionDto(newNutritionLog);
   } catch (error: unknown) {
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -161,7 +150,7 @@ async function findOrCreateNutritionLogByDate(userId: string, date: string) {
     // DON'T UPDATE
     update: {},
   });
-  return log;
+  return toNutritionDto(log);
 }
 
 // The date is the only field that can be updated, as meals are managed through a
@@ -180,7 +169,7 @@ async function updateNutritionLog(
       data,
       include: { meals: true },
     });
-    return updatedLog;
+    return toNutritionMealDto(updatedLog);
   } catch (error: unknown) {
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&
