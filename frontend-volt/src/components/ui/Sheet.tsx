@@ -67,7 +67,7 @@ export function Sheet({
           }
         }}
         className={cn(
-          "absolute inset-x-0 bottom-0 bg-ink-900 rounded-t-2xl border-t border-white/5",
+          "absolute inset-x-0 bottom-0 max-w-3xl mx-auto bg-ink-900 rounded-t-2xl border-t border-white/5",
           "pb-[env(safe-area-inset-bottom)]",
           (isOpening || isClosing) && "will-change-transform",
           isClosing ? "animate-sheet-slide-down" : "animate-sheet-slide-up",
