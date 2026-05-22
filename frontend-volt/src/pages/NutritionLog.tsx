@@ -163,7 +163,7 @@ export default function NutritionLog() {
                 key={m.id}
                 type="button"
                 onClick={() => openMealSheet(m)}
-                className="flex w-full items-center gap-4 bg-ink-900 px-4 py-3.5 text-left transition-colors hover:bg-ink-850 focus-visible:outline-none focus-visible:bg-ink-850"
+                className="flex w-full items-center gap-4 bg-ink-900 px-4 py-3.5 text-left transition-colors hover:bg-ink-850 focus-visible:outline-none focus-visible:bg-ink-850 cursor-pointer"
               >
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm font-semibold text-bone-50">
