@@ -44,3 +44,22 @@ export function filterToRange(filter: WeightFilter) {
   }
   return { from, to };
 }
+
+export function formatVerboseDate(date: string) {
+  const trimDate = date.slice(0, 10);
+  const [year, month, day] = trimDate.split("-").map(Number);
+  const localDate = new Date(year, month - 1, day); // multi arg form is local time
+  const verboseDate = localDate.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
+  return verboseDate;
+}
+
+/** "Today" / "Yesterday" / "May 19" — relative labels read more human than a bare date. */
+export function formatRelativeDate(date: string) {
+  const iso = date.slice(0, 10);
+  if (iso === todayLocalIso()) return "Today";
+  if (iso === yesterdayLocalIso()) return "Yesterday";
+  return formatVerboseDate(iso);
+}

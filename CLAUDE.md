@@ -133,11 +133,11 @@ All routes are mounted under `/api/v1` via `src/routes/index.ts`.
 
 | Method   | Path               | Description                                        |
 |----------|--------------------|-----------------------------------------------------|
-| GET      | `/nutrition`       | List nutrition logs as summaries (paginated)        |
-| GET      | `/nutrition/:id`   | Get a single log with full meal details             |
-| POST     | `/nutrition`       | Create a new nutrition log                          |
-| PATCH    | `/nutrition/:id`   | Update a nutrition log (e.g. change recorded date)  |
-| DELETE   | `/nutrition/:id`   | Delete a nutrition log                              |
+| GET      | `/nutrition-logs`       | List nutrition logs as summaries (paginated)        |
+| GET      | `/nutrition-logs/:id`   | Get a single log with full meal details             |
+| POST     | `/nutrition-logs`       | Create a new nutrition log                          |
+| PATCH    | `/nutrition-logs/:id`   | Update a nutrition log (e.g. change recorded date)  |
+| DELETE   | `/nutrition-logs/:id`   | Delete a nutrition log                              |
 
 ### Meals — Nested under nutrition logs, `🔒 userMiddleware` inherited from parent
 

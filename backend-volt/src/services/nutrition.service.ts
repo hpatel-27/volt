@@ -3,6 +3,7 @@ import { Prisma } from "../generated/prisma/client.js";
 import { DuplicateEntryError, NotFoundError } from "../errors.js";
 import type {
   CreateNutritionLogInput,
+  Totals,
   UpdateNutritionLogInput,
 } from "../types/nutrition.dto.js";
 
@@ -13,17 +14,59 @@ async function getAllNutritionLogs(
   limit: number,
 ) {
   // Find the nutrition logs for the user
-  const [nutritionLogs, total] = await prisma.$transaction([
-    prisma.nutritionLog.findMany({
+  const { nutritionLogs, total } = await prisma.$transaction(async (tx) => {
+    const pageLogs = await tx.nutritionLog.findMany({
       where: { userId },
       skip: (page - 1) * limit,
       take: limit,
       orderBy: { date: "desc" },
-    }),
-    prisma.nutritionLog.count({ where: { userId } }),
-  ]);
+    });
+    const total = await tx.nutritionLog.count({ where: { userId } });
+    const mealGroups = await tx.meal.groupBy({
+      by: ["nutritionLogId"],
+      where: { nutritionLogId: { in: pageLogs.map((l) => l.id) } },
+      _sum: { calories: true, protein: true, carbs: true, fat: true },
+      _count: true,
+    });
+
+    const totalsByLogId = new Map<string, Totals>();
+    const countsByLogId = new Map<string, number>();
+    mealGroups.forEach((group) => {
+      totalsByLogId.set(group.nutritionLogId, {
+        calories: group._sum.calories ?? 0,
+        protein: group._sum.protein ?? 0,
+        carbs: group._sum.carbs ?? 0,
+        fat: group._sum.fat ?? 0,
+      });
+      countsByLogId.set(group.nutritionLogId, group._count);
+    });
+
+    const nutritionLogs = pageLogs.map((l) => ({
+      id: l.id,
+      date: l.date.toISOString().split("T")[0], // Format date as YYYY-MM-DD
+      totals: totalsByLogId.get(l.id) ?? {
+        calories: 0,
+        protein: 0,
+        carbs: 0,
+        fat: 0,
+      },
+      // A log with zero meals never appears in mealGroups, so default to 0.
+      mealCount: countsByLogId.get(l.id) ?? 0,
+    }));
+    return { nutritionLogs, total };
+  });
   // An empty list of nutrition logs is still a valid response, so we return it as is
   return { nutritionLogs, total, page, limit };
+}
+
+// Return all of a user's nutrition logs whose `date` falls within [from, to].
+async function getNutritionLogsByRange(userId: string, from: Date, to: Date) {
+  const logs = await prisma.nutritionLog.findMany({
+    where: { userId, date: { gte: from, lte: to } },
+    orderBy: { date: "asc" },
+  });
+
+  return { logs, total: logs.length };
 }
 
 async function getNutritionLogById(userId: string, logId: string) {
@@ -37,6 +80,36 @@ async function getNutritionLogById(userId: string, logId: string) {
   }
 
   return nutritionLog;
+}
+
+// Return today's nutrition log as a summary (id, date, totals), or null if the user
+// has not logged anything today. `date` is the user's local YYYY-MM-DD.
+async function getTodayNutritionLog(userId: string, date: string) {
+  const log = await prisma.nutritionLog.findUnique({
+    where: { userId_date: { userId, date: new Date(date) } },
+    include: { meals: true },
+  });
+  if (!log) return null;
+
+  // Aggregate log's meals
+  const totals = log.meals.reduce(
+    (prev, current) => {
+      return {
+        calories: prev.calories + current.calories,
+        protein: prev.protein + current.protein,
+        carbs: prev.carbs + current.carbs,
+        fat: prev.fat + current.fat,
+      };
+    },
+    { calories: 0, protein: 0, carbs: 0, fat: 0 },
+  );
+
+  return {
+    id: log.id,
+    date: date.slice(0, 10),
+    totals,
+    mealCount: log.meals.length,
+  };
 }
 
 // Look up a nutrition log by the composite unique key (userId, date).
@@ -54,6 +127,8 @@ async function getNutritionLogByDate(userId: string, date: string) {
   return nutritionLog;
 }
 
+// @deprecated
+// NOW DEPRECATED AND REPLACED WITH A FIND_OR_CREATE_NUTRITION_LOG FN
 // Create a new nutrition log for the user, this initially only includes
 // the date and an empty list of meals
 async function createNutritionLog(data: CreateNutritionLogInput) {
@@ -74,6 +149,19 @@ async function createNutritionLog(data: CreateNutritionLogInput) {
     }
     throw error;
   }
+}
+
+// Find a nutrition log by (userId, date), or create one if it does not exist.
+// Used by POST /nutrition-logs/:date/meals so the user can log a meal without
+// having to explicitly create the parent log first.
+async function findOrCreateNutritionLogByDate(userId: string, date: string) {
+  const log = await prisma.nutritionLog.upsert({
+    where: { userId_date: { userId, date: new Date(date) } },
+    create: { userId, date: new Date(date) },
+    // DON'T UPDATE
+    update: {},
+  });
+  return log;
 }
 
 // The date is the only field that can be updated, as meals are managed through a
@@ -152,9 +240,12 @@ async function deleteNutritionLogByDate(userId: string, date: string) {
 
 export {
   getAllNutritionLogs,
+  getTodayNutritionLog,
+  getNutritionLogsByRange,
   getNutritionLogById,
   getNutritionLogByDate,
   createNutritionLog,
+  findOrCreateNutritionLogByDate,
   updateNutritionLog,
   deleteNutritionLog,
   deleteNutritionLogByDate,

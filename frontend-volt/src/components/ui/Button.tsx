@@ -14,13 +14,14 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variants: Record<Variant, string> = {
   primary:
-    "bg-volt-500 text-ink-950 hover:bg-volt-400 active:bg-volt-600 font-semibold",
+    "bg-volt-500 text-ink-950 hover:bg-volt-400 active:bg-volt-600 font-semibold cursor-pointer",
   danger:
-    "bg-blaze-500 text-bone-50 hover:bg-blaze-400 active:bg-blaze-600 font-semibold",
-  sky: "bg-sky-500 text-ink-950 hover:bg-sky-400 font-semibold",
-  ghost: "bg-transparent text-bone-200 hover:bg-ink-800",
+    "bg-blaze-500 text-bone-50 hover:bg-blaze-600 active:bg-blaze-700 font-semibold cursor-pointer",
+  sky: "bg-sky-500 text-ink-950 hover:bg-sky-600 active:bg-sky-700 font-semibold cursor-pointer",
+  ghost:
+    "bg-transparent text-bone-200 hover:bg-ink-800 active:bg-ink-700 cursor-pointer",
   outline:
-    "bg-transparent text-bone-50 border border-white/10 hover:bg-ink-800 hover:border-white/20",
+    "bg-transparent text-bone-50 border border-white/10 hover:bg-ink-800 hover:border-white/20 cursor-pointer",
 };
 
 const sizes: Record<Size, string> = {
@@ -43,7 +44,7 @@ export function Button({
     <button
       {...rest}
       className={cn(
-        "inline-flex items-center justify-center transition-colors",
+        "inline-flex items-center justify-center transition-colors leading-none",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-volt-500/60",
         "disabled:opacity-40 disabled:cursor-not-allowed",
         variants[variant],

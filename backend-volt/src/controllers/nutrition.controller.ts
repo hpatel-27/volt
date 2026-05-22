@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import * as nutritionService from "../services/nutrition.service.js";
 import type { CreateNutritionLogInput } from "../types/nutrition.dto.js";
+import { BadRequestError } from "../errors.js";
 
 // Return all nutrition logs for the user that made the request
 // Use pagination to limit the number of logs returned at once
@@ -15,6 +16,43 @@ async function getAllNutritionLogs(req: Request, res: Response) {
     limit,
   );
   res.json(nutritionLogs);
+}
+
+// Range mode: both from and to provided -> return all nutrition logs in that window, no pagination.
+// Used by the day strip on the nutrition page.
+async function getNutritionLogsByRange(req: Request, res: Response) {
+  const user = req.user!;
+  const userId = user.id;
+
+  const locals = res.locals;
+  const fromDate = locals.fromDate!;
+  const toDate = locals.toDate!;
+
+  const logs = await nutritionService.getNutritionLogsByRange(
+    userId,
+    fromDate,
+    toDate,
+  );
+  return res.json(logs);
+}
+
+// YYYY-MM-DD format check — client sends its local "today" so we respect the user's timezone
+const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+
+// Return today's nutrition log as a summary (with totals), or null if the user has not
+// logged anything today yet. The client passes its local date via ?date=YYYY-MM-DD so can
+// handle this separately compared to getting a nutrition log by date
+async function getTodayNutritionLog(req: Request, res: Response) {
+  const user = req.user!;
+  const userId = user.id;
+  const { date } = req.query;
+
+  if (typeof date !== "string" || !DATE_REGEX.test(date)) {
+    throw new BadRequestError("date query param must be in YYYY-MM-DD format");
+  }
+
+  const summary = await nutritionService.getTodayNutritionLog(userId, date);
+  res.json(summary);
 }
 
 // Return a single nutrition log by its date (YYYY-MM-DD), this includes full meal details
@@ -72,6 +110,8 @@ async function deleteNutritionLog(req: Request, res: Response) {
 
 export {
   getAllNutritionLogs,
+  getNutritionLogsByRange,
+  getTodayNutritionLog,
   getNutritionLogByDate,
   createNutritionLog,
   updateNutritionLog,

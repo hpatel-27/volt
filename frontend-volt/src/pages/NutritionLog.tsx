@@ -1,134 +1,210 @@
-import { useParams, Link } from "react-router";
+import { useParams, Link, useOutletContext } from "react-router";
+import { useEffect, useState } from "react";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
+import { Spinner } from "../components/ui/Spinner";
+import { ProgressRing } from "../components/ui/ProgressRing";
+import { useNutritionDetail } from "@/api/nutrition";
+import type { NutritionOutletContext } from "@/components/layout/NutritionLayout";
+import { formatRelativeDate } from "@/lib/date";
+import { ArrowLeft, ChevronRight, Plus } from "lucide-react";
+import type { Meal } from "@/types/meal";
+import { cn } from "@/lib/cn";
 
-const meals = [
-  {
-    type: "Breakfast",
-    name: "Eggs, oats, banana",
-    p: 32,
-    c: 58,
-    f: 14,
-    kcal: 512,
-    icon: "🥚",
-    tone: "sky" as const,
-  },
-  {
-    type: "Lunch",
-    name: "Chicken, rice, broccoli",
-    p: 55,
-    c: 72,
-    f: 12,
-    kcal: 624,
-    icon: "🍗",
-    tone: "volt" as const,
-  },
-  {
-    type: "Snack",
-    name: "Greek yogurt + almonds",
-    p: 28,
-    c: 18,
-    f: 18,
-    kcal: 328,
-    icon: "🥜",
-    tone: "blaze" as const,
-  },
-];
-
-const toneBg = {
-  sky: "bg-sky-500/10 text-sky-500",
-  volt: "bg-volt-500/10 text-volt-500",
-  blaze: "bg-blaze-500/10 text-blaze-400",
+// TODO: lift to user settings / shared nutrition config — duplicated in Nutrition.tsx
+const GOALS = {
+  calories: 2100,
+  protein: 140, // 560 calories
+  carbs: 210, // 840 calories
+  fat: 50, // 450 calories
 };
 
+function totalsFromMeals(meals: Meal[]) {
+  return meals.reduce(
+    (acc, m) => ({
+      calories: acc.calories + m.calories,
+      protein: acc.protein + m.protein,
+      carbs: acc.carbs + m.carbs,
+      fat: acc.fat + m.fat,
+    }),
+    { calories: 0, protein: 0, carbs: 0, fat: 0 },
+  );
+}
+
+const MACROS = [
+  {
+    key: "protein",
+    label: "Protein",
+    color: "text-volt-500",
+    bar: "bg-volt-500",
+  },
+  { key: "carbs", label: "Carbs", color: "text-sky-500", bar: "bg-sky-500" },
+  { key: "fat", label: "Fat", color: "text-blaze-500", bar: "bg-blaze-500" },
+] as const;
+
 export default function NutritionLog() {
-  const { logId } = useParams();
+  const { date } = useParams<{ date: string }>();
+  const { openMealSheet } = useOutletContext<NutritionOutletContext>();
+  const detailQuery = useNutritionDetail(date!);
+
+  // Bars/ring render at 0, then ease to their real
+  // value on the next frame. Key off loaded log to replay per day.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    if (detailQuery.data) {
+      const id = requestAnimationFrame(() => setMounted(true));
+      return () => cancelAnimationFrame(id);
+    }
+  }, [detailQuery.data]);
+
+  if (detailQuery.isLoading) {
+    return (
+      <div className="pt-8">
+        <Spinner />
+      </div>
+    );
+  }
+
+  const log = detailQuery.data;
+  const meals = log?.meals ?? [];
+  const totals = totalsFromMeals(meals);
+  const remaining = Math.max(GOALS.calories - totals.calories, 0);
+  const over = totals.calories > GOALS.calories;
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-6 pt-4">
       <header className="flex items-center gap-3">
-        <Link to="/app/nutrition" className="text-bone-300">
-          ←
+        <Link
+          to="/nutrition"
+          className="grid h-9 w-9 place-items-center rounded-xl text-bone-300 transition-colors hover:bg-ink-800 hover:text-bone-50"
+        >
+          <ArrowLeft className="h-4 w-4" />
         </Link>
-        <h1 className="flex-1 font-display text-lg font-bold">{logId}</h1>
-        <Button variant="sky" size="sm">
-          + Meal
+        <div className="flex-1">
+          <div className="text-caption text-bone-500">Nutrition</div>
+          <h1 className="font-display text-xl font-bold leading-tight">
+            {date ? formatRelativeDate(date) : "Log"}
+          </h1>
+        </div>
+        <Button
+          size="sm"
+          variant="sky"
+          leading={<Plus className="h-4 w-4" />}
+          onClick={() => openMealSheet()}
+        >
+          Meal
         </Button>
       </header>
 
-      <Card className="bg-linear-to-br from-sky-500/15 via-ink-900 to-ink-900 border-sky-500/20 flex items-center gap-5">
-        <div className="relative w-32 h-32">
-          <svg viewBox="0 0 120 120" className="w-32 h-32 -rotate-90">
-            <circle
-              cx="60"
-              cy="60"
-              r="52"
-              fill="none"
-              stroke="white"
-              strokeOpacity="0.08"
-              strokeWidth="10"
-            />
-            <circle
-              cx="60"
-              cy="60"
-              r="52"
-              fill="none"
-              stroke="var(--color-sky-500)"
-              strokeWidth="10"
-              strokeLinecap="round"
-              strokeDasharray="212 327"
-            />
-          </svg>
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-[10px] uppercase tracking-wider text-bone-500 font-semibold">
-              Left
-            </span>
-            <span className="font-display text-2xl font-bold text-sky-400">
-              842
-            </span>
-            <span className="text-[10px] text-bone-500 font-mono">/ 2,400</span>
-          </div>
-        </div>
-        <div className="flex-1 space-y-3">
-          {[
-            { label: "Protein", v: "142 / 180g", w: 78, color: "bg-volt-500" },
-            { label: "Carbs", v: "160 / 240g", w: 66, color: "bg-sky-500" },
-            { label: "Fat", v: "52 / 70g", w: 74, color: "bg-blaze-500" },
-          ].map((m) => (
-            <div key={m.label}>
-              <div className="flex justify-between mb-1">
-                <span className="text-caption">{m.label}</span>
-                <span className="text-xs font-mono">{m.v}</span>
+      {/* The calorie ring should dominate, everything else is supporting detail. */}
+      <Card className="flex flex-col items-center gap-6 m-4 py-8">
+        <ProgressRing
+          value={mounted ? totals.calories : 0}
+          max={GOALS.calories}
+          size={196}
+          stroke={14}
+          color={over ? "blaze" : "sky"}
+        >
+          <span className="text-caption text-bone-500">
+            {over ? "Over by" : "Remaining"}
+          </span>
+          <span
+            className={cn(
+              "font-display text-3xl font-bold leading-none",
+              over ? "text-blaze-500" : "text-bone-50",
+            )}
+          >
+            {over ? totals.calories - GOALS.calories : remaining}
+          </span>
+          <span className="font-mono text-xs text-bone-500 pt-2">
+            {totals.calories.toLocaleString()} /{" "}
+            {GOALS.calories.toLocaleString()} kcal
+          </span>
+        </ProgressRing>
+
+        <div className="grid w-full grid-cols-3 gap-3">
+          {MACROS.map((m) => {
+            const value = totals[m.key];
+            const goal = GOALS[m.key];
+            const pct = goal > 0 ? Math.min((value / goal) * 100, 100) : 0;
+            return (
+              <div key={m.key} className="space-y-2">
+                <div className="flex items-baseline justify-between">
+                  <span className="text-caption text-bone-500">{m.label}</span>
+                </div>
+                <div className="flex items-baseline gap-1">
+                  <span className={`font-display text-lg font-bold ${m.color}`}>
+                    {value}
+                  </span>
+                  <span className="font-mono text-[11px] text-bone-500">
+                    /{goal}g
+                  </span>
+                </div>
+                <div className="h-1 overflow-hidden rounded-full bg-ink-800">
+                  <div
+                    className={`h-full rounded-full ${m.bar} transition-[width] duration-700 ease-out`}
+                    style={{ width: mounted ? `${pct}%` : "0%" }}
+                  />
+                </div>
               </div>
-              <div className="h-1.5 rounded-full bg-ink-800 overflow-hidden">
-                <div
-                  className={`h-full ${m.color}`}
-                  style={{ width: `${m.w}%` }}
-                />
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </Card>
 
-      {meals.map((m) => (
-        <div key={m.type}>
-          <div className="text-caption mb-1">{m.type}</div>
-          <Card className="flex items-center gap-3 p-4">
-            <div
-              className={`w-10 h-10 rounded-xl flex items-center justify-center ${toneBg[m.tone]}`}
-            >
-              {m.icon}
-            </div>
-            <div className="flex-1">
-              <div className="text-sm font-semibold">{m.name}</div>
-              <div className="text-xs text-bone-500 font-mono mt-0.5">
-                P {m.p} · C {m.c} · F {m.f}
-              </div>
-            </div>
-            <div className="font-mono text-sm font-semibold">{m.kcal}</div>
-          </Card>
+      {meals.length > 0 ? (
+        <div>
+          <div className="mb-3 flex items-baseline justify-between">
+            <span className="text-caption text-bone-500">Meals</span>
+          </div>
+          <div className="space-y-px overflow-hidden rounded-2xl border border-white/5">
+            {meals.map((m) => (
+              <button
+                key={m.id}
+                type="button"
+                onClick={() => openMealSheet(m)}
+                className="flex w-full items-center gap-4 bg-ink-900 px-4 py-3.5 text-left transition-colors hover:bg-ink-850 focus-visible:outline-none focus-visible:bg-ink-850 cursor-pointer"
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-semibold text-bone-50">
+                    {m.name}
+                  </div>
+                  <div className="mt-1 flex gap-3 font-mono text-[11px] text-bone-500">
+                    <span className="text-volt-500">{m.protein}g Protein</span>
+                    <span className="text-sky-500">{m.carbs}g Carbs</span>
+                    <span className="text-blaze-500">{m.fat}g Fat</span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className="font-display text-lg font-bold text-bone-50">
+                    {m.calories}
+                  </span>
+                  <span className="ml-1 text-caption text-bone-500">kcal</span>
+                </div>
+                <ChevronRight className="h-4 w-4 shrink-0 text-bone-600" />
+              </button>
+            ))}
+          </div>
         </div>
-      ))}
+      ) : (
+        <div className="flex flex-col items-center gap-3 py-16 text-center">
+          <p className="font-display text-base font-semibold text-bone-50">
+            Nothing logged yet
+          </p>
+          <p className="text-caption max-w-60 text-bone-500 normal-case tracking-normal">
+            Add your first meal to start filling the ring for this day.
+          </p>
+          <Button
+            size="sm"
+            variant="sky"
+            leading={<Plus className="h-4 w-4" />}
+            onClick={() => openMealSheet()}
+            className="mt-1"
+          >
+            Add meal
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

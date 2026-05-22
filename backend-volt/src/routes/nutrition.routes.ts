@@ -6,7 +6,7 @@ import { userMiddleware } from "../middleware/user.middleware.js";
 import { parseDateParam } from "../middleware/param.middleware.js";
 import { paginationMiddleware } from "../middleware/pagination.middleware.js";
 import mealRouter from "./meal.routes.js";
-import { parseDate } from "../middleware/date.middleware.js";
+import { parseDate, parseDateRange } from "../middleware/date.middleware.js";
 
 // All routes in this file require the user to be authenticated, so we apply the userMiddleware to all routes
 
@@ -18,6 +18,20 @@ router.get(
   userMiddleware,
   paginationMiddleware,
   nutritionController.getAllNutritionLogs,
+);
+// Get all of a user's nutrition logs in a date range
+router.get(
+  "/range",
+  userMiddleware,
+  parseDateRange(14),
+  nutritionController.getNutritionLogsByRange,
+);
+// Get today's nutrition log summary (or null if none exists yet).
+// Registered before /:date so "today" is not interpreted as a date param.
+router.get(
+  "/today",
+  userMiddleware,
+  nutritionController.getTodayNutritionLog,
 );
 // Get a single nutrition log by its date (YYYY-MM-DD), this includes full meal details
 router.get(

@@ -16,6 +16,18 @@ Static visual reference: `frontend-volt/mockups.html` (open directly in a browse
 - **Borders are hairlines.** `border-white/5` for separators. Never use heavy zinc borders on OLED black.
 - **Mobile-first PWA.** Bottom nav on `<md`, sidebar on `≥md`. Center bottom-tab is the elevated "Log" verb.
 
+### Quality Patterns (premium / human checklist)
+
+The target feel is **premium, human, high-quality** — not generated. "Premium" isn't a vibe to chase; it's the result of applying these concrete, reviewable patterns. A PR can be failed against any of them:
+
+1. **One number dominates.** Each screen has a single hero figure at display scale (`text-display`/`text-stat`); everything else is deliberately smaller. If three things compete for the eye, none of them win.
+2. **Values animate on mount.** Rings and progress bars ease from 0 → real value on load (drive with a `mounted` flag flipped in `requestAnimationFrame`). Static = lifeless.
+3. **Lists are one grouped surface.** Render rows as a single hairline-divided container (`space-y-px overflow-hidden rounded-2xl border border-white/5`), not a stack of individually-bordered cards — competing hairlines read as noise on OLED black.
+4. **Relative dates.** "Today" / "Yesterday" / "May 19", not "Monday, May 19, 2026". Use `formatRelativeDate`.
+5. **Styling lives in the variant.** Hover/active/cursor states belong in the component (`Button`, `Card`), never re-pasted per page. Repeated utility strings across pages are a generated-code tell and a DRY violation.
+6. **Accent restraint.** The screen accent appears in exactly three places: the primary CTA, the one hero stat, and progress fills. Demote everything else (e.g. pagination) to `ghost`/`bone` so the hero stays special.
+7. **Handle the empty/edge states.** Null logs, over-goal, zero-meal days, single vs. plural — covering these is itself a quality signal; blank gaps and "1 meals" are tells.
+
 ## 2. Color Palette (locked)
 
 Defined in `src/index.css` via Tailwind v4 `@theme`. Same tokens duplicated in `mockups.html` for the CDN preview environment — keep them in sync.
@@ -31,8 +43,8 @@ Defined in `src/index.css` via Tailwind v4 `@theme`. Same tokens duplicated in `
 | `bone-300` | `#A1A1AA` | Secondary text |
 | `bone-500` | `#71717A` | Muted text / captions |
 | `volt-500` | `#C6FF3D` | Workouts, progress, success, primary CTA |
-| `blaze-500` | `#FF3B30` | PRs, intensity, destructive, warnings |
-| `sky-500` | `#5AC8FA` | Nutrition, recovery, analytics |
+| `blaze-500` | `#F31E4B` | PRs, intensity, destructive, warnings |
+| `sky-500` | `#2E8BFF` | Nutrition, recovery, analytics |
 
 **Accent rule:** an accent appears on (a) primary CTA, (b) one hero stat, (c) progress fills. Everything else stays bone/ink.
 
@@ -128,5 +140,7 @@ Bottom-tab order: **Home · Workouts · Log (center, raised, volt) · Nutrition 
 | 2026-04-26 | Static `mockups.html` precedes React port | Lets us iterate on look without wrestling component APIs first. Will be deleted once screens are in React. |
 | 2026-04-26 | Nutrition log auto-creates on first meal | Removes a meaningless step — users think in meals, not "log objects". |
 | 2026-04-29 | Landing page is the exception to "one accent per screen" | Marketing surface, not an app screen — showcases all three domain accents (volt/sky/blaze) so each is advertised once. Rule still holds for every authenticated screen. |
+| 2026-05-20 | Retuned `sky` → Electric Azure (`#2E8BFF`) and `blaze` → Crimson Rose (`#F31E4B`) | Old values were iOS system cyan/red — pale and "default OS" on OLED black. Saturated azure reads more "tech premium"; crimson reads "PR/intensity" over "error dialog". `volt` unchanged. |
+| 2026-05-20 | Added "Quality Patterns" checklist to §1 | Codifies the concrete, reviewable patterns behind the "premium/human" feel (hierarchy, mount animation, grouped lists, accent restraint, edge-state handling) so it's falsifiable in review, not a vibe. Distilled from the nutrition-pages polish pass. |
 
 Append new rows when a non-trivial decision is made — short reason, not a essay.

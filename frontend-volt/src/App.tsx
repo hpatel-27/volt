@@ -14,6 +14,7 @@ import Nutrition from "./pages/Nutrition";
 import NutritionLog from "./pages/NutritionLog";
 import Weight from "./pages/Weight";
 import Profile from "./pages/Profile";
+import NutritionLayout from "./components/layout/NutritionLayout";
 import { useDelayedFlag } from "./hooks/useDelayedFlag";
 import { Spinner } from "./components/ui/Spinner";
 import { Toaster } from "sonner";
@@ -55,8 +56,10 @@ export function App() {
           <Route path="/workouts/:planId" element={<WorkoutPlan />} />
           <Route path="/log" element={<Log />} />
           <Route path="/exercises" element={<Exercises />} />
-          <Route path="/nutrition" element={<Nutrition />} />
-          <Route path="/nutrition/:date" element={<NutritionLog />} />
+          <Route element={<NutritionLayout />}>
+            <Route path="/nutrition" element={<Nutrition />} />
+            <Route path="/nutrition/:date" element={<NutritionLog />} />
+          </Route>
           <Route path="/weight" element={<Weight />} />
           <Route path="/profile" element={<Profile />} />
         </Route>

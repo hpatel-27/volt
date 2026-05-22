@@ -8,7 +8,7 @@ export function BottomNav() {
       className="md:hidden fixed bottom-0 inset-x-0 z-40 border-t border-white/5 bg-ink-900/90 backdrop-blur-xl"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
-      <ul className="flex items-end justify-around h-16 px-2">
+      <ul className="flex items-end justify-around h-16 px-2 py-2.5">
         {navItems.map((item) => (
           <li key={item.to} className="flex-1">
             <NavLink

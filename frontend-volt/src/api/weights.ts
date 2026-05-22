@@ -141,6 +141,7 @@ export function useCreateWeight() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: weightKeys.lists() });
       queryClient.invalidateQueries({ queryKey: weightKeys.latest() });
+      queryClient.invalidateQueries({ queryKey: weightKeys.ranges() });
     },
   });
 }
@@ -166,6 +167,7 @@ export function useUpdateWeight() {
         queryKey: weightKeys.detail(variables.id),
       });
       queryClient.invalidateQueries({ queryKey: weightKeys.latest() });
+      queryClient.invalidateQueries({ queryKey: weightKeys.ranges() });
     },
   });
 }
@@ -183,6 +185,7 @@ export function useDeleteWeight() {
       queryClient.invalidateQueries({ queryKey: weightKeys.lists() });
       queryClient.removeQueries({ queryKey: weightKeys.detail(variables.id) });
       queryClient.invalidateQueries({ queryKey: weightKeys.latest() });
+      queryClient.invalidateQueries({ queryKey: weightKeys.ranges() });
     },
   });
 }

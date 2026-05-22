@@ -8,5 +8,9 @@ declare global {
       id?: string;
       pagination?: Pagination;
     }
+    interface Locals {
+      fromDate?: Date;
+      toDate?: Date;
+    }
   }
 }
