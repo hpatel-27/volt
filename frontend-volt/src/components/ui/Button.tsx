@@ -16,9 +16,10 @@ const variants: Record<Variant, string> = {
   primary:
     "bg-volt-500 text-ink-950 hover:bg-volt-400 active:bg-volt-600 font-semibold cursor-pointer",
   danger:
-    "bg-blaze-500 text-bone-50 hover:bg-blaze-400 active:bg-blaze-600 font-semibold cursor-pointer",
+    "bg-blaze-500 text-bone-50 hover:bg-blaze-600 active:bg-blaze-700 font-semibold cursor-pointer",
   sky: "bg-sky-500 text-ink-950 hover:bg-sky-600 active:bg-sky-700 font-semibold cursor-pointer",
-  ghost: "bg-transparent text-bone-200 hover:bg-ink-800 cursor-pointer",
+  ghost:
+    "bg-transparent text-bone-200 hover:bg-ink-800 active:bg-ink-700 cursor-pointer",
   outline:
     "bg-transparent text-bone-50 border border-white/10 hover:bg-ink-800 hover:border-white/20 cursor-pointer",
 };
