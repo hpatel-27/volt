@@ -203,6 +203,7 @@ export function MealEntrySheet({
           size="lg"
           full
           disabled={isPending}
+          className="hover:bg-volt-600"
         >
           {isPending ? "Saving..." : isEdit ? "Save changes" : "Save"}
         </Button>
@@ -238,7 +239,7 @@ export function MealEntrySheet({
           <button
             type="button"
             onClick={() => setConfirmingDelete(true)}
-            className="mt-4 w-full border-t border-white/5 pt-4 text-center text-sm font-medium text-blaze-400 transition-colors hover:text-blaze-500 cursor-pointer"
+            className="mt-4 w-full border-t border-white/5 pt-4 text-center text-sm font-medium text-blaze-500 transition-colors hover:text-blaze-700 cursor-pointer"
           >
             Delete meal
           </button>
