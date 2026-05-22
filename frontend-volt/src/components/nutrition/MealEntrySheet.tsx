@@ -238,7 +238,7 @@ export function MealEntrySheet({
           <button
             type="button"
             onClick={() => setConfirmingDelete(true)}
-            className="mt-4 w-full border-t border-white/5 pt-4 text-center text-sm font-medium text-blaze-400 transition-colors hover:text-blaze-500"
+            className="mt-4 w-full border-t border-white/5 pt-4 text-center text-sm font-medium text-blaze-400 transition-colors hover:text-blaze-500 cursor-pointer"
           >
             Delete meal
           </button>
@@ -269,7 +269,7 @@ function MacroInput({ label, unit, value, onChange }: MacroInputProps) {
           onChange={(e) => onChange(e.target.value)}
           className="
             flex-1 min-w-0 bg-transparent border-0 outline-none
-            font-display font-bold text-2xl text-bone-200
+            font-display font-bold text-2xl text-bone-200 text-right
             placeholder:text-bone-600 focus:outline-none transition scheme-dark
             [appearance:textfield]
             [&::-webkit-inner-spin-button]:appearance-none
