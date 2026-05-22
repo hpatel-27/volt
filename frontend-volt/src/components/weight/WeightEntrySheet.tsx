@@ -2,20 +2,43 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { Sheet } from "../ui/Sheet";
 import { Button } from "../ui/Button";
-import { useCreateWeight } from "../../api/weights";
-import type { CreateWeightInput } from "../../types/weight";
+import {
+  useCreateWeight,
+  useDeleteWeight,
+  useUpdateWeight,
+} from "../../api/weights";
+import type { CreateWeightInput, Weight } from "../../types/weight";
 import { todayLocalIso } from "../../lib/date";
 
 interface WeightEntrySheetProps {
   open: boolean;
   onClose: () => void;
+  // Present = edit that entry, null/undefined =create a new one.
+  weight?: Weight | null;
 }
 
-export function WeightEntrySheet({ open, onClose }: WeightEntrySheetProps) {
-  const [amount, setAmount] = useState("");
-  const [date, setDate] = useState(todayLocalIso);
+export function WeightEntrySheet({
+  open,
+  onClose,
+  weight,
+}: WeightEntrySheetProps) {
+  const isEdit = !!weight;
+
+  // The parent remounts this sheet on every open (via a changing key), so these
+  // lazy initializers re-run with the current weight.
+  const [amount, setAmount] = useState(() =>
+    weight ? String(weight.amount) : "",
+  );
+  const [date, setDate] = useState(
+    () => weight?.date.slice(0, 10) ?? todayLocalIso(),
+  );
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const amountRef = useRef<HTMLInputElement>(null);
+
   const createWeight = useCreateWeight();
+  const updateWeight = useUpdateWeight();
+  const deleteWeight = useDeleteWeight();
+  const isPending = createWeight.isPending || updateWeight.isPending;
 
   function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -25,24 +48,53 @@ export function WeightEntrySheet({ open, onClose }: WeightEntrySheetProps) {
       );
       return;
     } else if (Number(amount) >= 1000.0) {
-      toast.error(
-        "If you are genuinely this rotund, lose some weight you fat fucking chud.",
-      );
+      toast.error("That weight looks too high, please double-check the value.");
       return;
     } else if (!date || date > todayLocalIso()) {
       toast.error("Please select a valid date for this weight entry.");
       return;
     }
-    const data: CreateWeightInput = {
-      amount: Number(amount),
-      date,
-    };
+
+    const fields = { amount: Number(amount), date };
+
+    if (isEdit && weight) {
+      updateWeight.mutate(
+        { id: weight.id, input: fields },
+        {
+          onSuccess: () => {
+            toast.success("Weight updated.");
+            onClose();
+          },
+          onError: () =>
+            toast.error("Could not update weight. Please try again."),
+        },
+      );
+      return;
+    }
+
+    const data: CreateWeightInput = fields;
     createWeight.mutate(data, {
       onSuccess: () => {
         toast.success("Weight entry created!");
         onClose();
       },
+      onError: () => toast.error("Could not create weight. Please try again."),
     });
+  }
+
+  function handleDelete() {
+    if (!weight) return;
+    deleteWeight.mutate(
+      { id: weight.id },
+      {
+        onSuccess: () => {
+          toast.success("Weight deleted.");
+          onClose();
+        },
+        onError: () =>
+          toast.error("Could not delete weight. Please try again."),
+      },
+    );
   }
 
   return (
@@ -50,7 +102,7 @@ export function WeightEntrySheet({ open, onClose }: WeightEntrySheetProps) {
       open={open}
       onClose={onClose}
       onOpenEnd={() => amountRef.current?.focus()}
-      title="Log Weight"
+      title={isEdit ? "Edit Weight" : "Log Weight"}
     >
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
@@ -99,11 +151,48 @@ export function WeightEntrySheet({ open, onClose }: WeightEntrySheetProps) {
           variant="primary"
           size="lg"
           full
-          disabled={createWeight.isPending}
+          disabled={isPending}
+          className="hover:bg-volt-600"
         >
-          {createWeight.isPending ? "Saving..." : "Save"}
+          {isPending ? "Saving..." : isEdit ? "Save changes" : "Save"}
         </Button>
       </form>
+
+      {/* Delete in edit mode only */}
+      {isEdit &&
+        (confirmingDelete ? (
+          <div className="mt-4 flex items-center justify-between gap-3 border-t border-white/5 pt-4">
+            <span className="text-sm text-bone-300">Delete this entry?</span>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setConfirmingDelete(false)}
+                disabled={deleteWeight.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="danger"
+                size="sm"
+                onClick={handleDelete}
+                disabled={deleteWeight.isPending}
+              >
+                {deleteWeight.isPending ? "Deleting..." : "Delete"}
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setConfirmingDelete(true)}
+            className="mt-4 w-full border-t border-white/5 pt-4 text-center text-sm font-medium text-blaze-500 transition-colors hover:text-blaze-700 cursor-pointer"
+          >
+            Delete entry
+          </button>
+        ))}
     </Sheet>
   );
 }

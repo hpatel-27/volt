@@ -62,8 +62,8 @@ const WeightsChart = ({ weights }: WeightsChartProps) => {
           type={"monotone"}
           fill="url(#wg)"
           stroke="var(--color-amount)"
-          strokeWidth={1}
-          dot={{ r: 3, fill: "var(--color-amount)" }}
+          strokeWidth={2}
+          dot={false}
           activeDot={{ r: 5, fill: "var(--color-amount)" }}
         />
       </AreaChart>

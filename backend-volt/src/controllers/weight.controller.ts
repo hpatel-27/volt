@@ -25,11 +25,6 @@ async function getWeightsByRange(req: Request, res: Response) {
   // Add a limit on the date range to prevent abuse (14 days)
   const fromDate = locals.fromDate!;
   const toDate = locals.toDate!;
-  const diffMs = toDate.getTime() - fromDate.getTime();
-  const maxMs = 90 * 24 * 60 * 60 * 1000; // 14 days
-  if (diffMs > maxMs) {
-    throw new BadRequestError("Date range is limited to a maximum of 90 days.");
-  }
 
   const weights = await weightService.getWeightsByRange(
     userId,

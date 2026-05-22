@@ -23,7 +23,7 @@ router.get(
 router.get(
   "/range",
   userMiddleware,
-  parseDateRange(90),
+  parseDateRange(undefined),
   weightController.getWeightsByRange,
 );
 
