@@ -4,22 +4,25 @@ import { NotFoundError } from "../errors.js";
 import type {
   CreateWeightInput,
   UpdateWeightInput,
+  Weight,
 } from "../types/weight.dto.js";
+import { toWeightDto } from "../mappers/weight.mapper.js";
 
 // Return all of a user's weights whose `date` falls within [from, to].
 async function getWeightsByRange(userId: string, from: Date, to: Date) {
-  const weights = await prisma.weight.findMany({
+  const rawWeights = await prisma.weight.findMany({
     where: { userId, date: { gte: from, lte: to } },
     orderBy: { date: "asc" },
   });
 
+  const weights: Weight[] = rawWeights.map((w) => toWeightDto(w));
   return { weights, total: weights.length };
 }
 
 // Take a userId and return all the user's logged weights
 async function getAllWeights(userId: string, page: number, limit: number) {
   // Find the weights for the user
-  const [weights, total] = await prisma.$transaction([
+  const [rawWeights, total] = await prisma.$transaction([
     prisma.weight.findMany({
       where: { userId },
       skip: (page - 1) * limit,
@@ -28,26 +31,28 @@ async function getAllWeights(userId: string, page: number, limit: number) {
     }),
     prisma.weight.count({ where: { userId } }),
   ]);
+
   // This could be an empty list of weights
+  const weights: Weight[] = rawWeights.map((w) => toWeightDto(w));
   return { weights, total, page, limit };
 }
 
 async function getWeightById(userId: string, weightId: string) {
-  const weight = await prisma.weight.findFirst({
+  const rawWeight = await prisma.weight.findFirst({
     where: { id: weightId, userId },
   });
 
-  if (!weight) {
+  if (!rawWeight) {
     throw new NotFoundError(`Weight entry with id: ${weightId} not found.`);
   }
-  return weight;
+  return toWeightDto(rawWeight);
 }
 
 async function createWeight(data: CreateWeightInput) {
   const newWeight = await prisma.weight.create({
     data,
   });
-  return newWeight;
+  return toWeightDto(newWeight);
 }
 
 async function updateWeight(
@@ -62,7 +67,7 @@ async function updateWeight(
       data,
     });
 
-    return updatedWeight;
+    return toWeightDto(updatedWeight);
   } catch (error: unknown) {
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&
