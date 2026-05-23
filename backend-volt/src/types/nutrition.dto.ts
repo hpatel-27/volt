@@ -1,4 +1,4 @@
-import type { Meal } from "../generated/prisma/client.js";
+import type { Meal } from "./meal.dto.js";
 
 export interface CreateNutritionLogInput {
   userId: string;

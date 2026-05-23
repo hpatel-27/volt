@@ -8,6 +8,7 @@ import type {
   NutritionLogSummary,
   Totals,
 } from "../types/nutrition.dto.js";
+import { toMealDto } from "./meal.mapper.js";
 
 // Matches a log fetched with `include: { meals: true }`
 export type NutritionLogWithMeals = Prisma.NutritionLogGetPayload<{
@@ -26,7 +27,7 @@ function toNutritionDto(log: NutritionLogModel): NutritionLog {
 function toNutritionMealDto(log: NutritionLogWithMeals): NutritionLog {
   const id = log.id;
   const date = log.date.toISOString().slice(0, 10);
-  const meals = log.meals;
+  const meals = log.meals.map((m) => toMealDto(m));
   return { id, date, meals };
 }
 

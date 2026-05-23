@@ -3,6 +3,7 @@ import { Prisma } from "../generated/prisma/client.js";
 import { NotFoundError } from "../errors.js";
 import type { CreateMealInput, UpdateMealInput } from "../types/meal.dto.js";
 import { findOrCreateNutritionLogByDate } from "./nutrition.service.js";
+import { toMealDto } from "../mappers/meal.mapper.js";
 
 async function getAllMeals(logId: string, userId: string) {
   const log = await prisma.nutritionLog.findUnique({
@@ -13,8 +14,8 @@ async function getAllMeals(logId: string, userId: string) {
   if (!log) {
     throw new NotFoundError(`Log with id: ${logId} not found.`);
   }
-
-  return { meals: log.meals };
+  const safeMeals = log.meals.map((m) => toMealDto(m));
+  return { meals: safeMeals };
 }
 
 async function getMealById(logId: string, userId: string, mealId: string) {
@@ -26,12 +27,12 @@ async function getMealById(logId: string, userId: string, mealId: string) {
     throw new NotFoundError(`Meal with id: ${mealId} not found.`);
   }
 
-  return meal;
+  return toMealDto(meal);
 }
 
 async function createMeal(data: CreateMealInput) {
   const meal = await prisma.meal.create({ data });
-  return meal;
+  return toMealDto(meal);
 }
 
 async function updateMeal(
@@ -45,7 +46,7 @@ async function updateMeal(
       where: { id: mealId, nutritionLogId: logId, nutritionLog: { userId } },
       data,
     });
-    return updatedMeal;
+    return toMealDto(updatedMeal);
   } catch (error: unknown) {
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&
