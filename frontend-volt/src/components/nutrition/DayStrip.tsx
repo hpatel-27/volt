@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Dot } from "lucide-react";
 import { useNutritionRange } from "@/api/nutrition";
 import { daysAgoLocalIso } from "@/lib/date";
 import type { DayStripSelected, NutritionLog } from "@/types/nutrition";
@@ -48,20 +48,23 @@ const DayStrip = ({ selectedDate }: DayStripSelected) => {
           const log = logsByDate.get(iso);
           const isSelected = iso === selectedDate;
           return (
-            <Link
+            <div
               key={iso}
-              to={`/nutrition/${iso}`}
-              className={cn(
-                "flex flex-col items-center rounded-lg px-2 py-1 text-xs hover:bg-ink-700 transition",
-                isSelected &&
-                  "bg-sky-500 text-ink-950 font-semibold hover:bg-sky-600 active:bg-sky-700",
-              )}
+              className="relative flex flex-col items-center overflow-visible"
             >
-              <span>{weekdayLetter(iso)}</span>
-              <span className="font-mono">{dayNumber(iso)}</span>
-              {/* Dot indicator goes here */}
-              {log?.date && <p>.</p>}
-            </Link>
+              <Link
+                to={`/nutrition/${iso}`}
+                className={cn(
+                  "flex flex-col items-center rounded-lg px-2 py-1 text-xs hover:bg-ink-700 transition",
+                  isSelected &&
+                    "bg-sky-500 text-ink-950 font-semibold hover:bg-sky-600 active:bg-sky-700",
+                )}
+              >
+                <span>{weekdayLetter(iso)}</span>
+                <span className="font-mono">{dayNumber(iso)}</span>
+              </Link>
+              {log?.date && <Dot className="absolute top-full" />}
+            </div>
           );
         })}
       </div>
