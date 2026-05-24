@@ -5,6 +5,10 @@ import type {
   CreateWorkoutDayInput,
   UpdateWorkoutDayInput,
 } from "../types/workoutDay.dto.js";
+import {
+  toWorkoutDayDto,
+  toWorkoutDayDetailDto,
+} from "../mappers/workoutDay.mapper.js";
 
 async function getAllWorkoutDays(planId: string, userId: string) {
   const plan = await prisma.workoutPlan.findUnique({
@@ -18,7 +22,8 @@ async function getAllWorkoutDays(planId: string, userId: string) {
     throw new NotFoundError("Workout plan not found.");
   }
 
-  return { workoutDays: plan.workoutDays };
+  const workoutDays = plan.workoutDays.map((w) => toWorkoutDayDto(w));
+  return { workoutDays };
 }
 
 async function getWorkoutDayById(
@@ -31,7 +36,7 @@ async function getWorkoutDayById(
     include: {
       exercises: {
         orderBy: { order: "asc" },
-        include: { exercise: true },
+        include: { exercise: { select: { slug: true, name: true } } },
       },
     },
   });
@@ -40,7 +45,7 @@ async function getWorkoutDayById(
     throw new NotFoundError("Workout day not found.");
   }
 
-  return day;
+  return toWorkoutDayDetailDto(day);
 }
 
 async function createWorkoutDay(
@@ -56,7 +61,8 @@ async function createWorkoutDay(
       throw new NotFoundError("Workout plan not found.");
     }
 
-    return await tx.workoutDay.create({ data });
+    const day = await tx.workoutDay.create({ data });
+    return toWorkoutDayDto(day);
   });
 }
 
@@ -77,11 +83,11 @@ async function updateWorkoutDay(
       include: {
         exercises: {
           orderBy: { order: "asc" },
-          include: { exercise: true },
+          include: { exercise: { select: { slug: true, name: true } } },
         },
       },
     });
-    return updatedDay;
+    return toWorkoutDayDetailDto(updatedDay);
   } catch (error: unknown) {
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -93,11 +99,7 @@ async function updateWorkoutDay(
   }
 }
 
-async function deleteWorkoutDay(
-  planId: string,
-  userId: string,
-  dayId: string,
-) {
+async function deleteWorkoutDay(planId: string, userId: string, dayId: string) {
   try {
     await prisma.workoutDay.delete({
       where: {

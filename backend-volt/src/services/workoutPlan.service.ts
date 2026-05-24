@@ -5,46 +5,59 @@ import type {
   CreateWorkoutPlanInput,
   UpdateWorkoutPlanInput,
 } from "../types/workoutPlan.dto.js";
+import {
+  toWorkoutPlanDto,
+  toWorkoutPlanDetailDto,
+} from "../mappers/workoutPlan.mapper.js";
 
+const planDetailInclude = {
+  workoutDays: {
+    orderBy: { order: "asc" },
+    include: {
+      exercises: {
+        orderBy: { order: "asc" },
+        include: { exercise: { select: { slug: true, name: true } } },
+      },
+    },
+  },
+} satisfies Prisma.WorkoutPlanInclude;
+
+// When listing the plans we don't need the nested workout day exercises
 async function getAllWorkoutPlans(userId: string, page: number, limit: number) {
-  const [workoutPlans, total] = await prisma.$transaction([
+  const [rawPlans, total] = await prisma.$transaction([
     prisma.workoutPlan.findMany({
       where: { userId },
       skip: (page - 1) * limit,
       take: limit,
       orderBy: { createdAt: "desc" },
+      include: { _count: { select: { workoutDays: true } } },
     }),
     prisma.workoutPlan.count({ where: { userId } }),
   ]);
+
+  const workoutPlans = rawPlans.map((p) => toWorkoutPlanDto(p));
   return { workoutPlans, total, page, limit };
 }
 
 async function getWorkoutPlanById(userId: string, planId: string) {
   const workoutPlan = await prisma.workoutPlan.findUnique({
     where: { id: planId, userId },
-    include: {
-      workoutDays: {
-        orderBy: { order: "asc" },
-        include: {
-          exercises: {
-            orderBy: { order: "asc" },
-            include: { exercise: true },
-          },
-        },
-      },
-    },
+    include: planDetailInclude,
   });
 
   if (!workoutPlan) {
     throw new NotFoundError("Workout plan not found.");
   }
 
-  return workoutPlan;
+  return toWorkoutPlanDetailDto(workoutPlan);
 }
 
 async function createWorkoutPlan(data: CreateWorkoutPlanInput) {
-  const newPlan = await prisma.workoutPlan.create({ data });
-  return newPlan;
+  const newPlan = await prisma.workoutPlan.create({
+    data,
+    include: { _count: { select: { workoutDays: true } } },
+  });
+  return toWorkoutPlanDto(newPlan);
 }
 
 async function updateWorkoutPlan(
@@ -56,19 +69,9 @@ async function updateWorkoutPlan(
     const updatedPlan = await prisma.workoutPlan.update({
       where: { id: planId, userId },
       data,
-      include: {
-        workoutDays: {
-          orderBy: { order: "asc" },
-          include: {
-            exercises: {
-              orderBy: { order: "asc" },
-              include: { exercise: true },
-            },
-          },
-        },
-      },
+      include: planDetailInclude,
     });
-    return updatedPlan;
+    return toWorkoutPlanDetailDto(updatedPlan);
   } catch (error: unknown) {
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&

@@ -5,6 +5,7 @@ import type {
   CreateWorkoutDayExerciseInput,
   UpdateWorkoutDayExerciseInput,
 } from "../types/workoutDayExercise.dto.js";
+import { toWorkoutDayExerciseDto } from "../mappers/workoutDayExercise.mapper.js";
 
 async function getAllWorkoutDayExercises(
   planId: string,
@@ -16,7 +17,7 @@ async function getAllWorkoutDayExercises(
     include: {
       exercises: {
         orderBy: { order: "asc" },
-        include: { exercise: true },
+        include: { exercise: { select: { slug: true, name: true } } },
       },
     },
   });
@@ -24,8 +25,8 @@ async function getAllWorkoutDayExercises(
   if (!day) {
     throw new NotFoundError("Workout day not found.");
   }
-
-  return { exercises: day.exercises };
+  const exercises = day.exercises.map((e) => toWorkoutDayExerciseDto(e));
+  return { exercises };
 }
 
 async function getWorkoutDayExerciseById(
@@ -40,7 +41,7 @@ async function getWorkoutDayExerciseById(
       workoutDayId: dayId,
       workoutDay: { workoutPlanId: planId, workoutPlan: { userId } },
     },
-    include: { exercise: true },
+    include: { exercise: { select: { slug: true, name: true } } },
   });
 
   if (!dayExercise) {
@@ -49,7 +50,7 @@ async function getWorkoutDayExerciseById(
     );
   }
 
-  return dayExercise;
+  return toWorkoutDayExerciseDto(dayExercise);
 }
 
 async function createWorkoutDayExercise(
@@ -73,10 +74,11 @@ async function createWorkoutDayExercise(
       throw new NotFoundError("Exercise not found.");
     }
 
-    return await tx.workoutDayExercise.create({
+    const dayExercise = await tx.workoutDayExercise.create({
       data,
-      include: { exercise: true },
+      include: { exercise: { select: { slug: true, name: true } } },
     });
+    return toWorkoutDayExerciseDto(dayExercise);
   });
 }
 
@@ -95,9 +97,9 @@ async function updateWorkoutDayExercise(
         workoutDay: { workoutPlanId: planId, workoutPlan: { userId } },
       },
       data,
-      include: { exercise: true },
+      include: { exercise: { select: { slug: true, name: true } } },
     });
-    return updated;
+    return toWorkoutDayExerciseDto(updated);
   } catch (error: unknown) {
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&

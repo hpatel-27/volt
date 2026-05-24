@@ -1,6 +1,5 @@
 export type Weight = {
   id: number;
-  userId: number;
   date: string;
   amount: number;
 };

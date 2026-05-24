@@ -7,6 +7,13 @@ generator client {
   output   = "../src/generated/prisma"
 }
 
+enum PlanType {
+  STRENGTH
+  HYPERTROPHY
+  WEIGHT_LOSS
+}
+
+
 model User {
   id            String     @id @default(uuid())
   clerkId       String     @unique
@@ -14,6 +21,7 @@ model User {
   firstName     String?    // null until updated in profile
   lastName      String?    // null until updated in profile
   height        Int?       // Stored in centimeters
+  activePlanId  String?    
   isAdmin       Boolean    @default(false)
   createdAt     DateTime   @default(now())
   updatedAt     DateTime?  @updatedAt
@@ -62,9 +70,11 @@ model Weight {
 // A named workout plan, e.g. "PPL", "Bro Split", "My Custom Split"
 model WorkoutPlan {
   id        String   @id @default(uuid())
+  userId    String
   createdAt DateTime @default(now())
   name      String
-  userId    String
+  type      PlanType?
+  
   user      User     @relation(fields: [userId], references: [id])
 
   workoutDays WorkoutDay[]
@@ -75,9 +85,10 @@ model WorkoutPlan {
 // A single day within a plan, e.g. "Push", "Pull", "Legs"
 model WorkoutDay {
   id            String      @id @default(uuid())
+  workoutPlanId String
   name          String
   order         Int // order within the plan
-  workoutPlanId String
+  
   workoutPlan   WorkoutPlan @relation(fields: [workoutPlanId], references: [id], onDelete: Cascade)
 
   exercises   WorkoutDayExercise[]
@@ -88,12 +99,17 @@ model WorkoutDay {
 
 // Exercises assigned to a workout day template
 model WorkoutDayExercise {
-  id           String     @id @default(uuid())
-  order        Int
-  workoutDayId String
-  exerciseId   String
-  workoutDay   WorkoutDay @relation(fields: [workoutDayId], references: [id], onDelete: Cascade)
-  exercise     Exercise   @relation(fields: [exerciseId], references: [id])
+  id            String     @id @default(uuid())
+  workoutDayId  String
+  exerciseId    String
+  order         Int
+  targetSets    Int?
+  targetRepsMin Int?
+  targetRepsMax Int?
+  restSeconds   Int?
+
+  workoutDay    WorkoutDay @relation(fields: [workoutDayId], references: [id], onDelete: Cascade)
+  exercise      Exercise   @relation(fields: [exerciseId], references: [id])
 
   @@map("workout_day_exercises")
 }
@@ -101,9 +117,10 @@ model WorkoutDayExercise {
 // A recorded workout session
 model WorkoutLog {
   id           String      @id @default(uuid())
-  date         DateTime    @default(now())
   userId       String
-  workoutDayId String? // nullable — user may log an ad-hoc session
+  workoutDayId String?     // nullable — user may log an ad-hoc session
+  date         DateTime    @default(now())
+
   user         User        @relation(fields: [userId], references: [id])
   workoutDay   WorkoutDay? @relation(fields: [workoutDayId], references: [id], onDelete: SetNull)
 
@@ -118,6 +135,7 @@ model ExerciseLog {
   exerciseId   String
   workoutLogId String
   notes        String?
+
   exercise     Exercise   @relation(fields: [exerciseId], references: [id])
   workoutLog   WorkoutLog @relation(fields: [workoutLogId], references: [id], onDelete: Cascade)
 
@@ -129,10 +147,11 @@ model ExerciseLog {
 // An individual set: set number, reps performed, weight used
 model SetLog {
   id            String      @id @default(uuid())
+  exerciseLogId String
   setNumber     Int
   reps          Int
   weight        Float // in lbs
-  exerciseLogId String
+
   exerciseLog   ExerciseLog @relation(fields: [exerciseLogId], references: [id], onDelete: Cascade)
 
   @@map("set_logs")
@@ -160,6 +179,7 @@ model Meal {
   protein        Float // grams
   carbs          Float // grams
   fat            Float // grams
+
   nutritionLog   NutritionLog @relation(fields: [nutritionLogId], references: [id], onDelete: Cascade)
 
   @@map("meals")
