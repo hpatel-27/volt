@@ -17,7 +17,7 @@ export default function WorkoutPlan() {
     <div className="space-y-4">
       <header className="flex items-center gap-3">
         <Link
-          to="/workouts"
+          to="/plans"
           className="text-bone-300 p-2 rounded-lg hover:bg-ink-600 active:bg-ink-700 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />

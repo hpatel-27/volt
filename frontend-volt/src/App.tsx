@@ -52,9 +52,9 @@ export function App() {
 
         <Route element={<ProtectedLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/workouts" element={<Workouts />} />
-          <Route path="/workouts/:planId" element={<WorkoutPlan />} />
-          <Route path="/log" element={<Log />} />
+          <Route path="/plans" element={<Workouts />} />
+          <Route path="/plans/:planId" element={<WorkoutPlan />} />
+          <Route path="/workouts" element={<Log />} />
           <Route path="/exercises" element={<Exercises />} />
           <Route element={<NutritionLayout />}>
             <Route path="/nutrition" element={<Nutrition />} />

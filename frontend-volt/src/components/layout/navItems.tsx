@@ -16,13 +16,13 @@ export const navItems: NavItem[] = [
     ),
   },
   {
-    to: "/workouts",
-    label: "Workouts",
+    to: "/plans",
+    label: "Plans",
     icon: <Icon d="M5 9v6M19 9v6M2 12h3M19 12h3M8 6v12M16 6v12" />,
   },
   {
-    to: "/log",
-    label: "Log",
+    to: "/workouts",
+    label: "Logs",
     icon: <Icon d="M12 5v14M5 12h14" />,
     primary: true,
   },
