@@ -1,35 +1,13 @@
 import { Link } from "react-router";
+import { Card } from "@/components/ui/Card";
 import { Button } from "../components/ui/Button";
-import { Card } from "../components/ui/Card";
-import { Plus } from "lucide-react";
-import type { Plan as PlanEntry, PlanFilter } from "@/types/workoutPlan";
+import { ChevronLeft, ChevronRight, NotebookPen, Plus } from "lucide-react";
+import type { PlanFilter } from "@/types/workoutPlan";
 import { useState } from "react";
 import { cn } from "@/lib/cn";
-
-const plans = [
-  {
-    id: "ppl-hyp",
-    title: "PPL · Hypertrophy Block",
-    state: "Active" as const,
-    meta: "5 days/wk",
-    sub: "6 weeks · week 3 of 6",
-    progress: 50,
-  },
-  {
-    id: "531-bbb",
-    title: "5/3/1 BBB",
-    state: "Archived" as const,
-    meta: "4 days/wk",
-    sub: "Last performed · Mar 12",
-  },
-  {
-    id: "summer-cut",
-    title: "Summer Cut Plan",
-    state: "Draft" as const,
-    meta: "3 days/wk",
-    sub: "No exercises yet",
-  },
-];
+import { useWorkoutPlans } from "@/api/workoutPlan";
+import { LIMIT } from "@/types/shared";
+import { Spinner } from "@/components/ui/Spinner";
 
 export default function Workouts() {
   const planFilters: PlanFilter[] = [
@@ -39,16 +17,27 @@ export default function Workouts() {
     "Weight Loss",
   ];
   const [filter, setFilter] = useState<PlanFilter>("All");
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const [sheetKey, setSheetKey] = useState(0);
+  // const [sheetOpen, setSheetOpen] = useState(false);
+  // const [sheetKey, setSheetKey] = useState(0);
+  const [page, setPage] = useState(1);
+  const planQuery = useWorkoutPlans({ page, limit: LIMIT });
+  const totalPages =
+    planQuery.data?.total !== undefined &&
+    planQuery.data?.limit !== undefined &&
+    planQuery.data?.total !== 0
+      ? Math.ceil(planQuery.data?.total / planQuery.data?.limit)
+      : 1;
+  const plans = planQuery.data?.workoutPlans ?? [];
+  const activePlanId = "d8bfd801-945a-4c53-9424-679c24e50b58";
+  // console.log(planQuery.data ? planQuery.data : "wait");
 
   // No argument = log a new workout plan. Pass an entry = open the sheet to edit it.
   // Bumping the key remounts the sheet so its fields re-initialize from editingWeight`.
-  const openSheet = (plan?: PlanEntry) => {
-    // setEditingPlan(plan ?? null);
-    setSheetKey((k) => k + 1);
-    setSheetOpen(true);
-  };
+  // const openSheet = (plan?: PlanEntry) => {
+  //   // setEditingPlan(plan ?? null);
+  //   setSheetKey((k) => k + 1);
+  //   setSheetOpen(true);
+  // };
 
   return (
     <div className="space-y-4">
@@ -57,7 +46,7 @@ export default function Workouts() {
         <Button
           size="sm"
           leading={<Plus className="w-4 h-4" />}
-          onClick={() => openSheet()}
+          // onClick={() => openWorkoutPlanSheet()}
         >
           New
         </Button>
@@ -83,45 +72,96 @@ export default function Workouts() {
         ))}
       </div>
 
-      <div className="space-y-3">
-        {plans.map((plan) => (
-          <Link key={plan.id} to={`/workouts/${plan.id}`}>
-            <Card
-              interactive
-              className={plan.state === "Active" ? "border-volt-500/20" : ""}
-            >
-              <div className="flex items-center justify-between mb-1">
-                <span
-                  className={
-                    "text-[10px] font-bold tracking-widest uppercase " +
-                    (plan.state === "Active"
-                      ? "text-volt-500"
-                      : "text-bone-500")
-                  }
-                >
-                  {plan.state}
-                </span>
-                <span className="text-[10px] text-bone-500">{plan.meta}</span>
-              </div>
-              <div className="font-display text-xl font-bold">{plan.title}</div>
-              <div className="text-xs text-bone-500 mt-1">{plan.sub}</div>
-              {plan.progress !== undefined && (
-                <div className="mt-4 flex items-center gap-2">
-                  <div className="flex-1 h-1.5 rounded-full bg-ink-800 overflow-hidden">
-                    <div
-                      className="h-full bg-volt-500"
-                      style={{ width: `${plan.progress}%` }}
-                    />
-                  </div>
-                  <span className="text-xs font-mono text-bone-300">
-                    {plan.progress}%
-                  </span>
-                </div>
-              )}
-            </Card>
-          </Link>
-        ))}
-      </div>
+      {planQuery.isLoading ? (
+        <div className="pt-8">
+          <Spinner />
+        </div>
+      ) : plans.length > 0 ? (
+        <div>
+          <div className="space-y-3">
+            {plans.map((plan) => {
+              // TODO(human): determine whether this plan should render as "Active".
+              // No `active` field exists on WorkoutPlanSummary yet — decide how to derive it
+              // (e.g. most recently created, a future `isActive` flag, etc.) and return a boolean.
+              const isActive = plan.id === activePlanId;
+
+              return (
+                <Link key={plan.id} to={`/plans/${plan.id}`}>
+                  <Card
+                    interactive
+                    className={cn(isActive && "border-volt-500/30")}
+                  >
+                    <div className="mb-1 flex items-center justify-between">
+                      <span
+                        className={cn(
+                          "text-[10px] font-bold tracking-widest uppercase",
+                          isActive ? "text-volt-500" : "text-bone-500",
+                        )}
+                      >
+                        {isActive ? "Active" : "Inactive"}
+                      </span>
+                      <span className="text-[10px] text-bone-500">
+                        {plan.daysPerWeek} days/wk
+                      </span>
+                    </div>
+                    <div className="font-display text-xl font-bold">
+                      {plan.name}
+                    </div>
+                    <div className="text-xs text-bone-500">
+                      Day 1 of {plan.daysPerWeek}
+                    </div>
+                  </Card>
+                </Link>
+              );
+            })}
+          </div>
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 pt-6">
+              <Button
+                size="sm"
+                variant="ghost"
+                disabled={page === 1}
+                leading={<ChevronLeft className="h-4 w-4" />}
+                onClick={() => setPage((p) => p - 1)}
+              >
+                <span className="-translate-y-[1.5px]">Prev</span>
+              </Button>
+              <span className="px-2 font-mono text-xs text-bone-500">
+                {page} / {totalPages}
+              </span>
+              <Button
+                size="sm"
+                variant="ghost"
+                disabled={page === totalPages}
+                trailing={<ChevronRight className="h-4 w-4" />}
+                onClick={() => setPage((p) => p + 1)}
+              >
+                <span className="-translate-y-[1.5px]">Next</span>
+              </Button>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="flex flex-col items-center gap-3 min-h-[60vh] justify-center text-center">
+          <div className="grid h-14 w-14 place-items-center rounded-2xl bg-volt-500/10">
+            <NotebookPen className="h-6 w-6 text-volt-500" />
+          </div>
+          <p className="font-display text-lg font-semibold text-bone-50">
+            Let's get started
+          </p>
+          <p className="text-caption max-w-60 text-bone-500 normal-case tracking-normal">
+            Map out your first week of training.
+          </p>
+          <Button
+            size="sm"
+            leading={<Plus className="h-4 w-4" />}
+            // onClick={() => openWorkoutPlanSheet()}
+            className="mt-1"
+          >
+            Plan
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
