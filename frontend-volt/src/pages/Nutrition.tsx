@@ -7,13 +7,11 @@ import { useNutritionLogs, useNutritionToday } from "@/api/nutrition";
 import { formatRelativeDate, todayLocalIso } from "@/lib/date";
 import { ChevronLeft, ChevronRight, Plus, Utensils } from "lucide-react";
 import { Spinner } from "@/components/ui/Spinner";
+import { CALORIE_GOAL, LIMIT } from "@/types/shared";
 
 // TODO: lift to user goals
-const CALORIE_GOAL = 2100;
 
 export default function Nutrition() {
-  const LIMIT = 10;
-
   const [page, setPage] = useState(1);
   const pageQuery = useNutritionLogs({ page, limit: LIMIT });
   const totalPages =
@@ -134,7 +132,7 @@ export default function Nutrition() {
           )}
         </div>
       ) : (
-        <div className="flex flex-col items-center gap-3 py-16 text-center">
+        <div className="flex flex-col items-center gap-3 min-h-[40vh] justify-center text-center">
           <div className="grid h-14 w-14 place-items-center rounded-2xl bg-sky-500/10">
             <Utensils className="h-6 w-6 text-sky-500" />
           </div>
