@@ -62,6 +62,7 @@ async function createWorkoutDayExercise(
   return await prisma.$transaction(async (tx) => {
     const existingDay = await tx.workoutDay.findFirst({
       where: { id: dayId, workoutPlanId: planId, workoutPlan: { userId } },
+      include: { _count: { select: { exercises: true } } },
     });
     if (!existingDay) {
       throw new NotFoundError("Workout day not found.");
@@ -74,6 +75,9 @@ async function createWorkoutDayExercise(
       throw new NotFoundError("Exercise not found.");
     }
 
+    // The new day for the plan will always be the newest/last in the order
+    const currentExerciseCount = existingDay._count.exercises;
+    data.order = currentExerciseCount + 1;
     const dayExercise = await tx.workoutDayExercise.create({
       data,
       include: { exercise: { select: { slug: true, name: true } } },

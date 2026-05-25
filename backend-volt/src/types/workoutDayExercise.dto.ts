@@ -2,10 +2,17 @@ export interface CreateWorkoutDayExerciseInput {
   workoutDayId: string;
   exerciseId: string;
   order: number;
+  targetSets?: number;
+  targetRepsMin?: number;
+  targetRepsMax?: number;
+  restSeconds?: number;
 }
 
 export interface UpdateWorkoutDayExerciseInput {
-  order?: number;
+  targetSets?: number;
+  targetRepsMin?: number;
+  targetRepsMax?: number;
+  restSeconds?: number;
 }
 
 // API response shape for one exercise slot on a workout day.
