@@ -69,13 +69,14 @@ model Weight {
 
 // A named workout plan, e.g. "PPL", "Bro Split", "My Custom Split"
 model WorkoutPlan {
-  id        String   @id @default(uuid())
+  id        String    @id @default(uuid())
   userId    String
-  createdAt DateTime @default(now())
   name      String
   type      PlanType?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
   
-  user      User     @relation(fields: [userId], references: [id])
+  user      User      @relation(fields: [userId], references: [id])
 
   workoutDays WorkoutDay[]
 
