@@ -42,6 +42,14 @@ router.delete(
   workoutPlanController.deleteWorkoutPlan,
 );
 
+// Activate a workout plan
+router.post(
+  "/:planId/activate",
+  userMiddleware,
+  parseUuidParam("planId"),
+  workoutPlanController.activateWorkoutPlan,
+);
+
 // Mount Workout Day routes
 router.use(
   "/:planId/days",

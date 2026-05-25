@@ -106,10 +106,23 @@ async function deleteWorkoutPlan(req: Request, res: Response) {
   return res.status(204).send();
 }
 
+async function activateWorkoutPlan(req: Request, res: Response) {
+  const user = req.user!;
+  const userId = user.id;
+  const planId = res.locals.planId as string;
+
+  const activePlan = await workoutPlanService.activateWorkoutPlan(
+    userId,
+    planId,
+  );
+  return res.json(activePlan);
+}
+
 export {
   getAllWorkoutPlans,
   getWorkoutPlanById,
   createWorkoutPlan,
   updateWorkoutPlan,
   deleteWorkoutPlan,
+  activateWorkoutPlan,
 };

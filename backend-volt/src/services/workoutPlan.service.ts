@@ -53,11 +53,31 @@ async function getWorkoutPlanById(userId: string, planId: string) {
 }
 
 async function createWorkoutPlan(data: CreateWorkoutPlanInput) {
-  const newPlan = await prisma.workoutPlan.create({
-    data,
-    include: { _count: { select: { workoutDays: true } } },
+  // TODO(human): if this is the user's first workout plan, also set
+  // user.activePlanId to the new plan's id. Both writes should happen
+  // atomically so we never end up with a plan but no active pointer
+  // (or worse, the count check disagreeing with the actual state under
+  // concurrent creates). Return the plan DTO as before.
+  const { plan } = await prisma.$transaction(async (tx) => {
+    const plan = await tx.workoutPlan.create({
+      data,
+      include: { _count: { select: { workoutDays: true } } },
+    });
+
+    const count = await tx.workoutPlan.count({
+      where: { userId: data.userId },
+    });
+    // If this is the user's first plan (or they deleted their plans and they are making a new first plan)
+    if (count === 1) {
+      await tx.user.update({
+        where: { id: data.userId },
+        data: { activePlanId: plan.id },
+      });
+    }
+    return { plan };
   });
-  return toWorkoutPlanDto(newPlan);
+
+  return toWorkoutPlanDto(plan);
 }
 
 async function updateWorkoutPlan(
@@ -100,10 +120,29 @@ async function deleteWorkoutPlan(userId: string, planId: string) {
   }
 }
 
+async function activateWorkoutPlan(userId: string, planId: string) {
+  await prisma.$transaction(async (tx) => {
+    const workoutPlan = await tx.workoutPlan.findUnique({
+      where: { id: planId, userId },
+    });
+
+    if (!workoutPlan) {
+      throw new NotFoundError("Workout plan not found.");
+    }
+
+    await tx.user.update({
+      where: { id: userId },
+      data: { activePlanId: planId },
+    });
+  });
+  return { activePlanId: planId };
+}
+
 export {
   getAllWorkoutPlans,
   getWorkoutPlanById,
   createWorkoutPlan,
   updateWorkoutPlan,
   deleteWorkoutPlan,
+  activateWorkoutPlan,
 };
