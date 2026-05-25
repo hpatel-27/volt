@@ -8,7 +8,6 @@ export interface CreateWorkoutDayInput {
 
 export interface UpdateWorkoutDayInput {
   name?: string;
-  order?: number;
 }
 
 // API response shape for the workout day list endpoint (GET /)

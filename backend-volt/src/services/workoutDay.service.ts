@@ -56,11 +56,16 @@ async function createWorkoutDay(
   return await prisma.$transaction(async (tx) => {
     const existingPlan = await tx.workoutPlan.findUnique({
       where: { id: planId, userId },
+      include: { _count: { select: { workoutDays: true } } },
     });
+
     if (!existingPlan) {
       throw new NotFoundError("Workout plan not found.");
     }
 
+    // The new day for the plan will always be the newest/last in the order
+    const days = existingPlan._count.workoutDays;
+    data.order = days + 1;
     const day = await tx.workoutDay.create({ data });
     return toWorkoutDayDto(day);
   });
