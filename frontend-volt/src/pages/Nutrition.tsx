@@ -114,7 +114,7 @@ export default function Nutrition() {
                 leading={<ChevronLeft className="h-4 w-4" />}
                 onClick={() => setPage((p) => p - 1)}
               >
-                Prev
+                <span className="-translate-y-[1.5px]">Prev</span>
               </Button>
               <span className="px-2 font-mono text-xs text-bone-500">
                 {page} / {totalPages}
@@ -126,7 +126,7 @@ export default function Nutrition() {
                 trailing={<ChevronRight className="h-4 w-4" />}
                 onClick={() => setPage((p) => p + 1)}
               >
-                Next
+                <span className="-translate-y-[1.5px]">Next</span>
               </Button>
             </div>
           )}
