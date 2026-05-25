@@ -4,10 +4,12 @@ import type { WorkoutDayDetail } from "./workoutDay.dto.js";
 export interface CreateWorkoutPlanInput {
   userId: string;
   name: string;
+  type?: PlanType;
 }
 
 export interface UpdateWorkoutPlanInput {
   name?: string;
+  type?: PlanType;
 }
 
 // Matches a plan that includes the count of workout days scheduled for the plan
