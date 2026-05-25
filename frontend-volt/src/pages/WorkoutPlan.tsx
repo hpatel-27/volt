@@ -1,6 +1,9 @@
 import { useParams, Link } from "react-router";
 import { Card } from "../components/ui/Card";
-import { ArrowLeft } from "lucide-react";
+import { Button } from "../components/ui/Button";
+import { ArrowLeft, ChevronRight } from "lucide-react";
+import { useCurrentUser } from "@/api/user";
+import { useActivatePlan } from "@/api/workoutPlan";
 
 const exercises = [
   { name: "Barbell Bench Press", scheme: "4 × 6–8 · 90s rest" },
@@ -13,6 +16,10 @@ const days = ["Push", "Pull", "Legs", "Upper"];
 
 export default function WorkoutPlan() {
   const { planId } = useParams();
+  const userQuery = useCurrentUser();
+  const activateMutation = useActivatePlan();
+  const isActive = !!planId && userQuery.data?.activePlanId === planId;
+
   return (
     <div className="space-y-4">
       <header className="flex items-center gap-3">
@@ -26,9 +33,20 @@ export default function WorkoutPlan() {
           <div className="text-caption">Editing plan</div>
           <h1 className="font-display text-lg font-bold">{planId}</h1>
         </div>
-        <span className="text-volt-500 text-xs font-semibold uppercase tracking-wider">
-          Saved
-        </span>
+
+        {isActive ? (
+          <span className="text-volt-500 text-xs font-semibold tracking-wider">
+            Active
+          </span>
+        ) : (
+          <Button
+            size="sm"
+            onClick={() => planId && activateMutation.mutate(planId)}
+            disabled={!planId || activateMutation.isPending}
+          >
+            {activateMutation.isPending ? "Activating…" : "Activate"}
+          </Button>
+        )}
       </header>
 
       <div className="flex gap-2 overflow-x-auto">
@@ -53,14 +71,16 @@ export default function WorkoutPlan() {
       <div className="space-y-3">
         {exercises.map((ex) => (
           <Card key={ex.name} className="flex items-center gap-3 p-4">
-            <span className="text-bone-500 text-xs font-mono">⋮⋮</span>
+            <span className="text-bone-500 text-xs font-mono"></span>
             <div className="flex-1">
               <div className="text-sm font-semibold">{ex.name}</div>
               <div className="text-xs text-bone-500 font-mono mt-0.5">
                 {ex.scheme}
               </div>
             </div>
-            <button className="text-bone-500 text-lg">⋯</button>
+            <button className="text-bone-500 text-lg">
+              <ChevronRight />
+            </button>
           </Card>
         ))}
         <button className="w-full h-12 rounded-2xl border border-dashed border-white/15 text-bone-300 text-sm font-medium hover:bg-ink-900">
