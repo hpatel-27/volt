@@ -6,6 +6,7 @@ import type { PlanFilter } from "@/types/workoutPlan";
 import { useState } from "react";
 import { cn } from "@/lib/cn";
 import { useWorkoutPlans } from "@/api/workoutPlan";
+import { useCurrentUser } from "@/api/user";
 import { LIMIT } from "@/types/shared";
 import { Spinner } from "@/components/ui/Spinner";
 
@@ -28,8 +29,8 @@ export default function Workouts() {
       ? Math.ceil(planQuery.data?.total / planQuery.data?.limit)
       : 1;
   const plans = planQuery.data?.workoutPlans ?? [];
-  const activePlanId = "d8bfd801-945a-4c53-9424-679c24e50b58";
-  // console.log(planQuery.data ? planQuery.data : "wait");
+  const userQuery = useCurrentUser();
+  const activePlanId = userQuery.data?.activePlanId ?? null;
 
   // No argument = log a new workout plan. Pass an entry = open the sheet to edit it.
   // Bumping the key remounts the sheet so its fields re-initialize from editingWeight`.
@@ -80,9 +81,6 @@ export default function Workouts() {
         <div>
           <div className="space-y-3">
             {plans.map((plan) => {
-              // TODO(human): determine whether this plan should render as "Active".
-              // No `active` field exists on WorkoutPlanSummary yet — decide how to derive it
-              // (e.g. most recently created, a future `isActive` flag, etc.) and return a boolean.
               const isActive = plan.id === activePlanId;
 
               return (
