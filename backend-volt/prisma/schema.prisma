@@ -11,6 +11,7 @@ enum PlanType {
   STRENGTH
   HYPERTROPHY
   WEIGHT_LOSS
+  OTHER
 }
 
 
