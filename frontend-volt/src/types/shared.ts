@@ -11,3 +11,10 @@ export const GOALS = {
   carbs: 210, // 840 calories
   fat: 50, // 450 calories
 };
+
+export const WORKOUT_TYPES = [
+  "OTHER",
+  "STRENGTH",
+  "HYPERTROPHY",
+  "WEIGHT LOSS",
+];
