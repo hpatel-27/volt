@@ -37,7 +37,8 @@ export interface WorkoutPlan {
   name: string;
   type: PlanType | null;
   daysPerWeek: number;
-  createdAt: Date;
+  createdAt: string;
+  updatedAt: string | null;
 }
 
 // API response shape for a single plan with its full structure expanded.
@@ -45,6 +46,7 @@ export interface WorkoutPlanDetail {
   id: string;
   name: string;
   type: PlanType | null;
-  createdAt: Date;
+  createdAt: string;
+  updatedAt: string | null;
   workoutDays: WorkoutDayDetail[];
 }

@@ -12,7 +12,10 @@ function toWorkoutPlanDto(plan: PlanWithDayCount): WorkoutPlan {
     name: plan.name,
     type: plan.type,
     daysPerWeek: plan._count.workoutDays,
-    createdAt: plan.createdAt,
+    createdAt: plan.createdAt.toISOString().slice(0, 10),
+    updatedAt: plan.updatedAt
+      ? plan.updatedAt.toISOString().slice(0, 10)
+      : null,
   };
 }
 
@@ -23,7 +26,10 @@ function toWorkoutPlanDetailDto(
     id: plan.id,
     name: plan.name,
     type: plan.type,
-    createdAt: plan.createdAt,
+    createdAt: plan.createdAt.toISOString().slice(0, 10),
+    updatedAt: plan.updatedAt
+      ? plan.updatedAt.toISOString().slice(0, 10)
+      : null,
     workoutDays: plan.workoutDays.map((d) => toWorkoutDayDetailDto(d)),
   };
 }
