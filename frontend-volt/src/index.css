@@ -79,6 +79,7 @@
   html {
     background-color: var(--color-ink-950);
     color: var(--color-bone-50);
+    color-scheme: dark;
     -webkit-font-smoothing: antialiased;
     font-family: var(--font-sans);
     @apply font-sans;
