@@ -1,5 +1,12 @@
 import useFetch from "@/hooks/useFetch";
-import type { WorkoutPlanPage } from "@/types/workoutPlan";
+import type {
+  CreateWorkoutPlanInput,
+  DeleteWorkoutPlanVariables,
+  UpdateWorkoutPlanVariables,
+  WorkoutPlan,
+  WorkoutPlanPage,
+  WorkoutPlanSummary,
+} from "@/types/workoutPlan";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { userKeys } from "@/api/user";
 import type { User } from "@/types/user";
@@ -29,7 +36,7 @@ export function useWorkoutPlans(params: { page: number; limit: number }) {
   });
 }
 
-export function useActivatePlan() {
+export function useActivateWorkoutPlan() {
   const authedFetch = useFetch();
   const queryClient = useQueryClient();
 
@@ -47,6 +54,84 @@ export function useActivatePlan() {
       queryClient.setQueryData<User>(userKeys.me(), (prev) =>
         prev ? { ...prev, activePlanId: data.activePlanId } : prev,
       );
+    },
+  });
+}
+
+export function useWorkoutPlanDetail(id: string) {
+  const authedFetch = useFetch();
+  return useQuery({
+    queryKey: workoutPlanKeys.detail(id),
+    queryFn: async () => {
+      const url = `${BASE}/${id}`;
+      const data = await authedFetch<WorkoutPlan>(url);
+      if (!data)
+        throw new Error("Expected workout plan detail, got empty response");
+      return data;
+    },
+  });
+}
+
+export function useCreateWorkoutPlan() {
+  const authedFetch = useFetch();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: CreateWorkoutPlanInput) => {
+      const data = await authedFetch<WorkoutPlanSummary>(BASE, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(input),
+      });
+      if (!data)
+        throw new Error("Expected created workout plan, got empty response");
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: workoutPlanKeys.lists() });
+    },
+  });
+}
+
+export function useUpdateWorkoutPlan() {
+  const authedFetch = useFetch();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, input }: UpdateWorkoutPlanVariables) => {
+      const url = `${BASE}/${id}`;
+      const data = await authedFetch<WorkoutPlanSummary>(url, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(input),
+      });
+      if (!data)
+        throw new Error("Expected updated workout plan, got empty response");
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: workoutPlanKeys.lists() });
+      queryClient.invalidateQueries({
+        queryKey: workoutPlanKeys.detail(variables.id),
+      });
+    },
+  });
+}
+
+export function useDeleteWorkoutPlan() {
+  const authedFetch = useFetch();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id }: DeleteWorkoutPlanVariables) => {
+      const url = `${BASE}/${id}`;
+      await authedFetch(url, { method: "DELETE" });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: workoutPlanKeys.lists() });
+      // Removing the detail query indicates to the observer to refetch that data
+      // in the timeframe before the mutation navigates the user back to the plans
+      // page, so let the gc handle invalidating it after it expires
     },
   });
 }

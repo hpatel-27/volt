@@ -16,5 +16,5 @@ export const WORKOUT_TYPES = [
   "OTHER",
   "STRENGTH",
   "HYPERTROPHY",
-  "WEIGHT LOSS",
+  "WEIGHT_LOSS",
 ];

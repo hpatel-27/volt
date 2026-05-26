@@ -9,6 +9,7 @@ import { useWorkoutPlans } from "@/api/workoutPlan";
 import { useCurrentUser } from "@/api/user";
 import { LIMIT } from "@/types/shared";
 import { Spinner } from "@/components/ui/Spinner";
+import WorkoutPlanEntrySheet from "@/components/workout/WorkoutPlanEntrySheet";
 
 export default function Workouts() {
   const planFilters: PlanFilter[] = [
@@ -18,8 +19,8 @@ export default function Workouts() {
     "Weight Loss",
   ];
   const [filter, setFilter] = useState<PlanFilter>("All");
-  // const [sheetOpen, setSheetOpen] = useState(false);
-  // const [sheetKey, setSheetKey] = useState(0);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [sheetKey, setSheetKey] = useState(0);
   const [page, setPage] = useState(1);
   const planQuery = useWorkoutPlans({ page, limit: LIMIT });
   const totalPages =
@@ -32,13 +33,12 @@ export default function Workouts() {
   const userQuery = useCurrentUser();
   const activePlanId = userQuery.data?.activePlanId ?? null;
 
-  // No argument = log a new workout plan. Pass an entry = open the sheet to edit it.
-  // Bumping the key remounts the sheet so its fields re-initialize from editingWeight`.
-  // const openSheet = (plan?: PlanEntry) => {
-  //   // setEditingPlan(plan ?? null);
-  //   setSheetKey((k) => k + 1);
-  //   setSheetOpen(true);
-  // };
+  // No argument = log a new workout plan.
+  // Bumping the key remounts the sheet so its fields re-initialize.
+  const openWorkoutPlanSheet = () => {
+    setSheetKey((k) => k + 1);
+    setSheetOpen(true);
+  };
 
   return (
     <div className="space-y-4">
@@ -47,11 +47,18 @@ export default function Workouts() {
         <Button
           size="sm"
           leading={<Plus className="w-4 h-4" />}
-          // onClick={() => openWorkoutPlanSheet()}
+          onClick={() => openWorkoutPlanSheet()}
         >
           New
         </Button>
       </header>
+
+      <WorkoutPlanEntrySheet
+        key={sheetKey}
+        open={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        plan={null}
+      />
 
       <div className="flex gap-2">
         {planFilters.map((r) => (
@@ -153,7 +160,7 @@ export default function Workouts() {
           <Button
             size="sm"
             leading={<Plus className="h-4 w-4" />}
-            // onClick={() => openWorkoutPlanSheet()}
+            onClick={() => openWorkoutPlanSheet()}
             className="mt-1"
           >
             Plan
