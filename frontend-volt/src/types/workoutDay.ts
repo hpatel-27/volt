@@ -8,9 +8,17 @@ export type WorkoutDay = {
 };
 
 export type CreateWorkoutDayInput = { name: string };
+export type UpdateWorkoutDayInput = { name?: string };
+
+export type WorkoutDayEntry = { id: string; name: string };
 
 export type CreateWorkoutDayVariables = {
   planId: string;
   input: CreateWorkoutDayInput;
+};
+export type UpdateWorkoutDayVariables = {
+  planId: string;
+  dayId: string;
+  input: UpdateWorkoutDayInput;
 };
 export type DeleteWorkoutDayVariables = { planId: string; dayId: string };

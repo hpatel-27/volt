@@ -1,7 +1,13 @@
 import { useParams, Link } from "react-router";
 import { useState } from "react";
 import { Button } from "../components/ui/Button";
-import { ArrowLeft, ChevronRight, Pencil, Plus } from "lucide-react";
+import {
+  ArrowLeft,
+  ChevronRight,
+  EllipsisVertical,
+  Pencil,
+  Plus,
+} from "lucide-react";
 import { useCurrentUser } from "@/api/user";
 import {
   useActivateWorkoutPlan,
@@ -19,6 +25,7 @@ export default function WorkoutPlan() {
   const [sheetKey, setSheetKey] = useState(0);
   const [daySheetOpen, setDaySheetOpen] = useState(false);
   const [daySheetKey, setDaySheetKey] = useState(0);
+  const [editingDayId, setEditingDayId] = useState<string | null>(null);
   const [exSheetOpen, setExSheetOpen] = useState(false);
   const [exSheetKey, setExSheetKey] = useState(0);
   const planDetailQuery = useWorkoutPlanDetail(planId!);
@@ -37,24 +44,31 @@ export default function WorkoutPlan() {
 
   const plan = planDetailQuery.data;
   const workoutDays = plan?.workoutDays ?? [];
-  const selectedDay = selectedDayId
-    ? workoutDays.find((d) => d.id === selectedDayId)
-    : workoutDays.length > 0
-      ? workoutDays[0]
-      : null;
+  const selectedDay =
+    workoutDays.find((d) => d.id === selectedDayId) ?? workoutDays[0] ?? null;
   const exercises = selectedDay?.exercises ?? [];
 
   // This page only ever edits the plan it's displaying, so the sheet always
   // opens in edit mode with the current plan. Bumping the key remounts the
-  // sheet so its lazy initializers re-pick the latest name/type.
+  // sheet so its lazy initializers re-pick the latest name/type
   const openEditSheet = () => {
     setSheetKey((k) => k + 1);
     setSheetOpen(true);
   };
   const openDaySheet = () => {
+    setEditingDayId(null);
     setDaySheetKey((k) => k + 1);
     setDaySheetOpen(true);
   };
+  const openEditDaySheet = (dayId: string) => {
+    setEditingDayId(dayId);
+    setDaySheetKey((k) => k + 1);
+    setDaySheetOpen(true);
+  };
+  const editingDay = editingDayId
+    ? workoutDays.find((d) => d.id === editingDayId)
+    : null;
+
   const openExerciseSheet = () => {
     setExSheetKey((k) => k + 1);
     setExSheetOpen(true);
@@ -114,6 +128,7 @@ export default function WorkoutPlan() {
           open={daySheetOpen}
           onClose={() => setDaySheetOpen(false)}
           planId={planId}
+          day={editingDay && { id: editingDay.id, name: editingDay.name }}
         />
       )}
 
@@ -135,15 +150,19 @@ export default function WorkoutPlan() {
             <button
               key={d.id}
               type="button"
-              onClick={() => setSelectedDayId(d.id)}
+              onClick={() =>
+                active ? openEditDaySheet(d.id) : setSelectedDayId(d.id)
+              }
+              aria-label={active ? `More actions for ${d.name}` : d.name}
               className={cn(
-                "shrink-0 px-3 py-1.5 rounded-full text-xs cursor-pointer transition",
+                "shrink-0 flex items-center gap-1 rounded-full text-xs cursor-pointer transition py-1.5",
                 active
-                  ? "bg-volt-500 text-ink-950 font-bold"
-                  : "bg-ink-800 text-bone-300 font-medium hover:bg-ink-700",
+                  ? "bg-volt-500 hover:bg-volt-600 text-ink-950 font-bold pl-3 pr-2"
+                  : "bg-ink-800 text-bone-300 hover:bg-ink-700 font-medium px-3",
               )}
             >
               {d.name}
+              {active && <EllipsisVertical className="w-3 h-3" />}
             </button>
           );
         })}
