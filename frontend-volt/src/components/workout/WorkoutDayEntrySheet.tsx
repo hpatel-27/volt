@@ -19,7 +19,7 @@ export function WorkoutDayEntrySheet({
   const nameRef = useRef<HTMLInputElement>(null);
   const createDay = useCreateWorkoutDay();
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!name.trim()) {
       toast.error("Please enter a name for this day.");
@@ -51,7 +51,7 @@ export function WorkoutDayEntrySheet({
           <input
             ref={nameRef}
             type="text"
-            placeholder="Push, Pull, Legs"
+            placeholder="Push"
             value={name}
             onChange={(e) => setName(e.target.value)}
             className="
