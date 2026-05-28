@@ -9,6 +9,7 @@ export interface CreateWorkoutDayExerciseInput {
 }
 
 export interface UpdateWorkoutDayExerciseInput {
+  exerciseId?: string;
   targetSets?: number;
   targetRepsMin?: number;
   targetRepsMax?: number;

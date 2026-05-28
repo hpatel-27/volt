@@ -133,12 +133,22 @@ async function updateWorkoutDayExercise(req: Request, res: Response) {
   const dayId = res.locals.dayId as string;
   const dayExerciseId = res.locals.dayExerciseId as string;
 
+  const exerciseId = req.body?.exerciseId;
   const targetSets = req.body?.targetSets;
   const targetRepsMin = req.body?.targetRepsMin;
   const targetRepsMax = req.body?.targetRepsMax;
   const restSeconds = req.body?.restSeconds;
 
   const data: UpdateWorkoutDayExerciseInput = {};
+
+  if (exerciseId !== undefined) {
+    if (typeof exerciseId !== "string" || exerciseId.trim() === "") {
+      return res
+        .status(400)
+        .json({ error: "Exercise id must be a non-empty string." });
+    }
+    data.exerciseId = exerciseId;
+  }
 
   if (targetSets !== undefined) {
     if (

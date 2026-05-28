@@ -106,13 +106,17 @@ async function updateWorkoutDayExercise(
     });
     return toWorkoutDayExerciseDto(updated);
   } catch (error: unknown) {
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2025"
-    ) {
-      throw new NotFoundError("Workout day exercise not found.", {
-        cause: error,
-      });
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2025") {
+        throw new NotFoundError("Workout day exercise not found.", {
+          cause: error,
+        });
+      }
+      if (error.code === "P2003") {
+        throw new NotFoundError("Referenced exercise not found.", {
+          cause: error,
+        });
+      }
     }
     throw error;
   }
