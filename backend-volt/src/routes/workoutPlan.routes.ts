@@ -15,6 +15,13 @@ router.get(
   workoutPlanController.getAllWorkoutPlans,
 );
 
+// Get active workout plan for the authenticated user
+router.get(
+  "/active",
+  userMiddleware,
+  workoutPlanController.getActiveWorkoutPlan,
+);
+
 // Get a single workout plan with nested days and exercises
 router.get(
   "/:planId",

@@ -40,6 +40,29 @@ async function getAllWorkoutPlans(userId: string, page: number, limit: number) {
   return { workoutPlans, total, page, limit };
 }
 
+async function getActiveWorkoutPlan(userId: string) {
+  return await prisma.$transaction(async (tx) => {
+    const user = await tx.user.findUnique({
+      where: { id: userId },
+      select: { activePlanId: true },
+    });
+    // There's no active plan, we don't want to render this
+    const activePlanId = user?.activePlanId;
+    if (!activePlanId) {
+      return null;
+    }
+
+    const matchingPlan = await tx.workoutPlan.findUnique({
+      where: { id: activePlanId },
+    });
+
+    if (!matchingPlan) {
+      throw new NotFoundError("User has an active plan, but it was not found.");
+    }
+    return matchingPlan;
+  });
+}
+
 async function getWorkoutPlanById(userId: string, planId: string) {
   const workoutPlan = await prisma.workoutPlan.findUnique({
     where: { id: planId, userId },
@@ -141,6 +164,7 @@ async function activateWorkoutPlan(userId: string, planId: string) {
 
 export {
   getAllWorkoutPlans,
+  getActiveWorkoutPlan,
   getWorkoutPlanById,
   createWorkoutPlan,
   updateWorkoutPlan,

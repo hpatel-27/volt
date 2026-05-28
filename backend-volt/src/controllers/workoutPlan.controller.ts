@@ -19,6 +19,14 @@ async function getAllWorkoutPlans(req: Request, res: Response) {
   res.json(workoutPlans);
 }
 
+async function getActiveWorkoutPlan(req: Request, res: Response) {
+  const user = req.user!;
+  const userId = user.id;
+
+  const activePlan = await workoutPlanService.getActiveWorkoutPlan(userId);
+  res.json(activePlan);
+}
+
 async function getWorkoutPlanById(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
@@ -120,6 +128,7 @@ async function activateWorkoutPlan(req: Request, res: Response) {
 
 export {
   getAllWorkoutPlans,
+  getActiveWorkoutPlan,
   getWorkoutPlanById,
   createWorkoutPlan,
   updateWorkoutPlan,
