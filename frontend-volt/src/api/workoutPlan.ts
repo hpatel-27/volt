@@ -37,7 +37,7 @@ export function useWorkoutPlans(params: { page: number; limit: number }) {
   });
 }
 
-export function useWorkoutPlanActive() {
+export function useActiveWorkoutPlan() {
   const authedFetch = useFetch();
   return useQuery({
     queryKey: workoutPlanKeys.active(),
