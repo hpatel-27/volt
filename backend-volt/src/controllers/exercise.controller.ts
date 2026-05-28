@@ -8,7 +8,26 @@ import type {
 async function getExercises(req: Request, res: Response) {
   // Get pagination parameters from query string
   const { page, limit } = req.pagination!;
-  const { exercises, total } = await exerciseService.getExercises(page, limit);
+
+  // Optional case-insensitive search by exercise name. Narrows results before
+  // pagination so `total` reflects the filtered set, not the whole table
+  const rawQ = req.query.q;
+  if (typeof rawQ === "string" && rawQ.trim().length > 100) {
+    return res
+      .status(400)
+      .json({ error: "Exercise search query is too long." });
+  }
+
+  const q =
+    typeof rawQ === "string" && rawQ.trim().length > 0
+      ? rawQ.trim()
+      : undefined;
+
+  const { exercises, total } = await exerciseService.getExercises(
+    page,
+    limit,
+    q,
+  );
 
   res.json({ exercises, total, page, limit });
 }
