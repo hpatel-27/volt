@@ -148,9 +148,9 @@ export default function Workouts() {
                     <div className="font-display text-xl font-bold">
                       {plan.name}
                     </div>
-                    <div className="text-xs text-bone-500">
+                    {/* <div className="text-xs text-bone-500">
                       Day 1 of {plan.daysPerWeek}
-                    </div>
+                    </div> */}
                   </Card>
                 </Link>
               );
