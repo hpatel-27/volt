@@ -71,7 +71,7 @@ async function createWorkoutDay(
 
     // Nested update to the Workout Plan with no data
     // This updates the updatedAt field on the plan
-    tx.workoutPlan.update({ where: { id: planId }, data: {} });
+    await tx.workoutPlan.update({ where: { id: planId }, data: {} });
 
     return toWorkoutDayDto(day);
   });
@@ -102,7 +102,7 @@ async function updateWorkoutDay(
 
       // Nested update to the Workout Plan with no data
       // This updates the updatedAt field on the plan
-      tx.workoutPlan.update({ where: { id: planId }, data: {} });
+      await tx.workoutPlan.update({ where: { id: planId }, data: {} });
 
       return toWorkoutDayDetailDto(updatedDay);
     } catch (error: unknown) {
@@ -130,7 +130,7 @@ async function deleteWorkoutDay(planId: string, userId: string, dayId: string) {
 
       // Nested update to the Workout Plan with no data
       // This updates the updatedAt field on the plan
-      tx.workoutPlan.update({ where: { id: planId }, data: {} });
+      await tx.workoutPlan.update({ where: { id: planId }, data: {} });
 
       return;
     } catch (error: unknown) {
