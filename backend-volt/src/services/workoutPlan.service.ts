@@ -68,12 +68,13 @@ async function getActiveWorkoutPlan(userId: string) {
 
     const matchingPlan = await tx.workoutPlan.findUnique({
       where: { id: activePlanId },
+      include: { _count: { select: { workoutDays: true } } },
     });
 
     if (!matchingPlan) {
       throw new NotFoundError("User has an active plan, but it was not found.");
     }
-    return matchingPlan;
+    return toWorkoutPlanDto(matchingPlan);
   });
 }
 
