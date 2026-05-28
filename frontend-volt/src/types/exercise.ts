@@ -26,3 +26,7 @@ export type ExerciseListParams = {
   limit: number;
   q?: string;
 };
+
+// Narrowed projection of Exercise since these are the only reference fields needed
+// Mirrors the backend's EXERCISE_REF_SELECT shape.
+export type ExerciseRef = Pick<Exercise, "id" | "slug" | "name">;

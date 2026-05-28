@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { Sheet } from "../ui/Sheet";
 import { useExercises } from "@/api/exercise";
-import type { Exercise } from "@/types/exercise";
+import type { ExerciseRef } from "@/types/exercise";
 
 interface ExercisePickerSheetProps {
   open: boolean;
   onClose: () => void;
-  onSelect: (exercise: Exercise) => void;
+  onSelect: (exercise: ExerciseRef) => void;
 }
 
 const PAGE_SIZE = 10;
