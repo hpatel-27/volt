@@ -50,7 +50,9 @@ export function Sheet({
       aria-modal="true"
       aria-label={title}
     >
-      <div
+      <button
+        type="button"
+        aria-label="Close Sheet"
         onClick={onClose}
         className={cn(
           "absolute inset-0 bg-black/60 backdrop-blur-sm",
