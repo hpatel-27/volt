@@ -4,6 +4,7 @@ import { workoutPlanKeys } from "@/api/workoutPlan";
 import type {
   CreateWorkoutExerciseVariables,
   DeleteWorkoutExerciseVariables,
+  UpdateWorkoutExerciseVariables,
   WorkoutDayExercises,
 } from "@/types/workoutDayExercise";
 
@@ -27,6 +28,35 @@ export function useCreateWorkoutExercise() {
       });
       if (!data)
         throw new Error("Expected created exercise, got empty response");
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: workoutPlanKeys.detail(variables.planId),
+      });
+    },
+  });
+}
+
+export function useUpdateWorkoutExercise() {
+  const authedFetch = useFetch();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      planId,
+      dayId,
+      dayExerciseId,
+      input,
+    }: UpdateWorkoutExerciseVariables) => {
+      const url = `${BASE}/${planId}/days/${dayId}/exercises/${dayExerciseId}`;
+      const data = await authedFetch<WorkoutDayExercises>(url, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(input),
+      });
+      if (!data)
+        throw new Error("Expected updated exercise, got empty response");
       return data;
     },
     onSuccess: (_, variables) => {

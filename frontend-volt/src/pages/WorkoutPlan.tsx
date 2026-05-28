@@ -18,6 +18,7 @@ import { cn } from "@/lib/cn";
 import WorkoutPlanEntrySheet from "@/components/workout/WorkoutPlanEntrySheet";
 import WorkoutDayEntrySheet from "@/components/workout/WorkoutDayEntrySheet";
 import WorkoutExerciseEntrySheet from "@/components/workout/WorkoutExerciseEntrySheet";
+import type { WorkoutDayExercises } from "@/types/workoutDayExercise";
 
 export default function WorkoutPlan() {
   const { planId } = useParams<{ planId: string }>();
@@ -33,7 +34,8 @@ export default function WorkoutPlan() {
   const activateMutation = useActivateWorkoutPlan();
   const isActive = !!planId && userQuery.data?.activePlanId === planId;
   const [selectedDayId, setSelectedDayId] = useState<string | null>(null);
-
+  const [selectedDayExercise, setSelectedExercise] =
+    useState<WorkoutDayExercises | null>(null);
   if (planDetailQuery.isLoading) {
     return (
       <div className="pt-8">
@@ -69,7 +71,8 @@ export default function WorkoutPlan() {
     ? workoutDays.find((d) => d.id === editingDayId)
     : null;
 
-  const openExerciseSheet = () => {
+  const openExerciseSheet = (dayExercise?: WorkoutDayExercises) => {
+    setSelectedExercise(dayExercise ?? null);
     setExSheetKey((k) => k + 1);
     setExSheetOpen(true);
   };
@@ -140,6 +143,7 @@ export default function WorkoutPlan() {
           planId={planId}
           dayId={selectedDay.id}
           dayName={selectedDay.name}
+          dayExercise={selectedDayExercise}
         />
       )}
 
@@ -188,6 +192,7 @@ export default function WorkoutPlan() {
                 <button
                   key={ex.id}
                   type="button"
+                  onClick={() => openExerciseSheet(ex)}
                   className="flex w-full items-center gap-4 bg-ink-900 px-4 py-3.5 text-left transition-colors hover:bg-ink-850 focus-visible:outline-none focus-visible:bg-ink-850 cursor-pointer"
                 >
                   <div className="min-w-0 flex-1">
@@ -211,7 +216,7 @@ export default function WorkoutPlan() {
 
           <button
             type="button"
-            onClick={openExerciseSheet}
+            onClick={() => openExerciseSheet()}
             className="w-full h-12 rounded-2xl border border-dashed border-white/15 text-bone-300 text-sm font-medium hover:bg-ink-900 cursor-pointer transition-colors"
           >
             + Add exercise

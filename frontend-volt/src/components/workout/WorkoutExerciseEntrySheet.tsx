@@ -3,9 +3,17 @@ import { toast } from "sonner";
 import { Sheet } from "../ui/Sheet";
 import { Button } from "../ui/Button";
 import { ExercisePickerSheet } from "./ExercisePickerSheet";
-import { useCreateWorkoutExercise } from "@/api/workoutDayExercise";
-import type { CreateWorkoutExerciseInput } from "@/types/workoutDayExercise";
-import type { Exercise } from "@/types/exercise";
+import {
+  useCreateWorkoutExercise,
+  useDeleteWorkoutExercise,
+  useUpdateWorkoutExercise,
+} from "@/api/workoutDayExercise";
+import type {
+  CreateWorkoutExerciseInput,
+  UpdateWorkoutExerciseInput,
+  WorkoutDayExercises,
+} from "@/types/workoutDayExercise";
+import type { ExerciseRef } from "@/types/exercise";
 
 interface WorkoutExerciseEntrySheetProps {
   open: boolean;
@@ -13,6 +21,8 @@ interface WorkoutExerciseEntrySheetProps {
   planId: string;
   dayId: string;
   dayName: string;
+  // Present = edit that entry, null/undefined = create a new one.
+  dayExercise: WorkoutDayExercises | null;
 }
 
 export function WorkoutExerciseEntrySheet({
@@ -21,18 +31,42 @@ export function WorkoutExerciseEntrySheet({
   planId,
   dayId,
   dayName,
+  dayExercise,
 }: WorkoutExerciseEntrySheetProps) {
-  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(
-    null,
+  const isEdit = !!dayExercise;
+
+  const [selectedExercise, setSelectedExercise] = useState<ExerciseRef | null>(
+    () => (dayExercise ? dayExercise.exercise : null),
   );
-  const [sets, setSets] = useState("");
-  const [repsMin, setRepsMin] = useState("");
-  const [repsMax, setRepsMax] = useState("");
-  const [rest, setRest] = useState("");
+  const [sets, setSets] = useState(() =>
+    dayExercise && dayExercise?.targetSets
+      ? dayExercise.targetSets.toString()
+      : "",
+  );
+  const [repsMin, setRepsMin] = useState(() =>
+    dayExercise && dayExercise?.targetRepsMin
+      ? dayExercise.targetRepsMin.toString()
+      : "",
+  );
+  const [repsMax, setRepsMax] = useState(() =>
+    dayExercise && dayExercise?.targetRepsMax
+      ? dayExercise.targetRepsMax.toString()
+      : "",
+  );
+  const [rest, setRest] = useState(() =>
+    dayExercise && dayExercise?.restSeconds
+      ? dayExercise.restSeconds.toString()
+      : "",
+  );
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerKey, setPickerKey] = useState(0);
 
-  const createExercise = useCreateWorkoutExercise();
+  const createWorkoutExercise = useCreateWorkoutExercise();
+  const updateWorkoutExercise = useUpdateWorkoutExercise();
+  const deleteWorkoutExercise = useDeleteWorkoutExercise();
+  const isPending =
+    createWorkoutExercise.isPending || updateWorkoutExercise.isPending;
 
   // Parses an optional positive-integer numeric input from a controlled string
   // Returns null when blank (omit from payload), the integer when valid,
@@ -70,6 +104,30 @@ export function WorkoutExerciseEntrySheet({
       return;
     }
 
+    const fields: UpdateWorkoutExerciseInput = {
+      exerciseId: selectedExercise.id,
+    };
+
+    if (isEdit && dayExercise) {
+      updateWorkoutExercise.mutate(
+        {
+          planId,
+          dayId,
+          dayExerciseId: dayExercise.id,
+          input: fields,
+        },
+        {
+          onSuccess: () => {
+            toast.success("Exercise updated.");
+            onClose();
+          },
+          onError: () =>
+            toast.error("Could not update exercise. Please try again."),
+        },
+      );
+      return;
+    }
+
     const input: CreateWorkoutExerciseInput = {
       exerciseId: selectedExercise.id,
     };
@@ -78,7 +136,7 @@ export function WorkoutExerciseEntrySheet({
     if (parsed.repsMax !== null) input.targetRepsMax = parsed.repsMax as number;
     if (parsed.rest !== null) input.restSeconds = parsed.rest as number;
 
-    createExercise.mutate(
+    createWorkoutExercise.mutate(
       { planId, dayId, input },
       {
         onSuccess: () => {
@@ -90,13 +148,34 @@ export function WorkoutExerciseEntrySheet({
     );
   }
 
+  function handleDelete() {
+    if (!dayExercise) return;
+    deleteWorkoutExercise.mutate(
+      { planId, dayId, dayExerciseId: dayExercise.id },
+      {
+        onSuccess: () => {
+          toast.success("Exercise deleted.");
+          onClose();
+        },
+        onError: () =>
+          toast.error("Could not delete this exercise. Please try again."),
+      },
+    );
+  }
+
   function openPicker() {
     setPickerKey((k) => k + 1);
     setPickerOpen(true);
   }
 
   return (
-    <Sheet open={open} onClose={onClose} title={`Add to ${dayName}`}>
+    <Sheet
+      open={open}
+      onClose={onClose}
+      title={
+        isEdit ? `Update Exercise on ${dayName}` : `Add Exercise to ${dayName}`
+      }
+    >
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
           <div className="text-caption mb-2">Exercise</div>
@@ -146,9 +225,9 @@ export function WorkoutExerciseEntrySheet({
           variant="primary"
           size="lg"
           full
-          disabled={createExercise.isPending}
+          disabled={createWorkoutExercise.isPending}
         >
-          {createExercise.isPending ? "Adding..." : "Add exercise"}
+          {isPending ? "Adding..." : "Add exercise"}
         </Button>
       </form>
 
@@ -158,6 +237,42 @@ export function WorkoutExerciseEntrySheet({
         onClose={() => setPickerOpen(false)}
         onSelect={setSelectedExercise}
       />
+
+      {/* Delete in edit mode only */}
+      {isEdit &&
+        (confirmingDelete ? (
+          <div className="mt-4 flex items-center justify-between gap-3 border-t border-white/5 pt-4">
+            <span className="text-sm text-bone-300">Delete this exercise?</span>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setConfirmingDelete(false)}
+                disabled={deleteWorkoutExercise.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="danger"
+                size="sm"
+                onClick={handleDelete}
+                disabled={deleteWorkoutExercise.isPending}
+              >
+                {deleteWorkoutExercise.isPending ? "Deleting..." : "Delete"}
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setConfirmingDelete(true)}
+            className="mt-4 w-full border-t border-white/5 pt-4 text-center text-sm font-medium text-blaze-500 transition-colors hover:text-blaze-700 cursor-pointer"
+          >
+            Delete exercise
+          </button>
+        ))}
     </Sheet>
   );
 }
