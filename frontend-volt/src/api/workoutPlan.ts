@@ -18,6 +18,7 @@ export const workoutPlanKeys = {
   lists: () => [...workoutPlanKeys.all, "list"] as const,
   list: (params: { page: number; limit: number }) =>
     [...workoutPlanKeys.lists(), params] as const,
+  active: () => [...workoutPlanKeys.all, "active"] as const,
   details: () => [...workoutPlanKeys.all, "detail"] as const,
   detail: (planId: string) => [...workoutPlanKeys.details(), planId] as const,
 };
@@ -31,6 +32,20 @@ export function useWorkoutPlans(params: { page: number; limit: number }) {
       const data = await authedFetch<WorkoutPlanPage>(url);
       if (!data)
         throw new Error("Expected workout plan list, got empty response");
+      return data;
+    },
+  });
+}
+
+export function useWorkoutPlanActive() {
+  const authedFetch = useFetch();
+  return useQuery({
+    queryKey: workoutPlanKeys.active(),
+    queryFn: async () => {
+      const url = `${BASE}/active`;
+      const data = await authedFetch<WorkoutPlanSummary>(url);
+      if (!data)
+        throw new Error("Expected active workout plan, got empty response");
       return data;
     },
   });
@@ -54,6 +69,7 @@ export function useActivateWorkoutPlan() {
       queryClient.setQueryData<User>(userKeys.me(), (prev) =>
         prev ? { ...prev, activePlanId: data.activePlanId } : prev,
       );
+      queryClient.invalidateQueries({ queryKey: workoutPlanKeys.active() });
     },
   });
 }
