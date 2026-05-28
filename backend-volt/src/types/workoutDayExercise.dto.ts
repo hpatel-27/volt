@@ -25,6 +25,7 @@ export interface WorkoutDayExercise {
   targetRepsMax: number | null;
   restSeconds: number | null;
   exercise: {
+    id: string;
     slug: string;
     name: string;
   };

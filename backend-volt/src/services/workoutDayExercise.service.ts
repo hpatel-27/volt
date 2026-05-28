@@ -1,5 +1,6 @@
 import { prisma } from "../db.js";
 import { Prisma } from "../generated/prisma/client.js";
+import { EXERCISE_REF_SELECT } from "../prisma/selects.js";
 import { NotFoundError } from "../errors.js";
 import type {
   CreateWorkoutDayExerciseInput,
@@ -17,7 +18,7 @@ async function getAllWorkoutDayExercises(
     include: {
       exercises: {
         orderBy: { order: "asc" },
-        include: { exercise: { select: { slug: true, name: true } } },
+        include: { exercise: { select: EXERCISE_REF_SELECT } },
       },
     },
   });
@@ -41,7 +42,7 @@ async function getWorkoutDayExerciseById(
       workoutDayId: dayId,
       workoutDay: { workoutPlanId: planId, workoutPlan: { userId } },
     },
-    include: { exercise: { select: { slug: true, name: true } } },
+    include: { exercise: { select: EXERCISE_REF_SELECT } },
   });
 
   if (!dayExercise) {
@@ -80,7 +81,7 @@ async function createWorkoutDayExercise(
     data.order = currentExerciseCount + 1;
     const dayExercise = await tx.workoutDayExercise.create({
       data,
-      include: { exercise: { select: { slug: true, name: true } } },
+      include: { exercise: { select: EXERCISE_REF_SELECT } },
     });
     return toWorkoutDayExerciseDto(dayExercise);
   });
@@ -101,7 +102,7 @@ async function updateWorkoutDayExercise(
         workoutDay: { workoutPlanId: planId, workoutPlan: { userId } },
       },
       data,
-      include: { exercise: { select: { slug: true, name: true } } },
+      include: { exercise: { select: EXERCISE_REF_SELECT } },
     });
     return toWorkoutDayExerciseDto(updated);
   } catch (error: unknown) {

@@ -1,4 +1,5 @@
 import type { Prisma, PlanType } from "../generated/prisma/client.js";
+import type { EXERCISE_REF_SELECT } from "../prisma/selects.js";
 import type { WorkoutDayDetail } from "./workoutDay.dto.js";
 
 export interface CreateWorkoutPlanInput {
@@ -24,7 +25,7 @@ export type PlanWithDaysAndExercises = Prisma.WorkoutPlanGetPayload<{
     workoutDays: {
       include: {
         exercises: {
-          include: { exercise: { select: { slug: true; name: true } } };
+          include: { exercise: { select: typeof EXERCISE_REF_SELECT } };
         };
       };
     };

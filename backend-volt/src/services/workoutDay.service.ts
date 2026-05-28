@@ -1,5 +1,6 @@
 import { prisma } from "../db.js";
 import { Prisma } from "../generated/prisma/client.js";
+import { EXERCISE_REF_SELECT } from "../prisma/selects.js";
 import { NotFoundError } from "../errors.js";
 import type {
   CreateWorkoutDayInput,
@@ -36,7 +37,7 @@ async function getWorkoutDayById(
     include: {
       exercises: {
         orderBy: { order: "asc" },
-        include: { exercise: { select: { slug: true, name: true } } },
+        include: { exercise: { select: EXERCISE_REF_SELECT } },
       },
     },
   });
@@ -88,7 +89,7 @@ async function updateWorkoutDay(
       include: {
         exercises: {
           orderBy: { order: "asc" },
-          include: { exercise: { select: { slug: true, name: true } } },
+          include: { exercise: { select: EXERCISE_REF_SELECT } },
         },
       },
     });
