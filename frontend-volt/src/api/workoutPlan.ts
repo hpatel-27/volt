@@ -43,10 +43,7 @@ export function useActiveWorkoutPlan() {
     queryKey: workoutPlanKeys.active(),
     queryFn: async () => {
       const url = `${BASE}/active`;
-      const data = await authedFetch<WorkoutPlanSummary>(url);
-      if (!data)
-        throw new Error("Expected active workout plan, got empty response");
-      return data;
+      return await authedFetch<WorkoutPlanSummary | null>(url);
     },
   });
 }
@@ -70,6 +67,7 @@ export function useActivateWorkoutPlan() {
         prev ? { ...prev, activePlanId: data.activePlanId } : prev,
       );
       queryClient.invalidateQueries({ queryKey: workoutPlanKeys.active() });
+      queryClient.invalidateQueries({ queryKey: workoutPlanKeys.lists() });
     },
   });
 }

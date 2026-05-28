@@ -13,16 +13,19 @@ import {
 } from "@/api/workoutPlan";
 import { Button } from "../ui/Button";
 import { useNavigate } from "react-router";
+import { cn } from "@/lib/cn";
 
 interface WorkoutPlanEntrySheetProps {
   open: boolean;
   onClose: () => void;
+  isActive: boolean;
   // Present = edit that entry, null/undefined = create a new one.
   plan?: WorkoutPlanEntry | null;
 }
 export function WorkoutPlanEntrySheet({
   open,
   onClose,
+  isActive,
   plan,
 }: WorkoutPlanEntrySheetProps) {
   const isEdit = !!plan;
@@ -205,8 +208,20 @@ export function WorkoutPlanEntrySheet({
         ) : (
           <button
             type="button"
-            onClick={() => setConfirmingDelete(true)}
-            className="mt-4 w-full border-t border-white/5 pt-4 text-center text-sm font-medium text-blaze-500 transition-colors hover:text-blaze-700 cursor-pointer"
+            onClick={() => {
+              if (isActive) {
+                toast.info(
+                  "Active plans can't be deleted. Activate another plan first.",
+                );
+                return;
+              }
+              setConfirmingDelete(true);
+            }}
+            aria-disabled={isActive}
+            className={cn(
+              "mt-4 w-full border-t border-white/5 pt-4 text-center text-sm font-medium text-blaze-500 transition-colors hover:text-blaze-700 cursor-pointer",
+              isActive && "opacity-50 cursor-not-allowed",
+            )}
           >
             Delete plan
           </button>

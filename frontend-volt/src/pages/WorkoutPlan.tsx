@@ -122,6 +122,7 @@ export default function WorkoutPlan() {
         key={sheetKey}
         open={sheetOpen}
         onClose={() => setSheetOpen(false)}
+        isActive={isActive}
         plan={plan && { id: plan.id, name: plan.name, type: plan.type }}
       />
 

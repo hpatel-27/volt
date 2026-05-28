@@ -1,7 +1,7 @@
 import { prisma } from "../db.js";
 import { Prisma } from "../generated/prisma/client.js";
 import { EXERCISE_REF_SELECT } from "../prisma/selects.js";
-import { NotFoundError } from "../errors.js";
+import { BadRequestError, NotFoundError } from "../errors.js";
 import type {
   CreateWorkoutPlanInput,
   UpdateWorkoutPlanInput,
@@ -92,11 +92,6 @@ async function getWorkoutPlanById(userId: string, planId: string) {
 }
 
 async function createWorkoutPlan(data: CreateWorkoutPlanInput) {
-  // TODO(human): if this is the user's first workout plan, also set
-  // user.activePlanId to the new plan's id. Both writes should happen
-  // atomically so we never end up with a plan but no active pointer
-  // (or worse, the count check disagreeing with the actual state under
-  // concurrent creates). Return the plan DTO as before.
   const { plan } = await prisma.$transaction(async (tx) => {
     const plan = await tx.workoutPlan.create({
       data,
@@ -143,20 +138,32 @@ async function updateWorkoutPlan(
 }
 
 async function deleteWorkoutPlan(userId: string, planId: string) {
-  try {
-    await prisma.workoutPlan.delete({
-      where: { id: planId, userId },
-    });
-    return;
-  } catch (error: unknown) {
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2025"
-    ) {
-      throw new NotFoundError("Workout plan not found.", { cause: error });
+  return await prisma.$transaction(async (tx) => {
+    try {
+      const user = await tx.user.findUnique({
+        where: { id: userId },
+        select: { activePlanId: true },
+      });
+      // There's no active plan, we don't want to render this
+      const activePlanId = user?.activePlanId;
+      if (activePlanId === planId) {
+        throw new BadRequestError("Active workout plan cannot be deleted.");
+      }
+
+      await tx.workoutPlan.delete({
+        where: { id: planId, userId },
+      });
+      return;
+    } catch (error: unknown) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2025"
+      ) {
+        throw new NotFoundError("Workout plan not found.", { cause: error });
+      }
+      throw error;
     }
-    throw error;
-  }
+  });
 }
 
 async function activateWorkoutPlan(userId: string, planId: string) {
