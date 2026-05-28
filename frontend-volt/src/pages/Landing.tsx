@@ -26,7 +26,7 @@ const features = [
     icon: <TrendingUp className="w-6 h-6" />,
     accent: "blaze",
     title: "Trends that don't lie.",
-    body: "Body weight, training volume, calorie compliance — all in one trendline.",
+    body: "Body weight, training volume, calorie compliance all in one trendline.",
   },
 ];
 
@@ -164,7 +164,7 @@ const Landing = () => {
               return (
                 <div key={feature.title} className="bg-ink-950 p-10">
                   <div
-                    className={`w-12 h-12 rounded-2xl ${c.bg} border ${c.border} flex items-center justify-center mb-6`}
+                    className={`w-12 h-12 rounded-2xl ${c.bg} flex items-center justify-center mb-6`}
                   >
                     <span className={`${c.text} text-xl`}>{feature.icon}</span>
                   </div>
