@@ -83,6 +83,11 @@ async function createWorkoutDayExercise(
       data,
       include: { exercise: { select: EXERCISE_REF_SELECT } },
     });
+
+    // Nested update to the Workout Plan with no data
+    // This updates the updatedAt field on the plan
+    tx.workoutPlan.update({ where: { id: planId }, data: {} });
+
     return toWorkoutDayExerciseDto(dayExercise);
   });
 }
@@ -94,32 +99,39 @@ async function updateWorkoutDayExercise(
   dayExerciseId: string,
   data: UpdateWorkoutDayExerciseInput,
 ) {
-  try {
-    const updated = await prisma.workoutDayExercise.update({
-      where: {
-        id: dayExerciseId,
-        workoutDayId: dayId,
-        workoutDay: { workoutPlanId: planId, workoutPlan: { userId } },
-      },
-      data,
-      include: { exercise: { select: EXERCISE_REF_SELECT } },
-    });
-    return toWorkoutDayExerciseDto(updated);
-  } catch (error: unknown) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === "P2025") {
-        throw new NotFoundError("Workout day exercise not found.", {
-          cause: error,
-        });
+  return await prisma.$transaction(async (tx) => {
+    try {
+      const updated = await tx.workoutDayExercise.update({
+        where: {
+          id: dayExerciseId,
+          workoutDayId: dayId,
+          workoutDay: { workoutPlanId: planId, workoutPlan: { userId } },
+        },
+        data,
+        include: { exercise: { select: EXERCISE_REF_SELECT } },
+      });
+
+      // Nested update to the Workout Plan with no data
+      // This updates the updatedAt field on the plan
+      tx.workoutPlan.update({ where: { id: planId }, data: {} });
+
+      return toWorkoutDayExerciseDto(updated);
+    } catch (error: unknown) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === "P2025") {
+          throw new NotFoundError("Workout day exercise not found.", {
+            cause: error,
+          });
+        }
+        if (error.code === "P2003") {
+          throw new NotFoundError("Referenced exercise not found.", {
+            cause: error,
+          });
+        }
       }
-      if (error.code === "P2003") {
-        throw new NotFoundError("Referenced exercise not found.", {
-          cause: error,
-        });
-      }
+      throw error;
     }
-    throw error;
-  }
+  });
 }
 
 async function deleteWorkoutDayExercise(
@@ -128,26 +140,33 @@ async function deleteWorkoutDayExercise(
   userId: string,
   dayExerciseId: string,
 ) {
-  try {
-    await prisma.workoutDayExercise.delete({
-      where: {
-        id: dayExerciseId,
-        workoutDayId: dayId,
-        workoutDay: { workoutPlanId: planId, workoutPlan: { userId } },
-      },
-    });
-    return;
-  } catch (error: unknown) {
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2025"
-    ) {
-      throw new NotFoundError("Workout day exercise not found.", {
-        cause: error,
+  return await prisma.$transaction(async (tx) => {
+    try {
+      await tx.workoutDayExercise.delete({
+        where: {
+          id: dayExerciseId,
+          workoutDayId: dayId,
+          workoutDay: { workoutPlanId: planId, workoutPlan: { userId } },
+        },
       });
+
+      // Nested update to the Workout Plan with no data
+      // This updates the updatedAt field on the plan
+      tx.workoutPlan.update({ where: { id: planId }, data: {} });
+
+      return;
+    } catch (error: unknown) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2025"
+      ) {
+        throw new NotFoundError("Workout day exercise not found.", {
+          cause: error,
+        });
+      }
+      throw error;
     }
-    throw error;
-  }
+  });
 }
 
 export {
