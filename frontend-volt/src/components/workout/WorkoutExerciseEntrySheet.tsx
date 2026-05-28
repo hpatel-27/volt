@@ -108,6 +108,11 @@ export function WorkoutExerciseEntrySheet({
       exerciseId: selectedExercise.id,
     };
 
+    if (parsed.sets !== null) fields.targetSets = parsed.sets;
+    if (parsed.repsMin !== null) fields.targetRepsMin = parsed.repsMin;
+    if (parsed.repsMax !== null) fields.targetRepsMax = parsed.repsMax;
+    if (parsed.rest !== null) fields.restSeconds = parsed.rest;
+
     if (isEdit && dayExercise) {
       updateWorkoutExercise.mutate(
         {
@@ -131,10 +136,10 @@ export function WorkoutExerciseEntrySheet({
     const input: CreateWorkoutExerciseInput = {
       exerciseId: selectedExercise.id,
     };
-    if (parsed.sets !== null) input.targetSets = parsed.sets as number;
-    if (parsed.repsMin !== null) input.targetRepsMin = parsed.repsMin as number;
-    if (parsed.repsMax !== null) input.targetRepsMax = parsed.repsMax as number;
-    if (parsed.rest !== null) input.restSeconds = parsed.rest as number;
+    if (parsed.sets !== null) input.targetSets = parsed.sets;
+    if (parsed.repsMin !== null) input.targetRepsMin = parsed.repsMin;
+    if (parsed.repsMax !== null) input.targetRepsMax = parsed.repsMax;
+    if (parsed.rest !== null) input.restSeconds = parsed.rest;
 
     createWorkoutExercise.mutate(
       { planId, dayId, input },
@@ -225,9 +230,13 @@ export function WorkoutExerciseEntrySheet({
           variant="primary"
           size="lg"
           full
-          disabled={createWorkoutExercise.isPending}
+          disabled={isPending}
         >
-          {isPending ? "Adding..." : "Add exercise"}
+          {isPending
+            ? "Saving..."
+            : isEdit
+              ? "Update Exercise"
+              : "Add Exercise"}
         </Button>
       </form>
 
@@ -270,7 +279,7 @@ export function WorkoutExerciseEntrySheet({
             onClick={() => setConfirmingDelete(true)}
             className="mt-4 w-full border-t border-white/5 pt-4 text-center text-sm font-medium text-blaze-500 transition-colors hover:text-blaze-700 cursor-pointer"
           >
-            Delete exercise
+            Delete Exercise
           </button>
         ))}
     </Sheet>
