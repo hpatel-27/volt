@@ -30,6 +30,10 @@ export default function Workouts() {
       ? Math.ceil(planQuery.data?.total / planQuery.data?.limit)
       : 1;
   const plans = planQuery.data?.workoutPlans ?? [];
+  const filteredPlans =
+    filter !== "All"
+      ? plans.filter((p) => p.type === filter.toUpperCase())
+      : plans;
   const userQuery = useCurrentUser();
   const activePlanId = userQuery.data?.activePlanId ?? null;
 
@@ -84,10 +88,42 @@ export default function Workouts() {
         <div className="pt-8">
           <Spinner />
         </div>
-      ) : plans.length > 0 ? (
+      ) : plans.length === 0 ? (
+        <div className="flex flex-col items-center gap-3 min-h-[60vh] justify-center text-center">
+          <div className="grid h-14 w-14 place-items-center rounded-2xl bg-volt-500/10">
+            <NotebookPen className="h-6 w-6 text-volt-500" />
+          </div>
+          <p className="font-display text-lg font-semibold text-bone-50">
+            Let's get started
+          </p>
+          <p className="text-caption max-w-60 text-bone-500 normal-case tracking-normal">
+            Map out your first week of training.
+          </p>
+          <Button
+            size="sm"
+            leading={<Plus className="h-4 w-4" />}
+            onClick={() => openWorkoutPlanSheet()}
+            className="mt-1"
+          >
+            Plan
+          </Button>
+        </div>
+      ) : filteredPlans.length === 0 ? (
+        <div className="flex flex-col items-center gap-3 min-h-[60vh] justify-center text-center">
+          <div className="grid h-14 w-14 place-items-center rounded-2xl bg-volt-500/10">
+            <NotebookPen className="h-6 w-6 text-volt-500" />
+          </div>
+          <p className="font-display text-lg font-semibold text-bone-50">
+            No matches
+          </p>
+          <p className="text-caption max-w-60 text-bone-500 normal-case tracking-normal">
+            No plans match the active filter.
+          </p>
+        </div>
+      ) : (
         <div>
           <div className="space-y-3">
-            {plans.map((plan) => {
+            {filteredPlans.map((plan) => {
               const isActive = plan.id === activePlanId;
 
               return (
@@ -145,26 +181,6 @@ export default function Workouts() {
               </Button>
             </div>
           )}
-        </div>
-      ) : (
-        <div className="flex flex-col items-center gap-3 min-h-[60vh] justify-center text-center">
-          <div className="grid h-14 w-14 place-items-center rounded-2xl bg-volt-500/10">
-            <NotebookPen className="h-6 w-6 text-volt-500" />
-          </div>
-          <p className="font-display text-lg font-semibold text-bone-50">
-            Let's get started
-          </p>
-          <p className="text-caption max-w-60 text-bone-500 normal-case tracking-normal">
-            Map out your first week of training.
-          </p>
-          <Button
-            size="sm"
-            leading={<Plus className="h-4 w-4" />}
-            onClick={() => openWorkoutPlanSheet()}
-            className="mt-1"
-          >
-            Plan
-          </Button>
         </div>
       )}
     </div>
