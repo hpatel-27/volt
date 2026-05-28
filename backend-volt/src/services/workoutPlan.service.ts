@@ -25,16 +25,30 @@ const planDetailInclude = {
 
 // When listing the plans we don't need the nested workout day exercises
 async function getAllWorkoutPlans(userId: string, page: number, limit: number) {
-  const [rawPlans, total] = await prisma.$transaction([
-    prisma.workoutPlan.findMany({
-      where: { userId },
+  const [rawPlans, total] = await prisma.$transaction(async (tx) => {
+    const user = await tx.user.findUnique({
+      where: { id: userId },
+      select: { activePlanId: true },
+    });
+    if (!user) {
+      throw new NotFoundError("User not found.");
+    }
+    // If there's no active plan, it won't match to any existing plan to exclude anyway
+    const activePlanId = user.activePlanId;
+
+    const rawPlans = await tx.workoutPlan.findMany({
+      where: { userId, ...(activePlanId && { id: { not: activePlanId } }) },
       skip: (page - 1) * limit,
       take: limit,
       orderBy: { updatedAt: "desc" },
       include: { _count: { select: { workoutDays: true } } },
-    }),
-    prisma.workoutPlan.count({ where: { userId } }),
-  ]);
+    });
+    const total = await tx.workoutPlan.count({
+      where: { userId, ...(activePlanId && { id: { not: activePlanId } }) },
+    });
+
+    return [rawPlans, total];
+  });
 
   const workoutPlans = rawPlans.map((p) => toWorkoutPlanDto(p));
   return { workoutPlans, total, page, limit };
