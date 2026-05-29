@@ -59,7 +59,7 @@ volt/
 
 All routes are prefixed with `/api/v1`. Auth-protected routes require a valid Clerk JWT in the `Authorization` header.
 
-### Weights `🔒 Auth required`
+### Weights `Auth required`
 
 | Method   | Endpoint             | Description                                  |
 |----------|----------------------|----------------------------------------------|
@@ -85,7 +85,7 @@ All routes are prefixed with `/api/v1`. Auth-protected routes require a valid Cl
 
 ---
 
-### Exercises `🔓 Public GETs` / `🔒 Admin-only mutations`
+### Exercises `Public GETs` / `Admin-only mutations`
 
 | Method   | Endpoint                  | Description                        |
 |----------|---------------------------|------------------------------------|
@@ -95,13 +95,13 @@ All routes are prefixed with `/api/v1`. Auth-protected routes require a valid Cl
 | `PATCH`  | `/exercises/:slug`        | Update an exercise (admin only)    |
 | `DELETE` | `/exercises/:slug`        | Delete an exercise (admin only)    |
 
-**Query params for `GET /exercises`:** `page`, `limit`
+**Query params for `GET /exercises`:** `page`, `limit`, `query` (keyword search by name)
 
 **Example:** `GET /api/v1/exercises/barbell_deadlift`
 
 ---
 
-### Nutrition Logs `🔒 Auth required`
+### Nutrition Logs `Auth required`
 
 | Method   | Endpoint             | Description                                       |
 |----------|----------------------|---------------------------------------------------|
@@ -124,7 +124,7 @@ All routes are prefixed with `/api/v1`. Auth-protected routes require a valid Cl
 
 ---
 
-### Meals `🔒 Auth required` — Nested under nutrition logs
+### Meals `Auth required` — Nested under nutrition logs
 
 Meal routes are nested under `/:logId/meals`. One nutrition log per user per day is enforced.
 
@@ -140,6 +140,84 @@ Meal routes are nested under `/:logId/meals`. One nutrition log per user per day
 ```json
 { "name": "Lunch", "calories": 650, "protein": 45, "carbs": 70, "fat": 18 }
 ```
+
+---
+
+### Workout Plans `Auth required`
+
+| Method   | Endpoint                          | Description                                                      |
+|----------|-----------------------------------|------------------------------------------------------------------|
+| `GET`    | `/workout-plans`                  | List the user's workout plans (paginated, excludes active plan)  |
+| `GET`    | `/workout-plans/active`           | Get the user's active workout plan, or `null` if none is set     |
+| `GET`    | `/workout-plans/:planId`          | Get a single plan with nested days and exercises                 |
+| `POST`   | `/workout-plans`                  | Create a new workout plan                                        |
+| `PATCH`  | `/workout-plans/:planId`          | Update a workout plan's name or type                             |
+| `DELETE` | `/workout-plans/:planId`          | Delete a workout plan (blocked if the plan is currently active)  |
+| `POST`   | `/workout-plans/:planId/activate` | Set the plan as the user's active plan                           |
+
+**Query params for `GET /workout-plans`:** `page`, `limit`
+
+**Body for `POST /workout-plans`:**
+```json
+{ "name": "Push Pull Legs", "type": "strength" }
+```
+
+**Body for `PATCH /workout-plans/:planId`:**
+```json
+{ "name": "PPL v2", "type": "hypertrophy" }
+```
+
+---
+
+### Workout Days `Auth required` — Nested under workout plans
+
+Day routes are mounted under `/:planId/days`. Day `order` is derived server-side from the current day count, so clients do not send it.
+
+| Method   | Endpoint                                  | Description                          |
+|----------|-------------------------------------------|--------------------------------------|
+| `GET`    | `/workout-plans/:planId/days`             | List all days for a workout plan     |
+| `GET`    | `/workout-plans/:planId/days/:dayId`      | Get a single day with its exercises  |
+| `POST`   | `/workout-plans/:planId/days`             | Create a day on a workout plan       |
+| `PATCH`  | `/workout-plans/:planId/days/:dayId`      | Update a workout day                 |
+| `DELETE` | `/workout-plans/:planId/days/:dayId`      | Delete a workout day                 |
+
+**Body for `POST` / `PATCH` days:**
+```json
+{ "name": "Push Day" }
+```
+
+---
+
+### Workout Day Exercises `Auth required` — Nested under workout days
+
+Day-exercise routes are mounted under `/:planId/days/:dayId/exercises`. Exercise `order` within a day is derived server-side from the current count.
+
+| Method   | Endpoint                                                              | Description                              |
+|----------|-----------------------------------------------------------------------|------------------------------------------|
+| `GET`    | `/workout-plans/:planId/days/:dayId/exercises`                        | List all exercises for a workout day     |
+| `GET`    | `/workout-plans/:planId/days/:dayId/exercises/:dayExerciseId`         | Get a single workout day exercise        |
+| `POST`   | `/workout-plans/:planId/days/:dayId/exercises`                        | Add an exercise to a workout day         |
+| `PATCH`  | `/workout-plans/:planId/days/:dayId/exercises/:dayExerciseId`         | Update an exercise on a workout day      |
+| `DELETE` | `/workout-plans/:planId/days/:dayId/exercises/:dayExerciseId`         | Remove an exercise from a workout day    |
+
+**Body for `POST` / `PATCH` day exercises:**
+```json
+{
+  "exerciseId": "uuid-of-exercise",
+  "targetSets": 4,
+  "targetRepsMin": 6,
+  "targetRepsMax": 10,
+  "restSeconds": 120
+}
+```
+
+---
+
+### Users `Auth required`
+
+| Method | Endpoint     | Description                                                       |
+|--------|--------------|-------------------------------------------------------------------|
+| `GET`  | `/users/me`  | Get the authenticated user's profile (includes `activePlanId`)    |
 
 ---
 
