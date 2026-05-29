@@ -51,7 +51,7 @@ export default function Nutrition() {
 
       {/* Today hero — the calorie count is the headline number for the screen. */}
       <Link to={`/nutrition/${todayIso}`} className="block">
-        <Card interactive className="border-sky-500/10">
+        <Card interactive>
           <div className="text-caption mb-3 text-bone-500">Today</div>
           <div className="flex items-baseline gap-2">
             <span className="font-display text-display font-bold leading-none text-sky-500">
