@@ -28,7 +28,7 @@ async function createWorkoutDay(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
   const planId = res.locals.planId as string;
-  const { name, order } = req.body;
+  const name = req.body?.name;
 
   if (name === undefined || typeof name !== "string" || name.length < 1) {
     return res
@@ -36,18 +36,11 @@ async function createWorkoutDay(req: Request, res: Response) {
       .json({ error: "Name is required and cannot be empty." });
   }
 
-  if (
-    order === undefined ||
-    typeof order !== "number" ||
-    order < 1 ||
-    !Number.isInteger(order)
-  ) {
-    return res
-      .status(400)
-      .json({ error: "Order is required and must be a positive integer." });
-  }
-
-  const data: CreateWorkoutDayInput = { workoutPlanId: planId, name, order };
+  const data: CreateWorkoutDayInput = {
+    workoutPlanId: planId,
+    name,
+    order: -1,
+  };
   const newDay = await workoutDayService.createWorkoutDay(planId, userId, data);
   res.status(201).json(newDay);
 }
@@ -57,7 +50,7 @@ async function updateWorkoutDay(req: Request, res: Response) {
   const userId = user.id;
   const planId = res.locals.planId as string;
   const dayId = res.locals.dayId as string;
-  const { name, order } = req.body;
+  const name = req.body?.name;
 
   const data: UpdateWorkoutDayInput = {};
 
@@ -66,15 +59,6 @@ async function updateWorkoutDay(req: Request, res: Response) {
       return res.status(400).json({ error: "Name cannot be an empty string." });
     }
     data.name = name;
-  }
-
-  if (order !== undefined) {
-    if (typeof order !== "number" || order < 1 || !Number.isInteger(order)) {
-      return res
-        .status(400)
-        .json({ error: "Order must be a positive integer." });
-    }
-    data.order = order;
   }
 
   if (Object.keys(data).length === 0) {

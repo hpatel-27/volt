@@ -7,13 +7,11 @@ import { useNutritionLogs, useNutritionToday } from "@/api/nutrition";
 import { formatRelativeDate, todayLocalIso } from "@/lib/date";
 import { ChevronLeft, ChevronRight, Plus, Utensils } from "lucide-react";
 import { Spinner } from "@/components/ui/Spinner";
+import { CALORIE_GOAL, LIMIT } from "@/types/shared";
 
 // TODO: lift to user goals
-const CALORIE_GOAL = 2100;
 
 export default function Nutrition() {
-  const LIMIT = 10;
-
   const [page, setPage] = useState(1);
   const pageQuery = useNutritionLogs({ page, limit: LIMIT });
   const totalPages =
@@ -53,7 +51,7 @@ export default function Nutrition() {
 
       {/* Today hero — the calorie count is the headline number for the screen. */}
       <Link to={`/nutrition/${todayIso}`} className="block">
-        <Card interactive className="border-sky-500/10">
+        <Card interactive>
           <div className="text-caption mb-3 text-bone-500">Today</div>
           <div className="flex items-baseline gap-2">
             <span className="font-display text-display font-bold leading-none text-sky-500">
@@ -116,7 +114,7 @@ export default function Nutrition() {
                 leading={<ChevronLeft className="h-4 w-4" />}
                 onClick={() => setPage((p) => p - 1)}
               >
-                Prev
+                <span className="-translate-y-[1.5px]">Prev</span>
               </Button>
               <span className="px-2 font-mono text-xs text-bone-500">
                 {page} / {totalPages}
@@ -128,13 +126,13 @@ export default function Nutrition() {
                 trailing={<ChevronRight className="h-4 w-4" />}
                 onClick={() => setPage((p) => p + 1)}
               >
-                Next
+                <span className="-translate-y-[1.5px]">Next</span>
               </Button>
             </div>
           )}
         </div>
       ) : (
-        <div className="flex flex-col items-center gap-3 py-16 text-center">
+        <div className="flex flex-col items-center gap-3 min-h-[40vh] justify-center text-center">
           <div className="grid h-14 w-14 place-items-center rounded-2xl bg-sky-500/10">
             <Utensils className="h-6 w-6 text-sky-500" />
           </div>

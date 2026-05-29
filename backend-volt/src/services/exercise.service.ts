@@ -6,20 +6,21 @@ import type {
   UpdateExerciseInput,
 } from "../types/exercise.dto.js";
 
-// Get a paginated list of exercises.
-// This allows clients to fetch exercises in chunks, which is more efficient than fetching all exercises at once.
-async function getExercises(page: number, limit: number) {
+// Get a paginated list of exercises, optionally filtered by a name search query
+// When `q` is provided, results are narrowed to exercises whose name matches `q`
+// (case-insensitive) before pagination is applied
+async function getExercises(page: number, limit: number, q?: string) {
+  const where: Prisma.ExerciseWhereInput = q
+    ? { name: { contains: q, mode: "insensitive" } }
+    : {};
+
   const [exercises, total] = await prisma.$transaction([
-    // Use offset pagination to limit the number of exercises returned in one request, and allow clients
-    // to specify the offset and limit via query parameters. This is more efficient than returning all
-    // exercises at once, especially if there are many exercises in the database.
     prisma.exercise.findMany({
+      where,
       skip: (page - 1) * limit,
       take: limit,
     }),
-    // Get total count of exercises for pagination. This allows the client to know how many total exercises
-    // there are, and calculate how many pages of results exist.
-    prisma.exercise.count(),
+    prisma.exercise.count({ where }),
   ]);
 
   return { exercises, total, page, limit };

@@ -40,7 +40,12 @@ async function createWorkoutDayExercise(req: Request, res: Response) {
   const userId = user.id;
   const planId = res.locals.planId as string;
   const dayId = res.locals.dayId as string;
-  const { exerciseId, order } = req.body;
+  const exerciseId = req.body?.exerciseId;
+
+  const targetSets = req.body?.targetSets;
+  const targetRepsMin = req.body?.targetRepsMin;
+  const targetRepsMax = req.body?.targetRepsMax;
+  const restSeconds = req.body?.restSeconds;
 
   if (
     exerciseId === undefined ||
@@ -52,22 +57,66 @@ async function createWorkoutDayExercise(req: Request, res: Response) {
       .json({ error: "exerciseId is required and cannot be empty." });
   }
 
-  if (
-    order === undefined ||
-    typeof order !== "number" ||
-    order < 1 ||
-    !Number.isInteger(order)
-  ) {
-    return res
-      .status(400)
-      .json({ error: "Order is required and must be a positive integer." });
-  }
-
+  // Initially build data with required fields
   const data: CreateWorkoutDayExerciseInput = {
     workoutDayId: dayId,
     exerciseId,
-    order,
+    order: -1,
   };
+
+  // Add optional fields after sanitization
+  if (targetSets !== undefined) {
+    if (
+      typeof targetSets !== "number" ||
+      targetSets < 1 ||
+      !Number.isInteger(targetSets)
+    ) {
+      return res
+        .status(400)
+        .json({ error: "Target sets must be a positive integer." });
+    }
+    data.targetSets = targetSets;
+  }
+
+  if (targetRepsMin !== undefined) {
+    if (
+      typeof targetRepsMin !== "number" ||
+      targetRepsMin < 1 ||
+      !Number.isInteger(targetRepsMin)
+    ) {
+      return res
+        .status(400)
+        .json({ error: "Minimum target reps must be a positive integer." });
+    }
+    data.targetRepsMin = targetRepsMin;
+  }
+
+  if (targetRepsMax !== undefined) {
+    if (
+      typeof targetRepsMax !== "number" ||
+      targetRepsMax < 1 ||
+      !Number.isInteger(targetRepsMax)
+    ) {
+      return res
+        .status(400)
+        .json({ error: "Max target reps must be a positive integer." });
+    }
+    data.targetRepsMax = targetRepsMax;
+  }
+
+  if (restSeconds !== undefined) {
+    if (
+      typeof restSeconds !== "number" ||
+      restSeconds < 1 ||
+      !Number.isInteger(restSeconds)
+    ) {
+      return res
+        .status(400)
+        .json({ error: "Rest seconds must be a positive integer." });
+    }
+    data.restSeconds = restSeconds;
+  }
+
   const newExercise = await workoutDayExerciseService.createWorkoutDayExercise(
     planId,
     dayId,
@@ -83,17 +132,74 @@ async function updateWorkoutDayExercise(req: Request, res: Response) {
   const planId = res.locals.planId as string;
   const dayId = res.locals.dayId as string;
   const dayExerciseId = res.locals.dayExerciseId as string;
-  const { order } = req.body;
+
+  const exerciseId = req.body?.exerciseId;
+  const targetSets = req.body?.targetSets;
+  const targetRepsMin = req.body?.targetRepsMin;
+  const targetRepsMax = req.body?.targetRepsMax;
+  const restSeconds = req.body?.restSeconds;
 
   const data: UpdateWorkoutDayExerciseInput = {};
 
-  if (order !== undefined) {
-    if (typeof order !== "number" || order < 1 || !Number.isInteger(order)) {
+  if (exerciseId !== undefined) {
+    if (typeof exerciseId !== "string" || exerciseId.trim() === "") {
       return res
         .status(400)
-        .json({ error: "Order must be a positive integer." });
+        .json({ error: "Exercise id must be a non-empty string." });
     }
-    data.order = order;
+    data.exerciseId = exerciseId;
+  }
+
+  if (targetSets !== undefined) {
+    if (
+      typeof targetSets !== "number" ||
+      targetSets < 1 ||
+      !Number.isInteger(targetSets)
+    ) {
+      return res
+        .status(400)
+        .json({ error: "Target sets must be a positive integer." });
+    }
+    data.targetSets = targetSets;
+  }
+
+  if (targetRepsMin !== undefined) {
+    if (
+      typeof targetRepsMin !== "number" ||
+      targetRepsMin < 1 ||
+      !Number.isInteger(targetRepsMin)
+    ) {
+      return res
+        .status(400)
+        .json({ error: "Minimum target reps must be a positive integer." });
+    }
+    data.targetRepsMin = targetRepsMin;
+  }
+
+  if (targetRepsMax !== undefined) {
+    if (
+      typeof targetRepsMax !== "number" ||
+      targetRepsMax < 1 ||
+      !Number.isInteger(targetRepsMax)
+    ) {
+      return res
+        .status(400)
+        .json({ error: "Max target reps must be a positive integer." });
+    }
+    data.targetRepsMax = targetRepsMax;
+  }
+
+  if (restSeconds !== undefined) {
+    if (
+      typeof restSeconds !== "number" ||
+      restSeconds < 1 ||
+      !Number.isInteger(restSeconds)
+    ) {
+      return res
+        .status(400)
+        .json({ error: "Rest seconds must be a positive integer." });
+    }
+    data.restSeconds = restSeconds;
   }
 
   if (Object.keys(data).length === 0) {

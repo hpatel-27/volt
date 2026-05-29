@@ -14,6 +14,7 @@ import { cn } from "../lib/cn";
 import { Button } from "../components/ui/Button";
 import type { Weight as WeightEntry, WeightFilter } from "../types/weight";
 import WeightsChart from "@/components/weight/WeightsChart";
+import { LIMIT } from "@/types/shared";
 
 const FILTER_LABELS: Record<WeightFilter, string> = {
   "7D": "last 7 days",
@@ -41,8 +42,6 @@ function formatDelta(delta: number): {
 }
 
 export default function Weight() {
-  const LIMIT = 10;
-
   const listFilters: WeightFilter[] = ["7D", "30D", "90D", "All"];
   const [filter, setFilter] = useState<WeightFilter>("7D");
   const [page, setPage] = useState(1);
@@ -200,7 +199,7 @@ export default function Weight() {
                 leading={<ChevronLeft className="h-4 w-4" />}
                 onClick={() => setPage((p) => p - 1)}
               >
-                Prev
+                <span className="-translate-y-[1.5px]">Prev</span>
               </Button>
               <span className="px-2 font-mono text-xs text-bone-500">
                 {page} / {totalPages}
@@ -212,7 +211,7 @@ export default function Weight() {
                 trailing={<ChevronRight className="h-4 w-4" />}
                 onClick={() => setPage((p) => p + 1)}
               >
-                Next
+                <span className="-translate-y-[1.5px]">Next</span>
               </Button>
             </div>
           )}

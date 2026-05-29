@@ -61,7 +61,7 @@ export const weightKeys = {
   list: (params: { page: number; limit: number }) =>
     [...weightKeys.lists(), params] as const,
   details: () => [...weightKeys.all, "detail"] as const,
-  detail: (id: number) => [...weightKeys.details(), id] as const,
+  detail: (id: string) => [...weightKeys.details(), id] as const,
   latest: () => [...weightKeys.all, "latest"] as const,
   ranges: () => [...weightKeys.all, "range"] as const,
   range: (params: { from: string; to: string }) =>
@@ -111,7 +111,7 @@ export function useWeightsRange(params: { from: string; to: string }) {
   });
 }
 
-export function useWeightDetail(id: number) {
+export function useWeightDetail(id: string) {
   const authedFetch = useFetch();
   return useQuery({
     queryKey: weightKeys.detail(id),

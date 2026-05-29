@@ -10,14 +10,9 @@ import { formatRelativeDate } from "@/lib/date";
 import { ArrowLeft, ChevronRight, Plus } from "lucide-react";
 import type { Meal } from "@/types/meal";
 import { cn } from "@/lib/cn";
+import { GOALS } from "@/types/shared";
 
 // TODO: lift to user settings / shared nutrition config — duplicated in Nutrition.tsx
-const GOALS = {
-  calories: 2100,
-  protein: 140, // 560 calories
-  carbs: 210, // 840 calories
-  fat: 50, // 450 calories
-};
 
 function totalsFromMeals(meals: Meal[]) {
   return meals.reduce(

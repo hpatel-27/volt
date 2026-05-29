@@ -157,7 +157,7 @@ export function MealEntrySheet({
       onOpenEnd={() => nameRef.current?.focus()}
       title={isEdit ? "Edit Meal" : "Log Meal"}
     >
-      <form onSubmit={handleSubmit} className="space-y-5 pt-2">
+      <form onSubmit={handleSubmit} className="space-y-5">
         <div>
           <div className="text-caption mb-2">Name</div>
           <input

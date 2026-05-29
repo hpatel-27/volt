@@ -1,13 +1,16 @@
 import type { Prisma, PlanType } from "../generated/prisma/client.js";
+import type { EXERCISE_REF_SELECT } from "../prisma/selects.js";
 import type { WorkoutDayDetail } from "./workoutDay.dto.js";
 
 export interface CreateWorkoutPlanInput {
   userId: string;
   name: string;
+  type?: PlanType;
 }
 
 export interface UpdateWorkoutPlanInput {
   name?: string;
+  type?: PlanType;
 }
 
 // Matches a plan that includes the count of workout days scheduled for the plan
@@ -22,7 +25,7 @@ export type PlanWithDaysAndExercises = Prisma.WorkoutPlanGetPayload<{
     workoutDays: {
       include: {
         exercises: {
-          include: { exercise: { select: { slug: true; name: true } } };
+          include: { exercise: { select: typeof EXERCISE_REF_SELECT } };
         };
       };
     };
@@ -35,7 +38,8 @@ export interface WorkoutPlan {
   name: string;
   type: PlanType | null;
   daysPerWeek: number;
-  createdAt: Date;
+  createdAt: string;
+  updatedAt: string | null;
 }
 
 // API response shape for a single plan with its full structure expanded.
@@ -43,6 +47,7 @@ export interface WorkoutPlanDetail {
   id: string;
   name: string;
   type: PlanType | null;
-  createdAt: Date;
+  createdAt: string;
+  updatedAt: string | null;
   workoutDays: WorkoutDayDetail[];
 }

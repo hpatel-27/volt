@@ -15,6 +15,13 @@ router.get(
   workoutPlanController.getAllWorkoutPlans,
 );
 
+// Get active workout plan for the authenticated user
+router.get(
+  "/active",
+  userMiddleware,
+  workoutPlanController.getActiveWorkoutPlan,
+);
+
 // Get a single workout plan with nested days and exercises
 router.get(
   "/:planId",
@@ -40,6 +47,14 @@ router.delete(
   userMiddleware,
   parseUuidParam("planId"),
   workoutPlanController.deleteWorkoutPlan,
+);
+
+// Activate a workout plan
+router.post(
+  "/:planId/activate",
+  userMiddleware,
+  parseUuidParam("planId"),
+  workoutPlanController.activateWorkoutPlan,
 );
 
 // Mount Workout Day routes

@@ -7,9 +7,11 @@ export function Sidebar() {
   return (
     <aside className="hidden md:flex flex-col w-60 shrink-0 border-r border-white/5 bg-ink-950 px-4 py-6 sticky top-0 h-dvh">
       <div className="flex items-center gap-2 px-2 mb-10">
-        <div className="w-8 h-8 rounded-xl bg-volt-500 flex items-center justify-center">
-          <span className="text-ink-950 font-black text-lg">V</span>
-        </div>
+        <img
+          src="/thunder.svg"
+          alt="Volt Logo (thunder icon)"
+          className="w-6 h-6"
+        />
         <span className="font-display font-bold text-lg tracking-tight">
           VOLT
         </span>
