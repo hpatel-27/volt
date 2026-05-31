@@ -103,6 +103,7 @@ export function useCreateWorkoutPlan() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: workoutPlanKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: workoutPlanKeys.active() });
     },
   });
 }

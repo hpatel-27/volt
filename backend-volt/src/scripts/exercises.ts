@@ -1,8 +1,6 @@
 import "dotenv/config";
 import { prisma } from "../db.js";
 
-// TODO(human): define the shape of a single exercise as it comes from the
-// remote JSON (note: the remote uses `id` where our DB uses `slug`).
 type RemoteExercise = {
   id: string;
   name: string;
