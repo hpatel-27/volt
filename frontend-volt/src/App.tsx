@@ -64,7 +64,7 @@ export function App() {
           <Route path="/profile" element={<Profile />} />
         </Route>
       </Routes>
-      <Toaster />
+      <Toaster theme="dark" richColors />
     </ClerkProvider>
   );
 }
