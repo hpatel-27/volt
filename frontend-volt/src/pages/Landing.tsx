@@ -26,7 +26,7 @@ const features = [
     icon: <TrendingUp className="w-7 h-7" />,
     accent: "blaze",
     title: "An honest view of your progress.",
-    body: "Bodyweight on one trendline you can actually read.",
+    body: "Trendlines you can actually read.",
   },
 ];
 
@@ -144,7 +144,7 @@ const Landing = () => {
         </div>
 
         <footer className="text-caption text-center py-8">
-          &copy; Volt 2026. All rights reserved.
+          &copy; Harsh Patel. All rights reserved.
         </footer>
       </SignedOut>
     </div>

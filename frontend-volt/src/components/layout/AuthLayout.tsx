@@ -29,7 +29,7 @@ export function AuthLayout({ children }: { children: ReactNode }) {
           </p>
         </div>
         <div className="relative text-caption">
-          &copy; Volt 2026. All rights reserved.
+          &copy; Harsh Patel. All rights reserved.
         </div>
       </div>
 

@@ -4,9 +4,9 @@ import { AuthLayout } from "../components/layout/AuthLayout";
 import { Button } from "../components/ui/Button";
 
 const perks = [
-  "Log a set with ease",
+  "Log sets with ease",
   "Track macros without the math",
-  "Watch your progress over time",
+  "See your progress over time",
 ];
 
 export default function Register() {
