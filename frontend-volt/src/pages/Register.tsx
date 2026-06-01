@@ -3,7 +3,11 @@ import { Link, Navigate } from "react-router";
 import { AuthLayout } from "../components/layout/AuthLayout";
 import { Button } from "../components/ui/Button";
 
-const perks = ["Track lifts", "Log meals", "See progress over time"];
+const perks = [
+  "Log sets with ease",
+  "Track macros without the math",
+  "See your progress over time",
+];
 
 export default function Register() {
   return (
@@ -15,10 +19,10 @@ export default function Register() {
       <SignedOut>
         <AuthLayout>
           <h1 className="font-display text-4xl font-bold leading-none mb-2">
-            Create your account.
+            Start your streak.
           </h1>
           <p className="text-bone-300 text-sm mb-10">
-            Start logging in under a minute.
+            Set up takes under a minute. Your first log takes ten seconds.
           </p>
 
           <ul className="flex flex-col gap-3 mb-10">

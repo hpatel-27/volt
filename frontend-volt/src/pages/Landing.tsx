@@ -11,44 +11,29 @@ import { Zap, Activity, TrendingUp } from "lucide-react";
 
 const features = [
   {
-    icon: <Zap className="w-6 h-6" />,
+    icon: <Zap className="w-7 h-7" />,
     accent: "volt",
-    title: "Workout logging that keeps up.",
-    body: "Big inputs. One-tap set complete. Auto-detected PRs. Built for the gym floor.",
+    title: "Logging that keeps up with you.",
+    body: "Log workouts with ease. Track your progress over time.",
   },
   {
-    icon: <Activity className="w-6 h-6" />,
+    icon: <Activity className="w-7 h-7" />,
     accent: "sky",
     title: "Macros without the spreadsheet.",
-    body: "Protein, carbs, fat — tracked per meal, summed per day, charted per week.",
+    body: "Protein, carbs, and fat. Tracked per meal, summed per day.",
   },
   {
-    icon: <TrendingUp className="w-6 h-6" />,
+    icon: <TrendingUp className="w-7 h-7" />,
     accent: "blaze",
-    title: "Trends that don't lie.",
-    body: "Body weight, training volume, calorie compliance all in one trendline.",
+    title: "An honest view of your progress.",
+    body: "Trendlines you can actually read.",
   },
 ];
 
-const accentClasses: Record<
-  string,
-  { bg: string; border: string; text: string }
-> = {
-  volt: {
-    bg: "bg-volt-500/10",
-    border: "border-volt-500/20",
-    text: "text-volt-500",
-  },
-  sky: {
-    bg: "bg-sky-500/10",
-    border: "border-sky-500/20",
-    text: "text-sky-500",
-  },
-  blaze: {
-    bg: "bg-blaze-500/10",
-    border: "border-blaze-500/20",
-    text: "text-blaze-500",
-  },
+const accentText: Record<string, string> = {
+  volt: "text-volt-500",
+  sky: "text-sky-500",
+  blaze: "text-blaze-500",
 };
 
 const Landing = () => {
@@ -62,20 +47,7 @@ const Landing = () => {
         <div className="rounded-none md:rounded-3xl md:m-6 bg-ink-950 md:border md:border-white/5 overflow-hidden relative">
           {/* Hero */}
           <section className="relative px-6 md:px-16 py-12 overflow-hidden">
-            <div
-              className="absolute -top-40 -right-40 w-150 h-150 rounded-full opacity-50 blur-3xl pointer-events-none"
-              style={{
-                background:
-                  "radial-gradient(closest-side, var(--color-volt-500), transparent 70%)",
-              }}
-            />
-            <div
-              className="absolute bottom-0 left-1/3 w-100 h-100 rounded-full opacity-20 blur-3xl pointer-events-none"
-              style={{
-                background:
-                  "radial-gradient(closest-side, var(--color-blaze-500), transparent 70%)",
-              }}
-            />
+            <div className="absolute inset-0 bg-linear-to-b from-volt-500/6 to-transparent pointer-events-none" />
 
             <nav className="relative flex items-center justify-between mb-16 md:mb-20">
               <div className="flex items-center gap-2">
@@ -103,10 +75,6 @@ const Landing = () => {
             </nav>
 
             <div className="relative max-w-3xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-volt-500/10 border border-volt-500/20 text-volt-500 text-xs font-semibold uppercase tracking-wide mb-6">
-                <span className="w-1.5 h-1.5 rounded-full bg-volt-500" /> New ·
-                v1.0
-              </div>
               <h1
                 className="font-display font-bold tracking-tight leading-[0.9]"
                 style={{ fontSize: "clamp(3rem, 9vw, 7rem)" }}
@@ -118,8 +86,8 @@ const Landing = () => {
                 <span className="text-volt-500">TRACK.</span>
               </h1>
               <p className="mt-8 text-lg text-bone-300 max-w-xl">
-                The training log for athletes who care about the numbers.
-                Workouts, macros, body composition — one app, zero fluff.
+                The training log for tracking lifts, macros, and bodyweight in
+                one place.
               </p>
               <div className="mt-10 flex flex-wrap gap-3">
                 <Link to="/register">
@@ -159,27 +127,24 @@ const Landing = () => {
 
           {/* Feature blocks */}
           <section className="grid md:grid-cols-3 gap-px border-t border-white/5 bg-white/5">
-            {features.map((feature) => {
-              const c = accentClasses[feature.accent];
-              return (
-                <div key={feature.title} className="bg-ink-950 p-10">
-                  <div
-                    className={`w-12 h-12 rounded-2xl ${c.bg} flex items-center justify-center mb-6`}
-                  >
-                    <span className={`${c.text} text-xl`}>{feature.icon}</span>
-                  </div>
-                  <h3 className="font-display text-2xl font-bold mb-2">
-                    {feature.title}
-                  </h3>
-                  <p className="text-bone-300 text-sm">{feature.body}</p>
-                </div>
-              );
-            })}
+            {features.map((feature) => (
+              <div key={feature.title} className="bg-ink-950 p-10">
+                <span className={`${accentText[feature.accent]} mb-6 block`}>
+                  {feature.icon}
+                </span>
+                <h3 className="font-display text-2xl font-bold mb-2">
+                  {feature.title}
+                </h3>
+                <p className="text-bone-300 text-sm leading-relaxed">
+                  {feature.body}
+                </p>
+              </div>
+            ))}
           </section>
         </div>
 
         <footer className="text-caption text-center py-8">
-          © Volt 2026. All rights reserved.
+          &copy; Harsh Patel. All rights reserved.
         </footer>
       </SignedOut>
     </div>
