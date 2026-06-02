@@ -29,18 +29,11 @@ async function getAllSetLogs(
   return { sets: exerciseLog.sets };
 }
 
-async function getSetById(
-  logId: string,
-  exerciseLogId: string,
-  setId: string,
-  userId: string,
-) {
+async function getSetById(userId: string, setId: string) {
   const set = await prisma.setLog.findFirst({
     where: {
       id: setId,
-      exerciseLogId,
       exerciseLog: {
-        workoutLogId: logId,
         workoutLog: { userId },
       },
     },
@@ -76,8 +69,6 @@ async function createSetLog(
 }
 
 async function updateSetLog(
-  logId: string,
-  exerciseLogId: string,
   userId: string,
   setId: string,
   data: UpdateSetLogInput,
@@ -86,9 +77,7 @@ async function updateSetLog(
     const updated = await prisma.setLog.update({
       where: {
         id: setId,
-        exerciseLogId,
         exerciseLog: {
-          workoutLogId: logId,
           workoutLog: { userId },
         },
       },
@@ -106,19 +95,12 @@ async function updateSetLog(
   }
 }
 
-async function deleteSetLog(
-  logId: string,
-  exerciseLogId: string,
-  userId: string,
-  setId: string,
-) {
+async function deleteSetLog(userId: string, setId: string) {
   try {
     await prisma.setLog.delete({
       where: {
         id: setId,
-        exerciseLogId,
         exerciseLog: {
-          workoutLogId: logId,
           workoutLog: { userId },
         },
       },

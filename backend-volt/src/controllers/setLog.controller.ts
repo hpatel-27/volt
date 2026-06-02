@@ -18,16 +18,9 @@ async function getAllSetLogs(req: Request, res: Response) {
 async function getSetById(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
-  const logId = res.locals.logId as string;
-  const exerciseLogId = res.locals.exerciseLogId as string;
   const setId = res.locals.setId as string;
 
-  const set = await setLogService.getSetById(
-    logId,
-    exerciseLogId,
-    setId,
-    userId,
-  );
+  const set = await setLogService.getSetById(userId, setId);
   res.json(set);
 }
 
@@ -85,8 +78,6 @@ async function createSetLog(req: Request, res: Response) {
 async function updateSetLog(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
-  const logId = res.locals.logId as string;
-  const exerciseLogId = res.locals.exerciseLogId as string;
   const setId = res.locals.setId as string;
   const { setNumber, reps, weight } = req.body;
 
@@ -129,24 +120,16 @@ async function updateSetLog(req: Request, res: Response) {
       .json({ error: "No valid fields were provided to update." });
   }
 
-  const updated = await setLogService.updateSetLog(
-    logId,
-    exerciseLogId,
-    userId,
-    setId,
-    data,
-  );
+  const updated = await setLogService.updateSetLog(userId, setId, data);
   res.json(updated);
 }
 
 async function deleteSetLog(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
-  const logId = res.locals.logId as string;
-  const exerciseLogId = res.locals.exerciseLogId as string;
   const setId = res.locals.setId as string;
 
-  await setLogService.deleteSetLog(logId, exerciseLogId, userId, setId);
+  await setLogService.deleteSetLog(userId, setId);
   return res.status(204).send();
 }
 
