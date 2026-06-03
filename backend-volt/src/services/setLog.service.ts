@@ -5,6 +5,7 @@ import type {
   CreateSetLogInput,
   UpdateSetLogInput,
 } from "../types/setLog.dto.js";
+import { toSetLogDto } from "../mappers/setLog.mapper.js";
 
 async function getAllSetLogs(
   logId: string,
@@ -26,7 +27,7 @@ async function getAllSetLogs(
     throw new NotFoundError("Exercise log not found.");
   }
 
-  return { sets: exerciseLog.sets };
+  return { sets: exerciseLog.sets.map(toSetLogDto) };
 }
 
 async function getSetById(userId: string, setId: string) {
@@ -43,7 +44,7 @@ async function getSetById(userId: string, setId: string) {
     throw new NotFoundError("Set not found.");
   }
 
-  return set;
+  return toSetLogDto(set);
 }
 
 async function createSetLog(
@@ -59,12 +60,21 @@ async function createSetLog(
         workoutLogId: logId,
         workoutLog: { userId },
       },
+      include: { _count: { select: { sets: true } } },
     });
     if (!existingExerciseLog) {
       throw new NotFoundError("Exercise log not found.");
     }
 
-    return await tx.setLog.create({ data });
+    // The new set for the exercise log will always be the newest/last in the order
+    const last = await tx.setLog.findFirst({
+      where: { exerciseLogId },
+      orderBy: { setNumber: "desc" },
+      select: { setNumber: true },
+    });
+    const setNumber = (last?.setNumber ?? 0) + 1;
+    const createdLog = await tx.setLog.create({ data: { ...data, setNumber } });
+    return toSetLogDto(createdLog);
   });
 }
 
@@ -83,7 +93,7 @@ async function updateSetLog(
       },
       data,
     });
-    return updated;
+    return toSetLogDto(updated);
   } catch (error: unknown) {
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&
