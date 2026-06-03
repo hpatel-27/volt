@@ -4,7 +4,7 @@ import type {
   CreateWeightInput,
   UpdateWeightInput,
 } from "../types/weight.dto.js";
-import { BadRequestError } from "../errors.js";
+import { validatePositiveNumber } from "../helpers/validators.js";
 
 async function getAllWeights(req: Request, res: Response) {
   const user = req.user!;
@@ -50,20 +50,7 @@ async function createWeight(req: Request, res: Response) {
   // The date middleware guarantees the date is valid if it exists
   const isoDate = res.locals.date;
 
-  // Check if amount is present
-  if (amount === undefined) {
-    return res.status(400).json({ error: "Missing required parameters" });
-  }
-
-  // Validate amount
-  if (typeof amount !== "number") {
-    return res.status(400).json({ error: "Amount must be a number" });
-  }
-
-  // Validate weight amount (must be a positive number)
-  if (amount < 0) {
-    return res.status(400).json({ error: "Amount must be a positive number" });
-  }
+  validatePositiveNumber("amount", amount);
 
   const weightData: CreateWeightInput = {
     userId,
@@ -87,11 +74,7 @@ async function updateWeight(req: Request, res: Response) {
   // Validate weightAmount and date if they are present and add them to the data object
   const weightData: UpdateWeightInput = {};
   if (amount !== undefined) {
-    if (typeof amount !== "number" || amount < 0) {
-      return res
-        .status(400)
-        .json({ error: "Amount must be a positive number" });
-    }
+    validatePositiveNumber("amount", amount);
     weightData.amount = amount;
   }
 

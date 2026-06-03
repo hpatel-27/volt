@@ -4,6 +4,10 @@ import type {
   CreateSetLogInput,
   UpdateSetLogInput,
 } from "../types/setLog.dto.js";
+import {
+  validatePositiveInt,
+  validateNonNegativeNumber,
+} from "../helpers/validators.js";
 
 async function getAllSetLogs(req: Request, res: Response) {
   const user = req.user!;
@@ -18,16 +22,9 @@ async function getAllSetLogs(req: Request, res: Response) {
 async function getSetById(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
-  const logId = res.locals.logId as string;
-  const exerciseLogId = res.locals.exerciseLogId as string;
   const setId = res.locals.setId as string;
 
-  const set = await setLogService.getSetById(
-    logId,
-    exerciseLogId,
-    setId,
-    userId,
-  );
+  const set = await setLogService.getSetById(userId, setId);
   res.json(set);
 }
 
@@ -36,39 +33,13 @@ async function createSetLog(req: Request, res: Response) {
   const userId = user.id;
   const logId = res.locals.logId as string;
   const exerciseLogId = res.locals.exerciseLogId as string;
-  const { setNumber, reps, weight } = req.body;
+  const { reps, weight } = req.body;
 
-  if (
-    setNumber === undefined ||
-    typeof setNumber !== "number" ||
-    setNumber < 1 ||
-    !Number.isInteger(setNumber)
-  ) {
-    return res
-      .status(400)
-      .json({ error: "setNumber is required and must be a positive integer." });
-  }
-
-  if (
-    reps === undefined ||
-    typeof reps !== "number" ||
-    reps < 1 ||
-    !Number.isInteger(reps)
-  ) {
-    return res
-      .status(400)
-      .json({ error: "Reps is required and must be a positive integer." });
-  }
-
-  if (weight === undefined || typeof weight !== "number" || weight < 0) {
-    return res
-      .status(400)
-      .json({ error: "Weight is required and must be a non-negative number." });
-  }
+  validatePositiveInt("reps", reps);
+  validateNonNegativeNumber("weight", weight);
 
   const data: CreateSetLogInput = {
     exerciseLogId,
-    setNumber,
     reps,
     weight,
   };
@@ -85,41 +56,18 @@ async function createSetLog(req: Request, res: Response) {
 async function updateSetLog(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
-  const logId = res.locals.logId as string;
-  const exerciseLogId = res.locals.exerciseLogId as string;
   const setId = res.locals.setId as string;
-  const { setNumber, reps, weight } = req.body;
+  const { reps, weight } = req.body;
 
   const data: UpdateSetLogInput = {};
 
-  if (setNumber !== undefined) {
-    if (
-      typeof setNumber !== "number" ||
-      setNumber < 1 ||
-      !Number.isInteger(setNumber)
-    ) {
-      return res
-        .status(400)
-        .json({ error: "setNumber must be a positive integer." });
-    }
-    data.setNumber = setNumber;
-  }
-
   if (reps !== undefined) {
-    if (typeof reps !== "number" || reps < 1 || !Number.isInteger(reps)) {
-      return res
-        .status(400)
-        .json({ error: "Reps must be a positive integer." });
-    }
+    validatePositiveInt("reps", reps);
     data.reps = reps;
   }
 
   if (weight !== undefined) {
-    if (typeof weight !== "number" || weight < 0) {
-      return res
-        .status(400)
-        .json({ error: "Weight must be a non-negative number." });
-    }
+    validateNonNegativeNumber("weight", weight);
     data.weight = weight;
   }
 
@@ -129,24 +77,16 @@ async function updateSetLog(req: Request, res: Response) {
       .json({ error: "No valid fields were provided to update." });
   }
 
-  const updated = await setLogService.updateSetLog(
-    logId,
-    exerciseLogId,
-    userId,
-    setId,
-    data,
-  );
+  const updated = await setLogService.updateSetLog(userId, setId, data);
   res.json(updated);
 }
 
 async function deleteSetLog(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
-  const logId = res.locals.logId as string;
-  const exerciseLogId = res.locals.exerciseLogId as string;
   const setId = res.locals.setId as string;
 
-  await setLogService.deleteSetLog(logId, exerciseLogId, userId, setId);
+  await setLogService.deleteSetLog(userId, setId);
   return res.status(204).send();
 }
 

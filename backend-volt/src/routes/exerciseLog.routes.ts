@@ -3,7 +3,7 @@ const router = express.Router({ mergeParams: true });
 
 import * as exerciseLogController from "../controllers/exerciseLog.controller.js";
 import { parseUuidParam } from "../middleware/param.middleware.js";
-import setLogRouter from "./setLog.routes.js";
+import { nestedRouter } from "./setLog.routes.js";
 
 // Get all exercise logs for a workout log
 router.get("/", exerciseLogController.getAllExerciseLogs);
@@ -36,7 +36,7 @@ router.delete(
 router.use(
   "/:exerciseLogId/sets",
   parseUuidParam("exerciseLogId"),
-  setLogRouter,
+  nestedRouter,
 );
 
 export default router;

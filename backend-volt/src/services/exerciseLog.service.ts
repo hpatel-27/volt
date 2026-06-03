@@ -1,20 +1,19 @@
 import { prisma } from "../db.js";
 import { Prisma } from "../generated/prisma/client.js";
 import { NotFoundError } from "../errors.js";
-import type {
-  CreateExerciseLogInput,
-  UpdateExerciseLogInput,
+import {
+  EXERCISE_LOG_DETAIL_INCLUDE,
+  type CreateExerciseLogInput,
+  type UpdateExerciseLogInput,
 } from "../types/exerciseLog.dto.js";
+import { toExerciseLogDto } from "../mappers/exerciseLog.mapper.js";
 
 async function getAllExerciseLogs(logId: string, userId: string) {
   const workoutLog = await prisma.workoutLog.findUnique({
     where: { id: logId, userId },
     include: {
       exerciseLogs: {
-        include: {
-          exercise: true,
-          sets: { orderBy: { setNumber: "asc" } },
-        },
+        include: EXERCISE_LOG_DETAIL_INCLUDE,
       },
     },
   });
@@ -23,7 +22,7 @@ async function getAllExerciseLogs(logId: string, userId: string) {
     throw new NotFoundError("Workout log not found.");
   }
 
-  return { exerciseLogs: workoutLog.exerciseLogs };
+  return { exerciseLogs: workoutLog.exerciseLogs.map(toExerciseLogDto) };
 }
 
 async function getExerciseLogById(
@@ -37,17 +36,14 @@ async function getExerciseLogById(
       workoutLogId: logId,
       workoutLog: { userId },
     },
-    include: {
-      exercise: true,
-      sets: { orderBy: { setNumber: "asc" } },
-    },
+    include: EXERCISE_LOG_DETAIL_INCLUDE,
   });
 
   if (!exerciseLog) {
     throw new NotFoundError("Exercise log not found.");
   }
 
-  return exerciseLog;
+  return toExerciseLogDto(exerciseLog);
 }
 
 async function createExerciseLog(
@@ -70,10 +66,11 @@ async function createExerciseLog(
       throw new NotFoundError("Exercise not found.");
     }
 
-    return await tx.exerciseLog.create({
+    const newLog = await tx.exerciseLog.create({
       data,
-      include: { exercise: true },
+      include: EXERCISE_LOG_DETAIL_INCLUDE,
     });
+    return toExerciseLogDto(newLog);
   });
 }
 
@@ -84,19 +81,16 @@ async function updateExerciseLog(
   data: UpdateExerciseLogInput,
 ) {
   try {
-    const updated = await prisma.exerciseLog.update({
+    const updatedLog = await prisma.exerciseLog.update({
       where: {
         id: exerciseLogId,
         workoutLogId: logId,
         workoutLog: { userId },
       },
       data,
-      include: {
-        exercise: true,
-        sets: { orderBy: { setNumber: "asc" } },
-      },
+      include: EXERCISE_LOG_DETAIL_INCLUDE,
     });
-    return updated;
+    return toExerciseLogDto(updatedLog);
   } catch (error: unknown) {
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&

@@ -2,14 +2,12 @@ import type { Request, Response } from "express";
 import * as mealService from "../services/meal.service.js";
 import * as nutritionService from "../services/nutrition.service.js";
 import type { CreateMealInput, UpdateMealInput } from "../types/meal.dto.js";
+import { validateNonNegativeNumber } from "../helpers/validators.js";
 
 // Resolve the nutrition log UUID from the merged :date param.
 // Meal routes are nested under /nutrition/:date/meals, so req.params.date is the
 // YYYY-MM-DD key. We look up the log by (userId, date) to get its UUID, then
 // delegate to the meal service (which uses logId UUID for all queries).
-// Design decision: resolve date→logId here in each controller action rather than
-// in middleware, because the lookup itself can throw NotFoundError which should
-// surface as a 404 — and the centralized errorMiddleware handles that correctly.
 async function resolveLogId(userId: string, date: string): Promise<string> {
   const log = await nutritionService.getNutritionLogByDate(userId, date);
   return log.id;
@@ -51,21 +49,10 @@ async function createMeal(req: Request, res: Response) {
     });
   }
 
-  if (calories === undefined || typeof calories !== "number" || calories < 0) {
-    return res.status(400).json({ error: "Calories is a required parameter." });
-  }
-
-  if (protein === undefined || typeof protein !== "number" || protein < 0) {
-    return res.status(400).json({ error: "Protein is a required parameter." });
-  }
-
-  if (carbs === undefined || typeof carbs !== "number" || carbs < 0) {
-    return res.status(400).json({ error: "Carbs is a required parameter." });
-  }
-
-  if (fat === undefined || typeof fat !== "number" || fat < 0) {
-    return res.status(400).json({ error: "Fat is a required parameter." });
-  }
+  validateNonNegativeNumber("calories", calories);
+  validateNonNegativeNumber("protein", protein);
+  validateNonNegativeNumber("carbs", carbs);
+  validateNonNegativeNumber("fat", fat);
 
   const log = await nutritionService.findOrCreateNutritionLogByDate(
     userId,
@@ -108,38 +95,22 @@ async function updateMeal(req: Request, res: Response) {
   }
 
   if (calories !== undefined) {
-    if (typeof calories !== "number" || calories < 0) {
-      return res.status(400).json({
-        error: "Calories must be a non-negative number.",
-      });
-    }
+    validateNonNegativeNumber("calories", calories);
     mealData.calories = calories;
   }
 
   if (carbs !== undefined) {
-    if (typeof carbs !== "number" || carbs < 0) {
-      return res.status(400).json({
-        error: "Carbs must be a non-negative number.",
-      });
-    }
+    validateNonNegativeNumber("carbs", carbs);
     mealData.carbs = carbs;
   }
 
   if (protein !== undefined) {
-    if (typeof protein !== "number" || protein < 0) {
-      return res.status(400).json({
-        error: "Protein must be a non-negative number.",
-      });
-    }
+    validateNonNegativeNumber("protein", protein);
     mealData.protein = protein;
   }
 
   if (fat !== undefined) {
-    if (typeof fat !== "number" || fat < 0) {
-      return res.status(400).json({
-        error: "Fat must be a non-negative number.",
-      });
-    }
+    validateNonNegativeNumber("fat", fat);
     mealData.fat = fat;
   }
 

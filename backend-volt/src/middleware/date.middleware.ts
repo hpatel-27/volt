@@ -34,7 +34,7 @@ export const parseOptionalDate = (
 ) => {
   const { date } = req.body;
   if (date === undefined) {
-    next();
+    return next();
   }
 
   const validatedDate = validateDate(date);
