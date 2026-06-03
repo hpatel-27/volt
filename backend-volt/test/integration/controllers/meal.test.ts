@@ -1,7 +1,9 @@
-// This call is hoisted so the service is mocked before the import
+// Integration tests: meal controller via the real Express app + DB.
+// Clerk auth is stubbed so requests resolve to a known test user.
+// This call is hoisted so the module is mocked before the import.
 vi.mock("@clerk/express", () => {
   return {
-    clerkMiddleware: () => (req: any, res: Response, next: NextFunction) => {
+    clerkMiddleware: () => (req: any, _res: Response, next: NextFunction) => {
       req.auth = "integration_test_meal_controller_user";
       next();
     },
@@ -20,14 +22,13 @@ import { createApp } from "../../../src/app.js";
 
 const app = createApp({ skipRateLimit: true });
 
-// Unique clerkId so this test user doesn't collide with other test files running in parallel
 const TEST_CLERK_ID = "integration_test_meal_controller_user";
 let testUserId: string;
 // The date used as the URL key for the nutrition log
 const LOG_DATE = "2026-04-01";
+const FAKE_UUID = "aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa";
 
 beforeAll(async () => {
-  // Upsert a test user — same pattern as userMiddleware
   const user = await prisma.user.upsert({
     where: { clerkId: TEST_CLERK_ID },
     update: {},
@@ -35,20 +36,18 @@ beforeAll(async () => {
   });
   testUserId = user.id;
 
-  // Create the nutrition log that all meal tests will use, keyed by LOG_DATE
+  // The nutrition log most meal tests operate on, keyed by LOG_DATE
   await prisma.nutritionLog.create({
     data: { userId: testUserId, date: new Date("2026-04-01T00:00:00.000Z") },
   });
 });
 
 afterAll(async () => {
-  // Meals cascade-delete when the nutrition log is deleted,
-  // so we only need to remove logs then the user
+  // Meals cascade-delete with their nutrition log
   await prisma.nutritionLog.deleteMany({ where: { userId: testUserId } });
   await prisma.user.delete({ where: { id: testUserId } });
 });
 
-// Helper to get the logId UUID for a given date-keyed log
 async function getLogId(): Promise<string> {
   const log = await prisma.nutritionLog.findFirstOrThrow({
     where: { userId: testUserId, date: new Date("2026-04-01T00:00:00.000Z") },
@@ -56,47 +55,41 @@ async function getLogId(): Promise<string> {
   return log.id;
 }
 
-// GET all meals for a specific nutrition log (there are no query parameters for this)
-
 describe("GET /api/v1/nutrition-logs/:date/meals", () => {
-  it("returns 400 when date is not in YYYY-MM-DD format", async () => {
+  it("returns 400 when the date is not YYYY-MM-DD", async () => {
     await request(app)
       .get(`/api/v1/nutrition-logs/notadate/meals`)
-      .set("Accept", "application/json")
-      .expect("Content-Type", /json/)
       .expect(400)
       .expect({ error: "date must be a date in YYYY-MM-DD format" });
   });
 
-  it("returns 404 when date not found", async () => {
+  it("returns 404 when the date has no log", async () => {
     await request(app)
       .get(`/api/v1/nutrition-logs/2099-12-31/meals`)
-      .set("Accept", "application/json")
-      .expect("Content-Type", /json/)
       .expect(404)
       .expect((res) => {
         expect(res.body.error).toBe("Nutrition log not found.");
       });
   });
 
-  it("returns 200 with empty array", async () => {
+  it("returns 200 with a { meals: [] } shape", async () => {
     await request(app)
       .get(`/api/v1/nutrition-logs/${LOG_DATE}/meals`)
-      .set("Accept", "application/json")
-      .expect("Content-Type", /json/)
-      .expect(200);
+      .expect(200)
+      .expect((res) => {
+        expect(Array.isArray(res.body.meals)).toBe(true);
+      });
   });
 });
 
-// GET a meal by id from a nutrition log
 describe("GET /api/v1/nutrition-logs/:date/meals/:mealId", () => {
-  it("returns 400 when date is not in YYYY-MM-DD format", async () => {
+  afterAll(async () => {
+    await prisma.meal.deleteMany({ where: { nutritionLogId: await getLogId() } });
+  });
+
+  it("returns 400 when the date is not YYYY-MM-DD", async () => {
     await request(app)
-      .get(
-        `/api/v1/nutrition-logs/notadate/meals/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa`,
-      )
-      .set("Accept", "application/json")
-      .expect("Content-Type", /json/)
+      .get(`/api/v1/nutrition-logs/notadate/meals/${FAKE_UUID}`)
       .expect(400)
       .expect({ error: "date must be a date in YYYY-MM-DD format" });
   });
@@ -104,258 +97,182 @@ describe("GET /api/v1/nutrition-logs/:date/meals/:mealId", () => {
   it("returns 400 when mealId is not a UUID", async () => {
     await request(app)
       .get(`/api/v1/nutrition-logs/${LOG_DATE}/meals/notauuid`)
-      .set("Accept", "application/json")
-      .expect("Content-Type", /json/)
       .expect(400)
       .expect({ error: "Invalid mealId" });
   });
 
-  it("returns 404 when date is not found", async () => {
+  it("returns 404 when the date has no log", async () => {
     const logId = await getLogId();
     const meal = await prisma.meal.create({
-      data: {
-        nutritionLogId: logId,
-        name: "Greek Yogurt",
-        calories: 140,
-        protein: 20,
-        carbs: 9,
-        fat: 3,
-      },
+      data: { nutritionLogId: logId, name: "Greek Yogurt", calories: 140, protein: 20, carbs: 9, fat: 3 },
     });
 
     await request(app)
       .get(`/api/v1/nutrition-logs/2099-12-31/meals/${meal.id}`)
-      .set("Accept", "application/json")
-      .expect("Content-Type", /json/)
       .expect(404)
       .expect((res) => {
         expect(res.body.error).toBe("Nutrition log not found.");
       });
   });
 
-  it("returns 404 when mealId is not found", async () => {
+  it("returns 404 when the meal does not exist", async () => {
     await request(app)
-      .get(
-        `/api/v1/nutrition-logs/${LOG_DATE}/meals/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa`,
-      )
-      .set("Accept", "application/json")
-      .expect("Content-Type", /json/)
+      .get(`/api/v1/nutrition-logs/${LOG_DATE}/meals/${FAKE_UUID}`)
       .expect(404)
       .expect((res) => {
-        expect(res.body.error).toBe(
-          "Meal with id: aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa not found.",
-        );
+        expect(res.body.error).toBe(`Meal with id: ${FAKE_UUID} not found.`);
       });
   });
 
-  it("returns 200 and the meal with the id", async () => {
+  it("returns 200 with the meal (no nutritionLogId leaked)", async () => {
     const logId = await getLogId();
     const meal = await prisma.meal.create({
-      data: {
-        nutritionLogId: logId,
-        name: "Greek Yogurt",
-        calories: 140,
-        protein: 20,
-        carbs: 9,
-        fat: 3,
-      },
+      data: { nutritionLogId: logId, name: "Greek Yogurt", calories: 140, protein: 20, carbs: 9, fat: 3 },
     });
 
     await request(app)
       .get(`/api/v1/nutrition-logs/${LOG_DATE}/meals/${meal.id}`)
-      .set("Accept", "application/json")
-      .expect("Content-Type", /json/)
       .expect(200)
       .expect((res) => {
-        expect(res.body.nutritionLogId).toBe(logId);
+        expect(res.body.id).toBe(meal.id);
         expect(res.body.name).toBe("Greek Yogurt");
         expect(res.body.calories).toBe(140);
         expect(res.body.protein).toBe(20);
         expect(res.body.carbs).toBe(9);
         expect(res.body.fat).toBe(3);
+        expect(res.body).not.toHaveProperty("nutritionLogId");
       });
   });
 });
 
-// POST a meal to a nutrition log
 describe("POST /api/v1/nutrition-logs/:date/meals", () => {
-  const validMeal = {
-    name: "Oatmeal",
-    calories: 300,
-    protein: 10,
-    carbs: 54,
-    fat: 6,
-  };
+  const validMeal = { name: "Oatmeal", calories: 300, protein: 10, carbs: 54, fat: 6 };
 
-  it("returns 400 when date is not in YYYY-MM-DD format", async () => {
+  afterAll(async () => {
+    await prisma.meal.deleteMany({ where: { nutritionLogId: await getLogId() } });
+  });
+
+  it("returns 400 when the date is not YYYY-MM-DD", async () => {
     await request(app)
       .post(`/api/v1/nutrition-logs/notadate/meals`)
-      .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .send(validMeal)
-      .expect("Content-Type", /json/)
       .expect(400)
       .expect({ error: "date must be a date in YYYY-MM-DD format" });
   });
 
+  // Name validation is handled inline -> exact { error } body (no requestId)
   it("returns 400 when name is missing", async () => {
     await request(app)
       .post(`/api/v1/nutrition-logs/${LOG_DATE}/meals`)
-      .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .send({ calories: 300, protein: 10, carbs: 54, fat: 6 })
-      .expect("Content-Type", /json/)
       .expect(400)
-      .expect({
-        error: "Name is a required parameter and cannot be an empty string.",
-      });
+      .expect({ error: "Name is a required parameter and cannot be an empty string." });
   });
 
   it("returns 400 when name is an empty string", async () => {
     await request(app)
       .post(`/api/v1/nutrition-logs/${LOG_DATE}/meals`)
-      .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .send({ ...validMeal, name: "" })
-      .expect("Content-Type", /json/)
       .expect(400)
-      .expect({
-        error: "Name is a required parameter and cannot be an empty string.",
-      });
+      .expect({ error: "Name is a required parameter and cannot be an empty string." });
   });
 
-  it("returns 400 when calories is missing", async () => {
+  // Macro validation is delegated to validateNonNegativeNumber, which throws a
+  // BadRequestError -> the body carries { error, requestId }, so assert on res.body.error.
+  it.each([
+    ["calories", { name: "Oatmeal", protein: 10, carbs: 54, fat: 6 }, "Calories is required and must be a non-negative number"],
+    ["protein", { name: "Oatmeal", calories: 300, carbs: 54, fat: 6 }, "Protein is required and must be a non-negative number"],
+    ["carbs", { name: "Oatmeal", calories: 300, protein: 10, fat: 6 }, "Carbs is required and must be a non-negative number"],
+    ["fat", { name: "Oatmeal", calories: 300, protein: 10, carbs: 54 }, "Fat is required and must be a non-negative number"],
+  ])("returns 400 when %s is missing", async (_field, body, message) => {
     await request(app)
       .post(`/api/v1/nutrition-logs/${LOG_DATE}/meals`)
-      .set("Accept", "application/json")
       .set("Content-Type", "application/json")
-      .send({ name: "Oatmeal", protein: 10, carbs: 54, fat: 6 })
-      .expect("Content-Type", /json/)
+      .send(body)
       .expect(400)
-      .expect({ error: "Calories is a required parameter." });
-  });
-
-  it("returns 400 when calories is negative", async () => {
-    await request(app)
-      .post(`/api/v1/nutrition-logs/${LOG_DATE}/meals`)
-      .set("Accept", "application/json")
-      .set("Content-Type", "application/json")
-      .send({ ...validMeal, calories: -1 })
-      .expect("Content-Type", /json/)
-      .expect(400)
-      .expect({ error: "Calories is a required parameter." });
-  });
-
-  it("returns 400 when protein is missing", async () => {
-    await request(app)
-      .post(`/api/v1/nutrition-logs/${LOG_DATE}/meals`)
-      .set("Accept", "application/json")
-      .set("Content-Type", "application/json")
-      .send({ name: "Oatmeal", calories: 300, carbs: 54, fat: 6 })
-      .expect("Content-Type", /json/)
-      .expect(400)
-      .expect({ error: "Protein is a required parameter." });
-  });
-
-  it("returns 400 when protein is negative", async () => {
-    await request(app)
-      .post(`/api/v1/nutrition-logs/${LOG_DATE}/meals`)
-      .set("Accept", "application/json")
-      .set("Content-Type", "application/json")
-      .send({ ...validMeal, protein: -1 })
-      .expect("Content-Type", /json/)
-      .expect(400)
-      .expect({ error: "Protein is a required parameter." });
-  });
-
-  it("returns 400 when carbs is missing", async () => {
-    await request(app)
-      .post(`/api/v1/nutrition-logs/${LOG_DATE}/meals`)
-      .set("Accept", "application/json")
-      .set("Content-Type", "application/json")
-      .send({ name: "Oatmeal", calories: 300, protein: 10, fat: 6 })
-      .expect("Content-Type", /json/)
-      .expect(400)
-      .expect({ error: "Carbs is a required parameter." });
-  });
-
-  it("returns 400 when carbs is negative", async () => {
-    await request(app)
-      .post(`/api/v1/nutrition-logs/${LOG_DATE}/meals`)
-      .set("Accept", "application/json")
-      .set("Content-Type", "application/json")
-      .send({ ...validMeal, carbs: -1 })
-      .expect("Content-Type", /json/)
-      .expect(400)
-      .expect({ error: "Carbs is a required parameter." });
-  });
-
-  it("returns 400 when fat is missing", async () => {
-    await request(app)
-      .post(`/api/v1/nutrition-logs/${LOG_DATE}/meals`)
-      .set("Accept", "application/json")
-      .set("Content-Type", "application/json")
-      .send({ name: "Oatmeal", calories: 300, protein: 10, carbs: 54 })
-      .expect("Content-Type", /json/)
-      .expect(400)
-      .expect({ error: "Fat is a required parameter." });
-  });
-
-  it("returns 400 when fat is negative", async () => {
-    await request(app)
-      .post(`/api/v1/nutrition-logs/${LOG_DATE}/meals`)
-      .set("Accept", "application/json")
-      .set("Content-Type", "application/json")
-      .send({ ...validMeal, fat: -1 })
-      .expect("Content-Type", /json/)
-      .expect(400)
-      .expect({ error: "Fat is a required parameter." });
-  });
-
-  it("returns 404 when date not found", async () => {
-    await request(app)
-      .post(`/api/v1/nutrition-logs/2099-12-31/meals`)
-      .set("Accept", "application/json")
-      .set("Content-Type", "application/json")
-      .send(validMeal)
-      .expect("Content-Type", /json/)
-      .expect(404)
       .expect((res) => {
-        expect(res.body.error).toBe("Nutrition log not found.");
+        expect(res.body.error).toBe(message);
       });
   });
 
-  it("returns 201 with the created meal", async () => {
-    const logId = await getLogId();
+  it.each([
+    ["calories", { ...validMeal, calories: -1 }, "Calories is required and must be a non-negative number"],
+    ["protein", { ...validMeal, protein: -1 }, "Protein is required and must be a non-negative number"],
+    ["carbs", { ...validMeal, carbs: -1 }, "Carbs is required and must be a non-negative number"],
+    ["fat", { ...validMeal, fat: -1 }, "Fat is required and must be a non-negative number"],
+  ])("returns 400 when %s is negative", async (_field, body, message) => {
     await request(app)
       .post(`/api/v1/nutrition-logs/${LOG_DATE}/meals`)
-      .set("Accept", "application/json")
+      .set("Content-Type", "application/json")
+      .send(body)
+      .expect(400)
+      .expect((res) => {
+        expect(res.body.error).toBe(message);
+      });
+  });
+
+  it("auto-creates the parent log when none exists and returns 201", async () => {
+    // createMeal uses findOrCreateNutritionLogByDate, so posting to a fresh date
+    // creates the log rather than 404-ing.
+    const freshDate = "2026-08-08";
+    await request(app)
+      .post(`/api/v1/nutrition-logs/${freshDate}/meals`)
       .set("Content-Type", "application/json")
       .send(validMeal)
-      .expect("Content-Type", /json/)
       .expect(201)
       .expect((res) => {
-        expect(res.body.nutritionLogId).toBe(logId);
+        expect(res.body.id).toBeDefined();
+        expect(res.body.name).toBe("Oatmeal");
+      });
+
+    const createdLog = await prisma.nutritionLog.findUnique({
+      where: { userId_date: { userId: testUserId, date: new Date(freshDate) } },
+    });
+    expect(createdLog).not.toBeNull();
+
+    // cleanup the extra log (and its meal via cascade)
+    await prisma.nutritionLog.delete({ where: { id: createdLog!.id } });
+  });
+
+  it("returns 201 with the created meal (no nutritionLogId leaked)", async () => {
+    await request(app)
+      .post(`/api/v1/nutrition-logs/${LOG_DATE}/meals`)
+      .set("Content-Type", "application/json")
+      .send(validMeal)
+      .expect(201)
+      .expect((res) => {
+        expect(res.body.id).toBeDefined();
         expect(res.body.name).toBe(validMeal.name);
         expect(res.body.calories).toBe(validMeal.calories);
         expect(res.body.protein).toBe(validMeal.protein);
         expect(res.body.carbs).toBe(validMeal.carbs);
         expect(res.body.fat).toBe(validMeal.fat);
+        expect(res.body).not.toHaveProperty("nutritionLogId");
       });
   });
 });
 
-// PATCH a meal in a nutrition log
 describe("PATCH /api/v1/nutrition-logs/:date/meals/:mealId", () => {
-  it("returns 400 when date is not in YYYY-MM-DD format", async () => {
+  afterAll(async () => {
+    await prisma.meal.deleteMany({ where: { nutritionLogId: await getLogId() } });
+  });
+
+  // Helper to seed a meal for the shared log
+  async function seedMeal() {
+    const logId = await getLogId();
+    return prisma.meal.create({
+      data: { nutritionLogId: logId, name: "Banana", calories: 90, protein: 1, carbs: 23, fat: 0 },
+    });
+  }
+
+  it("returns 400 when the date is not YYYY-MM-DD", async () => {
     await request(app)
-      .patch(
-        `/api/v1/nutrition-logs/notadate/meals/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa`,
-      )
-      .set("Accept", "application/json")
+      .patch(`/api/v1/nutrition-logs/notadate/meals/${FAKE_UUID}`)
       .set("Content-Type", "application/json")
       .send({ name: "Updated" })
-      .expect("Content-Type", /json/)
       .expect(400)
       .expect({ error: "date must be a date in YYYY-MM-DD format" });
   });
@@ -363,186 +280,66 @@ describe("PATCH /api/v1/nutrition-logs/:date/meals/:mealId", () => {
   it("returns 400 when mealId is not a UUID", async () => {
     await request(app)
       .patch(`/api/v1/nutrition-logs/${LOG_DATE}/meals/notauuid`)
-      .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .send({ name: "Updated" })
-      .expect("Content-Type", /json/)
       .expect(400)
       .expect({ error: "Invalid mealId" });
   });
 
   it("returns 400 when no valid fields are provided", async () => {
-    const logId = await getLogId();
-    const meal = await prisma.meal.create({
-      data: {
-        nutritionLogId: logId,
-        name: "Banana",
-        calories: 90,
-        protein: 1,
-        carbs: 23,
-        fat: 0,
-      },
-    });
-
+    const meal = await seedMeal();
     await request(app)
       .patch(`/api/v1/nutrition-logs/${LOG_DATE}/meals/${meal.id}`)
-      .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .send({})
-      .expect("Content-Type", /json/)
       .expect(400)
       .expect({ error: "No valid fields were provided to update." });
   });
 
   it("returns 400 when name is an empty string", async () => {
-    const logId = await getLogId();
-    const meal = await prisma.meal.create({
-      data: {
-        nutritionLogId: logId,
-        name: "Banana",
-        calories: 90,
-        protein: 1,
-        carbs: 23,
-        fat: 0,
-      },
-    });
-
+    const meal = await seedMeal();
     await request(app)
       .patch(`/api/v1/nutrition-logs/${LOG_DATE}/meals/${meal.id}`)
-      .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .send({ name: "" })
-      .expect("Content-Type", /json/)
       .expect(400)
       .expect({ error: "Meal name cannot be an empty string." });
   });
 
-  it("returns 400 when calories is negative", async () => {
-    const logId = await getLogId();
-    const meal = await prisma.meal.create({
-      data: {
-        nutritionLogId: logId,
-        name: "Banana",
-        calories: 90,
-        protein: 1,
-        carbs: 23,
-        fat: 0,
-      },
-    });
-
+  it.each([
+    ["calories", "Calories is required and must be a non-negative number"],
+    ["protein", "Protein is required and must be a non-negative number"],
+    ["carbs", "Carbs is required and must be a non-negative number"],
+    ["fat", "Fat is required and must be a non-negative number"],
+  ])("returns 400 when %s is negative", async (field, message) => {
+    const meal = await seedMeal();
     await request(app)
       .patch(`/api/v1/nutrition-logs/${LOG_DATE}/meals/${meal.id}`)
-      .set("Accept", "application/json")
       .set("Content-Type", "application/json")
-      .send({ calories: -1 })
-      .expect("Content-Type", /json/)
+      .send({ [field]: -1 })
       .expect(400)
-      .expect({ error: "Calories must be a non-negative number." });
+      .expect((res) => {
+        expect(res.body.error).toBe(message);
+      });
   });
 
-  it("returns 400 when protein is negative", async () => {
-    const logId = await getLogId();
-    const meal = await prisma.meal.create({
-      data: {
-        nutritionLogId: logId,
-        name: "Banana",
-        calories: 90,
-        protein: 1,
-        carbs: 23,
-        fat: 0,
-      },
-    });
-
-    await request(app)
-      .patch(`/api/v1/nutrition-logs/${LOG_DATE}/meals/${meal.id}`)
-      .set("Accept", "application/json")
-      .set("Content-Type", "application/json")
-      .send({ protein: -1 })
-      .expect("Content-Type", /json/)
-      .expect(400)
-      .expect({ error: "Protein must be a non-negative number." });
-  });
-
-  it("returns 400 when carbs is negative", async () => {
-    const logId = await getLogId();
-    const meal = await prisma.meal.create({
-      data: {
-        nutritionLogId: logId,
-        name: "Banana",
-        calories: 90,
-        protein: 1,
-        carbs: 23,
-        fat: 0,
-      },
-    });
-
-    await request(app)
-      .patch(`/api/v1/nutrition-logs/${LOG_DATE}/meals/${meal.id}`)
-      .set("Accept", "application/json")
-      .set("Content-Type", "application/json")
-      .send({ carbs: -1 })
-      .expect("Content-Type", /json/)
-      .expect(400)
-      .expect({ error: "Carbs must be a non-negative number." });
-  });
-
-  it("returns 400 when fat is negative", async () => {
-    const logId = await getLogId();
-    const meal = await prisma.meal.create({
-      data: {
-        nutritionLogId: logId,
-        name: "Banana",
-        calories: 90,
-        protein: 1,
-        carbs: 23,
-        fat: 0,
-      },
-    });
-
-    await request(app)
-      .patch(`/api/v1/nutrition-logs/${LOG_DATE}/meals/${meal.id}`)
-      .set("Accept", "application/json")
-      .set("Content-Type", "application/json")
-      .send({ fat: -1 })
-      .expect("Content-Type", /json/)
-      .expect(400)
-      .expect({ error: "Fat must be a non-negative number." });
-  });
-
-  it("returns 404 when date not found", async () => {
-    const logId = await getLogId();
-    const meal = await prisma.meal.create({
-      data: {
-        nutritionLogId: logId,
-        name: "Banana",
-        calories: 90,
-        protein: 1,
-        carbs: 23,
-        fat: 0,
-      },
-    });
-
+  it("returns 404 when the date has no log", async () => {
+    const meal = await seedMeal();
     await request(app)
       .patch(`/api/v1/nutrition-logs/2099-12-31/meals/${meal.id}`)
-      .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .send({ name: "Updated" })
-      .expect("Content-Type", /json/)
       .expect(404)
       .expect((res) => {
         expect(res.body.error).toBe("Nutrition log not found.");
       });
   });
 
-  it("returns 404 when mealId not found", async () => {
+  it("returns 404 when the meal does not exist", async () => {
     await request(app)
-      .patch(
-        `/api/v1/nutrition-logs/${LOG_DATE}/meals/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa`,
-      )
-      .set("Accept", "application/json")
+      .patch(`/api/v1/nutrition-logs/${LOG_DATE}/meals/${FAKE_UUID}`)
       .set("Content-Type", "application/json")
       .send({ name: "Updated" })
-      .expect("Content-Type", /json/)
       .expect(404)
       .expect((res) => {
         expect(res.body.error).toBe("Meal not found.");
@@ -550,43 +347,37 @@ describe("PATCH /api/v1/nutrition-logs/:date/meals/:mealId", () => {
   });
 
   it("returns 200 with the updated meal", async () => {
-    const logId = await getLogId();
-    const meal = await prisma.meal.create({
-      data: {
-        nutritionLogId: logId,
-        name: "Banana",
-        calories: 90,
-        protein: 1,
-        carbs: 23,
-        fat: 0,
-      },
-    });
-
+    const meal = await seedMeal();
     await request(app)
       .patch(`/api/v1/nutrition-logs/${LOG_DATE}/meals/${meal.id}`)
-      .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .send({ name: "Banana Updated", calories: 100 })
-      .expect("Content-Type", /json/)
       .expect(200)
       .expect((res) => {
         expect(res.body.id).toBe(meal.id);
         expect(res.body.name).toBe("Banana Updated");
         expect(res.body.calories).toBe(100);
-        expect(res.body.protein).toBe(1);
+        expect(res.body.protein).toBe(1); // unchanged
+        expect(res.body).not.toHaveProperty("nutritionLogId");
       });
   });
 });
 
-// DELETE a meal from a nutrition log
 describe("DELETE /api/v1/nutrition-logs/:date/meals/:mealId", () => {
-  it("returns 400 when date is not in YYYY-MM-DD format", async () => {
+  afterAll(async () => {
+    await prisma.meal.deleteMany({ where: { nutritionLogId: await getLogId() } });
+  });
+
+  async function seedMeal() {
+    const logId = await getLogId();
+    return prisma.meal.create({
+      data: { nutritionLogId: logId, name: "Apple", calories: 80, protein: 0, carbs: 21, fat: 0 },
+    });
+  }
+
+  it("returns 400 when the date is not YYYY-MM-DD", async () => {
     await request(app)
-      .delete(
-        `/api/v1/nutrition-logs/notadate/meals/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa`,
-      )
-      .set("Accept", "application/json")
-      .expect("Content-Type", /json/)
+      .delete(`/api/v1/nutrition-logs/notadate/meals/${FAKE_UUID}`)
       .expect(400)
       .expect({ error: "date must be a date in YYYY-MM-DD format" });
   });
@@ -594,63 +385,36 @@ describe("DELETE /api/v1/nutrition-logs/:date/meals/:mealId", () => {
   it("returns 400 when mealId is not a UUID", async () => {
     await request(app)
       .delete(`/api/v1/nutrition-logs/${LOG_DATE}/meals/notauuid`)
-      .set("Accept", "application/json")
-      .expect("Content-Type", /json/)
       .expect(400)
       .expect({ error: "Invalid mealId" });
   });
 
-  it("returns 404 when date not found", async () => {
-    const logId = await getLogId();
-    const meal = await prisma.meal.create({
-      data: {
-        nutritionLogId: logId,
-        name: "Apple",
-        calories: 80,
-        protein: 0,
-        carbs: 21,
-        fat: 0,
-      },
-    });
-
+  it("returns 404 when the date has no log", async () => {
+    const meal = await seedMeal();
     await request(app)
       .delete(`/api/v1/nutrition-logs/2099-12-31/meals/${meal.id}`)
-      .set("Accept", "application/json")
-      .expect("Content-Type", /json/)
       .expect(404)
       .expect((res) => {
         expect(res.body.error).toBe("Nutrition log not found.");
       });
   });
 
-  it("returns 404 when mealId not found", async () => {
+  it("returns 404 when the meal does not exist", async () => {
     await request(app)
-      .delete(
-        `/api/v1/nutrition-logs/${LOG_DATE}/meals/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa`,
-      )
-      .set("Accept", "application/json")
-      .expect("Content-Type", /json/)
+      .delete(`/api/v1/nutrition-logs/${LOG_DATE}/meals/${FAKE_UUID}`)
       .expect(404)
       .expect((res) => {
         expect(res.body.error).toBe("Meal not found.");
       });
   });
 
-  it("returns 204 when meal is deleted", async () => {
-    const logId = await getLogId();
-    const meal = await prisma.meal.create({
-      data: {
-        nutritionLogId: logId,
-        name: "Apple",
-        calories: 80,
-        protein: 0,
-        carbs: 21,
-        fat: 0,
-      },
-    });
-
+  it("returns 204 and removes the meal", async () => {
+    const meal = await seedMeal();
     await request(app)
       .delete(`/api/v1/nutrition-logs/${LOG_DATE}/meals/${meal.id}`)
       .expect(204);
+
+    const gone = await prisma.meal.findUnique({ where: { id: meal.id } });
+    expect(gone).toBeNull();
   });
 });

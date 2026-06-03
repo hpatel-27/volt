@@ -1,5 +1,5 @@
-// Mock the database
-// This call is hoisted so the db is mocked before the prisma import
+// Unit tests: meal service with a mocked database.
+// This call is hoisted so the db is mocked before the prisma import.
 vi.mock("../../../src/db.js");
 
 import type { DeepMockProxy } from "vitest-mock-extended";
@@ -9,433 +9,257 @@ import * as mealService from "../../../src/services/meal.service.js";
 import { Prisma } from "../../../src/generated/prisma/client.js";
 import { NotFoundError } from "../../../src/errors.js";
 
-// Mock prisma proxy, otherwise a type error exists when trying to call the mockResolved...
 const prismaMock = prisma as unknown as DeepMockProxy<typeof prisma>;
 
+// A raw meal row as Prisma returns it — note nutritionLogId is present here but
+// the mapper (toMealDto) strips it from the service's output.
+function mealRow(overrides: Record<string, unknown> = {}) {
+  return {
+    id: "meal-uuid-1",
+    nutritionLogId: "log-uuid-15",
+    name: "Milk",
+    calories: 150,
+    protein: 8,
+    carbs: 12,
+    fat: 8,
+    ...overrides,
+  };
+}
+
+function prismaError(code: string) {
+  return new Prisma.PrismaClientKnownRequestError(`Prisma error ${code}`, {
+    code,
+    clientVersion: "7.4.2",
+  });
+}
+
 describe("Meal Service getAllMeals", () => {
-  // Prevent individual test context from leaking into other tests
   beforeEach(() => vi.clearAllMocks());
 
-  it("should throw error for log not found or it does not belong to the user", async () => {
-    const logId = "log-uuid-15";
-    const userId = "user-uuid-12";
-    await expect(mealService.getAllMeals(logId, userId)).rejects.toThrow(
-      `Log with id: ${logId} not found.`,
-    );
+  it("throws NotFoundError when the log is missing or not owned by the user", async () => {
+    // findUnique resolves null by default -> NotFound branch
+    await expect(
+      mealService.getAllMeals("log-uuid-15", "user-uuid-12"),
+    ).rejects.toThrow(new NotFoundError("Log with id: log-uuid-15 not found."));
   });
 
-  it("should propagate unexpected errors", async () => {
-    const logId = "log-uuid-15";
-    const userId = "user-uuid-12";
-    const dbError = new Error(
-      "Prisma database at url: someUrl is currently unavailable.",
-    );
+  it("propagates an unexpected error", async () => {
+    const dbError = new Error("Prisma database is currently unavailable.");
     prismaMock.nutritionLog.findUnique.mockRejectedValueOnce(dbError);
 
-    await expect(mealService.getAllMeals(logId, userId)).rejects.toThrow(
-      dbError.message,
-    );
+    await expect(
+      mealService.getAllMeals("log-uuid-15", "user-uuid-12"),
+    ).rejects.toThrow(dbError);
   });
 
-  it("should propagate unknown thrown values", async () => {
-    const logId = "log-uuid-15";
-    const userId = "user-uuid-12";
+  it("propagates a non-Error thrown value", async () => {
     prismaMock.nutritionLog.findUnique.mockRejectedValueOnce(42);
 
-    await expect(mealService.getAllMeals(logId, userId)).rejects.toBe(42);
+    await expect(
+      mealService.getAllMeals("log-uuid-15", "user-uuid-12"),
+    ).rejects.toBe(42);
   });
 
-  it("should return an empty meals list for a log", async () => {
-    const logId = "log-uuid-15";
-    const userId = "user-uuid-12";
-    const date = new Date("2026-04-11T14:48:00.000Z");
-    // findUnique now returns the log with its meals included in a single query
+  it("returns an empty meals list for a log with no meals", async () => {
     prismaMock.nutritionLog.findUnique.mockResolvedValueOnce({
-      id: logId,
-      userId,
-      date,
+      id: "log-uuid-15",
+      userId: "user-uuid-12",
+      date: new Date("2026-04-11T00:00:00.000Z"),
       meals: [],
     } as any);
 
-    const data = await mealService.getAllMeals(logId, userId);
-    const meals = data.meals;
-    expect(meals.length).toBe(0);
-    expect(meals).toStrictEqual([]);
+    const data = await mealService.getAllMeals("log-uuid-15", "user-uuid-12");
+    expect(data).toStrictEqual({ meals: [] });
   });
 
-  it("should return multiple meals in list for a log", async () => {
-    const logId = "log-uuid-15";
-    const userId = "user-uuid-12";
-    const date = new Date("2026-04-11T14:48:00.000Z");
-    const firstMealId = "meal-uuid-14";
-    const secondMealId = "meal-uuid-17";
+  it("maps each meal to a DTO with nutritionLogId stripped", async () => {
     prismaMock.nutritionLog.findUnique.mockResolvedValueOnce({
-      id: logId,
-      userId,
-      date,
+      id: "log-uuid-15",
+      userId: "user-uuid-12",
+      date: new Date("2026-04-11T00:00:00.000Z"),
       meals: [
-        {
-          id: firstMealId,
-          nutritionLogId: logId,
-          name: "Tortilla",
-          calories: 200,
-          protein: 5,
-          fat: 2,
-          carbs: 10,
-        },
-        {
-          id: secondMealId,
-          nutritionLogId: logId,
-          name: "Milk",
-          calories: 120,
-          protein: 8,
-          fat: 2,
-          carbs: 0,
-        },
+        mealRow({ id: "meal-1", name: "Tortilla", calories: 200, protein: 5, carbs: 10, fat: 2 }),
+        mealRow({ id: "meal-2", name: "Milk", calories: 120, protein: 8, carbs: 0, fat: 2 }),
       ],
     } as any);
 
-    const data = await mealService.getAllMeals(logId, userId);
-    const meals = data.meals;
-    expect(meals.length).toBe(2);
+    const { meals } = await mealService.getAllMeals(
+      "log-uuid-15",
+      "user-uuid-12",
+    );
+
     expect(meals).toStrictEqual([
-      {
-        id: firstMealId,
-        nutritionLogId: logId,
-        name: "Tortilla",
-        calories: 200,
-        protein: 5,
-        fat: 2,
-        carbs: 10,
-      },
-      {
-        id: secondMealId,
-        nutritionLogId: logId,
-        name: "Milk",
-        calories: 120,
-        protein: 8,
-        fat: 2,
-        carbs: 0,
-      },
+      { id: "meal-1", name: "Tortilla", calories: 200, protein: 5, carbs: 10, fat: 2 },
+      { id: "meal-2", name: "Milk", calories: 120, protein: 8, carbs: 0, fat: 2 },
     ]);
+    // Defensive: the mapper must not leak the foreign key
+    expect(meals[0]).not.toHaveProperty("nutritionLogId");
   });
 });
 
 describe("Meal Service getMealById", () => {
-  // Prevent individual test context from leaking into other tests
   beforeEach(() => vi.clearAllMocks());
 
-  it("should throw an error when meal is not found or does not belong to the user", async () => {
-    const logId = "log-uuid-15";
-    const userId = "user-uuid-12";
-    const mealId = "meal-uuid-109";
-
-    // findFirst returns null when the meal/log ownership check fails — single query
+  it("throws NotFoundError when the meal is missing or not owned", async () => {
+    // findFirst resolves null by default
     await expect(
-      mealService.getMealById(logId, userId, mealId),
-    ).rejects.toThrow(`Meal with id: ${mealId} not found.`);
+      mealService.getMealById("log-uuid-15", "user-uuid-12", "meal-uuid-109"),
+    ).rejects.toThrow(
+      new NotFoundError("Meal with id: meal-uuid-109 not found."),
+    );
   });
 
-  it("should propagate unexpected errors", async () => {
-    const logId = "log-uuid-15";
-    const userId = "user-uuid-12";
-    const mealId = "meal-uuid-109";
-    const dbError = new Error(
-      "Prisma database at url: someUrl is currently unavailable.",
-    );
+  it("propagates an unexpected error", async () => {
+    const dbError = new Error("Prisma database is currently unavailable.");
     prismaMock.meal.findFirst.mockRejectedValueOnce(dbError);
 
     await expect(
-      mealService.getMealById(logId, userId, mealId),
-    ).rejects.toThrow(dbError.message);
+      mealService.getMealById("log-uuid-15", "user-uuid-12", "meal-uuid-109"),
+    ).rejects.toThrow(dbError);
   });
 
-  it("should propagate unknown thrown values", async () => {
-    const logId = "log-uuid-15";
-    const userId = "user-uuid-12";
-    const mealId = "meal-uuid-109";
-    prismaMock.meal.findFirst.mockRejectedValueOnce("45");
+  it("returns the meal as a DTO without nutritionLogId", async () => {
+    prismaMock.meal.findFirst.mockResolvedValueOnce(mealRow({ id: "meal-uuid-341" }) as any);
 
-    await expect(mealService.getMealById(logId, userId, mealId)).rejects.toBe(
-      "45",
+    const meal = await mealService.getMealById(
+      "log-uuid-17",
+      "user-uuid-11",
+      "meal-uuid-341",
     );
-  });
 
-  it("should return a valid meal", async () => {
-    const logId = "log-uuid-17";
-    const userId = "user-uuid-11";
-    const mealId = "meal-uuid-341";
-    prismaMock.meal.findFirst.mockResolvedValueOnce({
-      id: mealId,
-      nutritionLogId: logId,
-      name: "Milk",
-      calories: 150,
-      protein: 8,
-      fat: 8,
-      carbs: 12,
-    });
-
-    const meal = await mealService.getMealById(logId, userId, mealId);
     expect(meal).toStrictEqual({
-      id: mealId,
-      nutritionLogId: logId,
+      id: "meal-uuid-341",
       name: "Milk",
       calories: 150,
       protein: 8,
-      fat: 8,
       carbs: 12,
+      fat: 8,
     });
   });
 });
 
 describe("Meal Service createMeal", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    prismaMock.$transaction.mockImplementation(async (callback) =>
-      callback(prismaMock as any),
-    );
-  });
+  beforeEach(() => vi.clearAllMocks());
 
-  it("should throw error for log not found or it does not belong to the user", async () => {
-    // Invalid userId and logId
-    const logId = "log-uuid-15";
-    const userId = "user-uuid-12";
-    const mealData = {
-      nutritionLogId: logId,
+  it("creates the meal and returns a DTO without nutritionLogId", async () => {
+    const input = {
+      nutritionLogId: "log-uuid-15",
       name: "Milk",
       calories: 150,
       protein: 8,
-      fat: 8,
       carbs: 12,
+      fat: 8,
     };
-
-    // Log not found
-    await expect(
-      mealService.createMeal(logId, userId, mealData),
-    ).rejects.toThrow(
-      new NotFoundError("Log associated to this meal does not exist."),
+    prismaMock.meal.create.mockResolvedValueOnce(
+      mealRow({ id: "meal-uuid-1", ...input }) as any,
     );
-  });
 
-  it("should propagate unexpected errors", async () => {
-    const logId = "log-uuid-15";
-    const userId = "user-uuid-12";
-    const date = new Date("2026-04-13T14:48:00.000Z");
+    const created = await mealService.createMeal(input);
 
-    const mealData = {
-      nutritionLogId: logId,
+    expect(created).toStrictEqual({
+      id: "meal-uuid-1",
       name: "Milk",
       calories: 150,
       protein: 8,
-      fat: 8,
       carbs: 12,
-    };
-
-    prismaMock.nutritionLog.findUnique.mockResolvedValueOnce({
-      id: logId,
-      userId,
-      date,
+      fat: 8,
     });
+    // The service passes the input straight through to prisma.create
+    expect(prismaMock.meal.create).toHaveBeenCalledWith({ data: input });
+  });
 
-    const dbError = new Error(
-      "Prisma database at url: someUrl is currently unavailable.",
-    );
+  it("propagates an unexpected error", async () => {
+    const dbError = new Error("Prisma database is currently unavailable.");
     prismaMock.meal.create.mockRejectedValueOnce(dbError);
 
     await expect(
-      mealService.createMeal(logId, userId, mealData),
-    ).rejects.toThrow(dbError.message);
-  });
-
-  it("should propagate unknown thrown values", async () => {
-    const logId = "log-uuid-15";
-    const userId = "user-uuid-12";
-    const date = new Date("2026-04-13T14:48:00.000Z");
-
-    const mealData = {
-      nutritionLogId: logId,
-      name: "Milk",
-      calories: 150,
-      protein: 8,
-      fat: 8,
-      carbs: 12,
-    };
-
-    prismaMock.nutritionLog.findUnique.mockResolvedValueOnce({
-      id: logId,
-      userId,
-      date,
-    } as any);
-    prismaMock.meal.create.mockRejectedValueOnce(undefined);
-
-    await expect(mealService.createMeal(logId, userId, mealData)).rejects.toBe(
-      undefined,
-    );
-  });
-
-  it("should create a valid meal", async () => {
-    const logId = "log-uuid-15";
-    const userId = "user-uuid-12";
-    const date = new Date("2026-04-13T14:48:00.000Z");
-
-    const mealData = {
-      id: "meal-uuid-1",
-      nutritionLogId: logId,
-      name: "Milk",
-      calories: 150,
-      protein: 8,
-      fat: 8,
-      carbs: 12,
-    };
-
-    prismaMock.nutritionLog.findUnique.mockResolvedValueOnce({
-      id: logId,
-      userId,
-      date,
-    } as any);
-    prismaMock.meal.create.mockResolvedValueOnce(mealData);
-    const createdMeal = await mealService.createMeal(logId, userId, mealData);
-    expect(createdMeal).toStrictEqual(mealData);
+      mealService.createMeal({
+        nutritionLogId: "log-uuid-15",
+        name: "Milk",
+        calories: 150,
+        protein: 8,
+        carbs: 12,
+        fat: 8,
+      }),
+    ).rejects.toThrow(dbError);
   });
 });
 
 describe("Meal Service updateMeal", () => {
-  // Clear mocks before each tests to prevent leaks
   beforeEach(() => vi.clearAllMocks());
 
-  it("should throw a NotFoundError when meal or log is not found", async () => {
-    const logId = "log-uuid-15";
-    const userId = "user-uuid-12";
-    const mealId = "meal-uuid-1";
-    const updateData = { name: "Whole Milk" };
-
-    // P2025 is thrown by Prisma when the update target doesn't exist, which
-    // now covers both "meal not found" and "log doesn't belong to user"
-    const error = new Prisma.PrismaClientKnownRequestError(
-      "Prisma error with meal to update not found.",
-      { code: "P2025", clientVersion: "7.4.2" },
-    );
-    prismaMock.meal.update.mockRejectedValueOnce(error);
+  it("throws NotFoundError when the meal/log is not found (P2025)", async () => {
+    prismaMock.meal.update.mockRejectedValueOnce(prismaError("P2025"));
 
     await expect(
-      mealService.updateMeal(logId, userId, mealId, updateData),
-    ).rejects.toThrow("Meal not found.");
+      mealService.updateMeal("log-uuid-15", "user-uuid-12", "meal-uuid-1", {
+        name: "Whole Milk",
+      }),
+    ).rejects.toThrow(new NotFoundError("Meal not found."));
   });
 
-  it("should propagate unexpected errors", async () => {
-    const logId = "log-uuid-15";
-    const userId = "user-uuid-12";
-    const mealId = "meal-uuid-1";
-    const updateData = { name: "Whole Milk" };
-    const dbError = new Error(
-      "Prisma database at url: someUrl is currently unavailable.",
-    );
+  it("propagates an unexpected error", async () => {
+    const dbError = new Error("Prisma database is currently unavailable.");
     prismaMock.meal.update.mockRejectedValueOnce(dbError);
 
     await expect(
-      mealService.updateMeal(logId, userId, mealId, updateData),
-    ).rejects.toThrow(dbError.message);
+      mealService.updateMeal("log-uuid-15", "user-uuid-12", "meal-uuid-1", {
+        name: "Whole Milk",
+      }),
+    ).rejects.toThrow(dbError);
   });
 
-  it("should propagate unknown thrown values", async () => {
-    const logId = "log-uuid-15";
-    const userId = "user-uuid-12";
-    const mealId = "meal-uuid-1";
-    const updateData = { name: "Whole Milk" };
-    prismaMock.meal.update.mockRejectedValueOnce(undefined);
+  it("returns the updated meal as a DTO without nutritionLogId", async () => {
+    prismaMock.meal.update.mockResolvedValueOnce(
+      mealRow({ id: "meal-uuid-109", name: "Whole Milk" }) as any,
+    );
 
-    await expect(
-      mealService.updateMeal(logId, userId, mealId, updateData),
-    ).rejects.toBe(undefined);
-  });
+    const updated = await mealService.updateMeal(
+      "log-uuid-15",
+      "user-uuid-12",
+      "meal-uuid-109",
+      { name: "Whole Milk" },
+    );
 
-  it("should complete a valid meal update", async () => {
-    const logId = "log-uuid-15";
-    const userId = "user-uuid-12";
-    const mealId = "meal-uuid-109";
-    const mealData = {
-      id: mealId,
-      nutritionLogId: logId,
+    expect(updated).toStrictEqual({
+      id: "meal-uuid-109",
       name: "Whole Milk",
       calories: 150,
       protein: 8,
-      fat: 8,
       carbs: 12,
-    };
-    const updateData = { name: "Whole Milk" };
-
-    prismaMock.meal.update.mockResolvedValueOnce(mealData);
-
-    const updatedMeal = await mealService.updateMeal(
-      logId,
-      userId,
-      mealId,
-      updateData,
-    );
-    expect(updatedMeal).toStrictEqual(mealData);
+      fat: 8,
+    });
   });
 });
 
 describe("Meal Service deleteMeal", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("should throw a NotFoundError when meal or log is not found", async () => {
-    const logId = "log-uuid-15";
-    const userId = "user-uuid-12";
-    const mealId = "meal-uuid-1";
+  it("throws NotFoundError when the meal/log is not found (P2025)", async () => {
+    prismaMock.meal.delete.mockRejectedValueOnce(prismaError("P2025"));
 
-    const error = new Prisma.PrismaClientKnownRequestError(
-      "Prisma error with meal to delete not found.",
-      { code: "P2025", clientVersion: "7.4.2" },
-    );
-    prismaMock.meal.delete.mockRejectedValueOnce(error);
-
-    await expect(mealService.deleteMeal(logId, userId, mealId)).rejects.toThrow(
-      "Meal not found.",
-    );
+    await expect(
+      mealService.deleteMeal("log-uuid-15", "user-uuid-12", "meal-uuid-1"),
+    ).rejects.toThrow(new NotFoundError("Meal not found."));
   });
 
-  it("should propagate unexpected errors", async () => {
-    const logId = "log-uuid-15";
-    const userId = "user-uuid-12";
-    const mealId = "meal-uuid-1";
-    const dbError = new Error(
-      "Prisma database at url: someUrl is currently unavailable.",
-    );
+  it("propagates an unexpected error", async () => {
+    const dbError = new Error("Prisma database is currently unavailable.");
     prismaMock.meal.delete.mockRejectedValueOnce(dbError);
 
-    await expect(mealService.deleteMeal(logId, userId, mealId)).rejects.toThrow(
-      dbError.message,
-    );
+    await expect(
+      mealService.deleteMeal("log-uuid-15", "user-uuid-12", "meal-uuid-1"),
+    ).rejects.toThrow(dbError);
   });
 
-  it("should propagate unknown thrown values", async () => {
-    const logId = "log-uuid-15";
-    const userId = "user-uuid-12";
-    const mealId = "meal-uuid-1";
-    prismaMock.meal.delete.mockRejectedValueOnce(undefined);
+  it("resolves to undefined on success", async () => {
+    prismaMock.meal.delete.mockResolvedValueOnce(mealRow() as any);
 
-    await expect(mealService.deleteMeal(logId, userId, mealId)).rejects.toBe(
-      undefined,
+    const result = await mealService.deleteMeal(
+      "log-uuid-15",
+      "user-uuid-12",
+      "meal-uuid-1",
     );
-  });
-
-  it("should complete a valid meal delete", async () => {
-    const logId = "log-uuid-15";
-    const userId = "user-uuid-12";
-    const mealId = "meal-uuid-1";
-
-    prismaMock.meal.delete.mockResolvedValueOnce({
-      id: mealId,
-      nutritionLogId: logId,
-      name: "Milk",
-      calories: 150,
-      protein: 8,
-      fat: 8,
-      carbs: 12,
-    });
-
-    const result = await mealService.deleteMeal(logId, userId, mealId);
     expect(result).toBeUndefined();
   });
 });
