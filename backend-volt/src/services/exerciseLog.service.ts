@@ -1,9 +1,10 @@
 import { prisma } from "../db.js";
 import { Prisma } from "../generated/prisma/client.js";
 import { NotFoundError } from "../errors.js";
-import type {
-  CreateExerciseLogInput,
-  UpdateExerciseLogInput,
+import {
+  EXERCISE_LOG_DETAIL_INCLUDE,
+  type CreateExerciseLogInput,
+  type UpdateExerciseLogInput,
 } from "../types/exerciseLog.dto.js";
 import { EXERCISE_REF_SELECT } from "../prisma/selects.js";
 import { toExerciseLogDto } from "../mappers/exerciseLog.mapper.js";
@@ -13,10 +14,7 @@ async function getAllExerciseLogs(logId: string, userId: string) {
     where: { id: logId, userId },
     include: {
       exerciseLogs: {
-        include: {
-          exercise: { select: EXERCISE_REF_SELECT },
-          sets: { orderBy: { setNumber: "asc" } },
-        },
+        include: EXERCISE_LOG_DETAIL_INCLUDE,
       },
     },
   });
@@ -39,10 +37,7 @@ async function getExerciseLogById(
       workoutLogId: logId,
       workoutLog: { userId },
     },
-    include: {
-      exercise: { select: EXERCISE_REF_SELECT },
-      sets: { orderBy: { setNumber: "asc" } },
-    },
+    include: EXERCISE_LOG_DETAIL_INCLUDE,
   });
 
   if (!exerciseLog) {
@@ -74,10 +69,7 @@ async function createExerciseLog(
 
     const newLog = await tx.exerciseLog.create({
       data,
-      include: {
-        exercise: { select: EXERCISE_REF_SELECT },
-        sets: { orderBy: { setNumber: "asc" } },
-      },
+      include: EXERCISE_LOG_DETAIL_INCLUDE,
     });
     return toExerciseLogDto(newLog);
   });
@@ -97,10 +89,7 @@ async function updateExerciseLog(
         workoutLog: { userId },
       },
       data,
-      include: {
-        exercise: { select: EXERCISE_REF_SELECT },
-        sets: { orderBy: { setNumber: "asc" } },
-      },
+      include: EXERCISE_LOG_DETAIL_INCLUDE,
     });
     return toExerciseLogDto(updatedLog);
   } catch (error: unknown) {
