@@ -1,5 +1,5 @@
-// Integration tests: meal service against a real database
-// No mocks — prisma queries run against the test DB
+// Integration tests: meal service against a real database.
+// No mocks — prisma queries run against the test DB (TEST_DATABASE_URL).
 
 import { expect, describe, it, beforeAll, afterAll } from "vitest";
 import { prisma } from "../../../src/db.js";
@@ -7,19 +7,28 @@ import { Prisma } from "../../../src/generated/prisma/client.js";
 import * as mealService from "../../../src/services/meal.service.js";
 import { NotFoundError } from "../../../src/errors.js";
 
-// Unique clerkId so this test user doesn't collide with real users
 const TEST_CLERK_ID = "integration_test_meal_service_user";
 let testUserId: string;
 let logId: string;
 
+// A second user to prove cross-user isolation
+const OTHER_CLERK_ID = "integration_test_meal_service_other";
+let otherUserId: string;
+
 beforeAll(async () => {
-  // Upsert a test user — same pattern as userMiddleware
   const user = await prisma.user.upsert({
     where: { clerkId: TEST_CLERK_ID },
     update: {},
     create: { clerkId: TEST_CLERK_ID },
   });
   testUserId = user.id;
+
+  const other = await prisma.user.upsert({
+    where: { clerkId: OTHER_CLERK_ID },
+    update: {},
+    create: { clerkId: OTHER_CLERK_ID },
+  });
+  otherUserId = other.id;
 
   const log = await prisma.nutritionLog.create({
     data: { userId: testUserId, date: new Date("2026-04-01T00:00:00.000Z") },
@@ -28,131 +37,105 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  // Meals cascade-delete when the nutrition log is deleted,
-  // so we only need to remove logs then the user
+  // Meals cascade-delete with their nutrition log
   await prisma.nutritionLog.deleteMany({ where: { userId: testUserId } });
   await prisma.user.delete({ where: { id: testUserId } });
+  await prisma.user.delete({ where: { id: otherUserId } });
 });
 
-// getAllMeals
 describe("getAllMeals", () => {
-  // After all these tests remove all the meals on the global log
   afterAll(async () => {
     await prisma.meal.deleteMany({ where: { nutritionLogId: logId } });
   });
 
-  it("throws NotFoundError when log not found", async () => {
+  it("throws NotFoundError when the log does not exist", async () => {
     await expect(
-      mealService.getAllMeals("non-existent-log-uuid", testUserId),
-    ).rejects.toThrow(
-      new NotFoundError(`Log with id: non-existent-log-uuid not found.`),
-    );
+      mealService.getAllMeals(crypto.randomUUID(), testUserId),
+    ).rejects.toThrow(NotFoundError);
   });
 
-  it("returns an empty list of meals for the log", async () => {
+  it("throws NotFoundError when the log belongs to a different user", async () => {
+    await expect(
+      mealService.getAllMeals(logId, otherUserId),
+    ).rejects.toThrow(NotFoundError);
+  });
+
+  it("returns an empty list for a log with no meals", async () => {
     const data = await mealService.getAllMeals(logId, testUserId);
-    const meals = data.meals;
-    expect(meals.length).toBe(0);
-    expect(meals).toStrictEqual([]);
+    expect(data).toStrictEqual({ meals: [] });
   });
 
-  it("returns multiple meals in the list for the log", async () => {
-    const firstMealData: Prisma.MealUncheckedCreateInput = {
-      nutritionLogId: logId,
+  it("returns the log's meals as DTOs without nutritionLogId", async () => {
+    await prisma.meal.createMany({
+      data: [
+        { nutritionLogId: logId, name: "Greek Yogurt", calories: 140, protein: 20, carbs: 9, fat: 3 },
+        { nutritionLogId: logId, name: "Protein Shake", calories: 230, protein: 42, carbs: 9, fat: 3.5 },
+      ],
+    });
+
+    const { meals } = await mealService.getAllMeals(logId, testUserId);
+    expect(meals).toHaveLength(2);
+
+    // Order is not guaranteed (no orderBy), so look up by name
+    const yogurt = meals.find((m) => m.name === "Greek Yogurt");
+    const shake = meals.find((m) => m.name === "Protein Shake");
+
+    expect(yogurt).toStrictEqual({
+      id: yogurt!.id,
       name: "Greek Yogurt",
       calories: 140,
       protein: 20,
       carbs: 9,
       fat: 3,
-    };
-
-    const secondMealData: Prisma.MealUncheckedCreateInput = {
-      nutritionLogId: logId,
-      name: "Protein Shake",
-      calories: 230,
-      protein: 42,
-      carbs: 9,
-      fat: 3.5,
-    };
-
-    const firstMeal = await mealService.createMeal(
-      logId,
-      testUserId,
-      firstMealData,
-    );
-    const secondMeal = await mealService.createMeal(
-      logId,
-      testUserId,
-      secondMealData,
-    );
-
-    const data = await mealService.getAllMeals(logId, testUserId);
-    const meals = data.meals;
-    expect(meals.length).toBe(2);
-    // Check the first meal
-    expect(meals[0]?.nutritionLogId).toBe(logId);
-    expect(meals[0]?.name).toBe("Greek Yogurt");
-    expect(meals[0]?.calories).toBe(140);
-    expect(meals[0]?.protein).toBe(20);
-    expect(meals[0]?.carbs).toBe(9);
-    expect(meals[0]?.fat).toBe(3);
-
-    // Check the second meal
-    expect(meals[1]?.nutritionLogId).toBe(logId);
-    expect(meals[1]?.name).toBe("Protein Shake");
-    expect(meals[1]?.calories).toBe(230);
-    expect(meals[1]?.protein).toBe(42);
-    expect(meals[1]?.carbs).toBe(9);
-    expect(meals[1]?.fat).toBe(3.5);
+    });
+    expect(shake).toMatchObject({ name: "Protein Shake", calories: 230, fat: 3.5 });
+    expect(yogurt).not.toHaveProperty("nutritionLogId");
   });
 });
 
 describe("getMealById", () => {
   let mealId: string;
+
   beforeAll(async () => {
-    const mealData: Prisma.MealUncheckedCreateInput = {
-      nutritionLogId: logId,
+    const meal = await prisma.meal.create({
+      data: { nutritionLogId: logId, name: "Breakfast", calories: 500, protein: 30, carbs: 40, fat: 20 },
+    });
+    mealId = meal.id;
+  });
+
+  afterAll(async () => {
+    await prisma.meal.deleteMany({ where: { nutritionLogId: logId } });
+  });
+
+  it("throws NotFoundError when the log does not exist", async () => {
+    await expect(
+      mealService.getMealById(crypto.randomUUID(), testUserId, mealId),
+    ).rejects.toThrow(new NotFoundError(`Meal with id: ${mealId} not found.`));
+  });
+
+  it("throws NotFoundError when the meal does not exist", async () => {
+    const missing = crypto.randomUUID();
+    await expect(
+      mealService.getMealById(logId, testUserId, missing),
+    ).rejects.toThrow(new NotFoundError(`Meal with id: ${missing} not found.`));
+  });
+
+  it("throws NotFoundError when the log belongs to a different user", async () => {
+    await expect(
+      mealService.getMealById(logId, otherUserId, mealId),
+    ).rejects.toThrow(NotFoundError);
+  });
+
+  it("returns the meal without nutritionLogId", async () => {
+    const meal = await mealService.getMealById(logId, testUserId, mealId);
+    expect(meal).toStrictEqual({
+      id: mealId,
       name: "Breakfast",
       calories: 500,
       protein: 30,
       carbs: 40,
       fat: 20,
-    };
-    const meal = await prisma.meal.create({ data: mealData });
-    mealId = meal.id;
-  });
-  afterAll(async () => {
-    await prisma.meal.deleteMany({ where: { nutritionLogId: logId } });
-  });
-
-  it("throws NotFoundError when log not found", async () => {
-    await expect(
-      mealService.getMealById("non-existent-log-uuid", testUserId, mealId),
-    ).rejects.toThrow(
-      new NotFoundError(`Meal with id: ${mealId} not found.`),
-    );
-  });
-
-  it("throws NotFoundError when meal not found", async () => {
-    await expect(
-      mealService.getMealById(
-        logId,
-        testUserId,
-        "non-existent-meal-uuid",
-      ),
-    ).rejects.toThrow(
-      new NotFoundError(`Meal with id: non-existent-meal-uuid not found.`),
-    );
-  });
-
-  it("returns the meal with the given id", async () => {
-    const meal = await mealService.getMealById(logId, testUserId, mealId);
-    expect(meal).toBeDefined();
-    expect(meal.name).toBe("Breakfast");
-    expect(meal.calories).toBe(500);
-    expect(meal.protein).toBe(30);
-    expect(meal.carbs).toBe(40);
-    expect(meal.fat).toBe(20);
+    });
   });
 });
 
@@ -161,40 +144,36 @@ describe("createMeal", () => {
     await prisma.meal.deleteMany({ where: { nutritionLogId: logId } });
   });
 
-  it("throws NotFoundError when log not found", async () => {
-    const mealData: Prisma.MealUncheckedCreateInput = {
+  it("creates a meal and persists it under the log", async () => {
+    const meal = await mealService.createMeal({
       nutritionLogId: logId,
       name: "Milk",
       calories: 150,
       protein: 8,
       carbs: 12,
       fat: 8,
-    };
+    });
 
-    await expect(
-      mealService.createMeal("non-existent-log-uuid", testUserId, mealData),
-    ).rejects.toThrow(
-      new NotFoundError("Log associated to this meal does not exist."),
-    );
+    expect(meal).toMatchObject({ name: "Milk", calories: 150, protein: 8, carbs: 12, fat: 8 });
+    expect(meal).not.toHaveProperty("nutritionLogId");
+
+    // Confirm it was actually written and linked to the log
+    const persisted = await prisma.meal.findUnique({ where: { id: meal.id } });
+    expect(persisted?.nutritionLogId).toBe(logId);
   });
 
-  it("returns a created meal", async () => {
-    const mealData: Prisma.MealUncheckedCreateInput = {
-      nutritionLogId: logId,
-      name: "Milk",
-      calories: 150,
-      protein: 8,
-      carbs: 12,
-      fat: 8,
-    };
-
-    const meal = await mealService.createMeal(logId, testUserId, mealData);
-    expect(meal).toBeDefined();
-    expect(meal.name).toBe("Milk");
-    expect(meal.calories).toBe(150);
-    expect(meal.protein).toBe(8);
-    expect(meal.carbs).toBe(12);
-    expect(meal.fat).toBe(8);
+  it("rejects with a foreign-key error when the log does not exist", async () => {
+    // createMeal does not pre-check ownership; the DB FK constraint enforces it
+    await expect(
+      mealService.createMeal({
+        nutritionLogId: crypto.randomUUID(),
+        name: "Orphan",
+        calories: 10,
+        protein: 1,
+        carbs: 1,
+        fat: 1,
+      }),
+    ).rejects.toThrow(Prisma.PrismaClientKnownRequestError);
   });
 });
 
@@ -203,75 +182,39 @@ describe("updateMeal", () => {
     await prisma.meal.deleteMany({ where: { nutritionLogId: logId } });
   });
 
-  it("throws NotFoundError when log not found", async () => {
-    const mealData: Prisma.MealUncheckedCreateInput = {
-      nutritionLogId: logId,
-      name: "Milk",
-      calories: 150,
-      protein: 8,
-      carbs: 12,
-      fat: 8,
-    };
-
-    // Fake logId and fake mealId
+  it("throws NotFoundError when the meal does not exist", async () => {
     await expect(
-      mealService.updateMeal(
-        "non-existent-log-uuid",
-        testUserId,
-        "non-existent-meal-uuid",
-        mealData,
-      ),
+      mealService.updateMeal(logId, testUserId, crypto.randomUUID(), { protein: 14 }),
     ).rejects.toThrow(new NotFoundError("Meal not found."));
   });
 
-  it("throws NotFoundError when meal to update is not found", async () => {
-    const mealData: Prisma.MealUncheckedCreateInput = {
-      nutritionLogId: logId,
-      name: "Milk",
-      calories: 150,
-      protein: 8,
-      carbs: 12,
-      fat: 8,
-    };
-
-    await mealService.createMeal(logId, testUserId, mealData);
+  it("throws NotFoundError when the meal belongs to a different user's log", async () => {
+    const meal = await prisma.meal.create({
+      data: { nutritionLogId: logId, name: "Milk", calories: 150, protein: 8, carbs: 12, fat: 8 },
+    });
 
     await expect(
-      mealService.updateMeal(logId, testUserId, "non-existent-meal-uuid", {
-        protein: 14,
-      }),
-    ).rejects.toThrow(new NotFoundError("Meal not found."));
+      mealService.updateMeal(logId, otherUserId, meal.id, { protein: 14 }),
+    ).rejects.toThrow(NotFoundError);
   });
 
-  it("returns an updated meal", async () => {
-    const mealData: Prisma.MealUncheckedCreateInput = {
-      nutritionLogId: logId,
+  it("applies a partial update and leaves other fields unchanged", async () => {
+    const meal = await prisma.meal.create({
+      data: { nutritionLogId: logId, name: "Milk", calories: 150, protein: 8, carbs: 12, fat: 8 },
+    });
+
+    const updated = await mealService.updateMeal(logId, testUserId, meal.id, {
+      protein: 14,
+    });
+
+    expect(updated).toStrictEqual({
+      id: meal.id,
       name: "Milk",
       calories: 150,
-      protein: 8,
+      protein: 14, // only this changed
       carbs: 12,
       fat: 8,
-    };
-
-    const meal = await mealService.createMeal(logId, testUserId, mealData);
-
-    const updatedMeal = await mealService.updateMeal(
-      logId,
-      testUserId,
-      meal.id,
-      {
-        protein: 14,
-      },
-    );
-
-    // Protein should be updated to the new value
-    expect(updatedMeal.protein).toBe(14);
-    // Confirm previous fields remained unchanged
-    expect(updatedMeal.nutritionLogId).toBe(logId);
-    expect(updatedMeal.name).toBe("Milk");
-    expect(updatedMeal.calories).toBe(150);
-    expect(updatedMeal.carbs).toBe(12);
-    expect(updatedMeal.fat).toBe(8);
+    });
   });
 });
 
@@ -280,53 +223,31 @@ describe("deleteMeal", () => {
     await prisma.meal.deleteMany({ where: { nutritionLogId: logId } });
   });
 
-  it("throws NotFoundError when log not found", async () => {
-    // fake logId and fake mealId
+  it("throws NotFoundError when the meal does not exist", async () => {
     await expect(
-      mealService.deleteMeal(
-        "non-existent-log-uuid",
-        testUserId,
-        "non-existent-meal-uuid",
-      ),
+      mealService.deleteMeal(logId, testUserId, crypto.randomUUID()),
     ).rejects.toThrow(new NotFoundError("Meal not found."));
   });
 
-  it("throws NotFoundError when meal to delete is not found", async () => {
-    const mealData: Prisma.MealUncheckedCreateInput = {
-      nutritionLogId: logId,
-      name: "Milk",
-      calories: 150,
-      protein: 8,
-      carbs: 12,
-      fat: 8,
-    };
-
-    await mealService.createMeal(logId, testUserId, mealData);
-
-    await expect(
-      mealService.deleteMeal(logId, testUserId, "non-existent-meal-uuid"),
-    ).rejects.toThrow(new NotFoundError("Meal not found."));
-  });
-
-  it("returns undefined and deletes the meal successfully", async () => {
-    const mealData: Prisma.MealUncheckedCreateInput = {
-      nutritionLogId: logId,
-      name: "Milk",
-      calories: 150,
-      protein: 8,
-      carbs: 12,
-      fat: 8,
-    };
-
-    const meal = await mealService.createMeal(logId, testUserId, mealData);
-    // Deleting a meal should return no content
-    const res = await mealService.deleteMeal(logId, testUserId, meal.id);
-    expect(res).toBeUndefined();
-
-    // Confirm that the deleted meal cannot be found
-    const deletedMeal = await prisma.meal.findUnique({
-      where: { id: meal.id, nutritionLogId: logId },
+  it("throws NotFoundError when the meal belongs to a different user's log", async () => {
+    const meal = await prisma.meal.create({
+      data: { nutritionLogId: logId, name: "Milk", calories: 150, protein: 8, carbs: 12, fat: 8 },
     });
-    expect(deletedMeal).toBeNull();
+
+    await expect(
+      mealService.deleteMeal(logId, otherUserId, meal.id),
+    ).rejects.toThrow(NotFoundError);
+  });
+
+  it("deletes the meal and returns undefined", async () => {
+    const meal = await prisma.meal.create({
+      data: { nutritionLogId: logId, name: "Milk", calories: 150, protein: 8, carbs: 12, fat: 8 },
+    });
+
+    const result = await mealService.deleteMeal(logId, testUserId, meal.id);
+    expect(result).toBeUndefined();
+
+    const gone = await prisma.meal.findUnique({ where: { id: meal.id } });
+    expect(gone).toBeNull();
   });
 });
