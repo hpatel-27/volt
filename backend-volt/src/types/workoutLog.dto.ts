@@ -16,11 +16,6 @@ export interface UpdateWorkoutLogInput {
 export const WORKOUT_LOG_SUMMARY_INCLUDE = {
   workoutDay: { select: { id: true, name: true } },
   _count: { select: { exerciseLogs: true } },
-  exerciseLogs: {
-    include: {
-      _count: { select: { sets: true } },
-    },
-  },
 } as const satisfies Prisma.WorkoutLogInclude;
 
 export type WorkoutLogWithSummary = Prisma.WorkoutLogGetPayload<{
@@ -52,6 +47,5 @@ export interface WorkoutLogSummary {
   id: string;
   date: string;
   exerciseCount: number;
-  setCount: number;
   workoutDay: { id: string; name: string } | null;
 }

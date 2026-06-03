@@ -12,10 +12,6 @@ function toWorkoutLogSummaryDto(log: WorkoutLogWithSummary): WorkoutLogSummary {
     date: log.date.toISOString().slice(0, 10),
     workoutDay: log.workoutDay,
     exerciseCount: log._count.exerciseLogs,
-    setCount: log.exerciseLogs.reduce(
-      (sum, exerciseLog) => sum + exerciseLog._count.sets,
-      0,
-    ),
   };
 }
 
