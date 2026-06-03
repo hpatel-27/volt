@@ -1,5 +1,5 @@
 import type { Prisma } from "../generated/prisma/client.js";
-import type { EXERCISE_REF_SELECT } from "../prisma/selects.js";
+import { EXERCISE_REF_SELECT } from "../prisma/selects.js";
 import type { SetLog } from "./setLog.dto.js";
 
 export interface CreateExerciseLogInput {
@@ -26,3 +26,8 @@ export interface ExerciseLog {
   notes?: string | null;
   sets: SetLog[];
 }
+
+export const EXERCISE_LOG_DETAIL_INCLUDE = {
+  exercise: { select: EXERCISE_REF_SELECT },
+  sets: { orderBy: { setNumber: "asc" } },
+} as const satisfies Prisma.ExerciseLogInclude;
