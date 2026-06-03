@@ -4,6 +4,10 @@ import type {
   CreateSetLogInput,
   UpdateSetLogInput,
 } from "../types/setLog.dto.js";
+import {
+  validatePositiveInt,
+  validateNonNegativeNumber,
+} from "../helpers/validators.js";
 
 async function getAllSetLogs(req: Request, res: Response) {
   const user = req.user!;
@@ -31,22 +35,8 @@ async function createSetLog(req: Request, res: Response) {
   const exerciseLogId = res.locals.exerciseLogId as string;
   const { reps, weight } = req.body;
 
-  if (
-    reps === undefined ||
-    typeof reps !== "number" ||
-    reps < 1 ||
-    !Number.isInteger(reps)
-  ) {
-    return res
-      .status(400)
-      .json({ error: "Reps is required and must be a positive integer." });
-  }
-
-  if (weight === undefined || typeof weight !== "number" || weight < 0) {
-    return res
-      .status(400)
-      .json({ error: "Weight is required and must be a non-negative number." });
-  }
+  validatePositiveInt("reps", reps);
+  validateNonNegativeNumber("weight", weight);
 
   const data: CreateSetLogInput = {
     exerciseLogId,
@@ -72,20 +62,12 @@ async function updateSetLog(req: Request, res: Response) {
   const data: UpdateSetLogInput = {};
 
   if (reps !== undefined) {
-    if (typeof reps !== "number" || reps < 1 || !Number.isInteger(reps)) {
-      return res
-        .status(400)
-        .json({ error: "Reps must be a positive integer." });
-    }
+    validatePositiveInt("reps", reps);
     data.reps = reps;
   }
 
   if (weight !== undefined) {
-    if (typeof weight !== "number" || weight < 0) {
-      return res
-        .status(400)
-        .json({ error: "Weight must be a non-negative number." });
-    }
+    validateNonNegativeNumber("weight", weight);
     data.weight = weight;
   }
 

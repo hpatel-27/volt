@@ -4,6 +4,7 @@ import type {
   CreateWorkoutDayExerciseInput,
   UpdateWorkoutDayExerciseInput,
 } from "../types/workoutDayExercise.dto.js";
+import { validatePositiveInt } from "../helpers/validators.js";
 
 async function getAllWorkoutDayExercises(req: Request, res: Response) {
   const user = req.user!;
@@ -66,54 +67,22 @@ async function createWorkoutDayExercise(req: Request, res: Response) {
 
   // Add optional fields after sanitization
   if (targetSets !== undefined) {
-    if (
-      typeof targetSets !== "number" ||
-      targetSets < 1 ||
-      !Number.isInteger(targetSets)
-    ) {
-      return res
-        .status(400)
-        .json({ error: "Target sets must be a positive integer." });
-    }
+    validatePositiveInt("targetSets", targetSets);
     data.targetSets = targetSets;
   }
 
   if (targetRepsMin !== undefined) {
-    if (
-      typeof targetRepsMin !== "number" ||
-      targetRepsMin < 1 ||
-      !Number.isInteger(targetRepsMin)
-    ) {
-      return res
-        .status(400)
-        .json({ error: "Minimum target reps must be a positive integer." });
-    }
+    validatePositiveInt("targetRepsMin", targetRepsMin);
     data.targetRepsMin = targetRepsMin;
   }
 
   if (targetRepsMax !== undefined) {
-    if (
-      typeof targetRepsMax !== "number" ||
-      targetRepsMax < 1 ||
-      !Number.isInteger(targetRepsMax)
-    ) {
-      return res
-        .status(400)
-        .json({ error: "Max target reps must be a positive integer." });
-    }
+    validatePositiveInt("targetRepsMax", targetRepsMax);
     data.targetRepsMax = targetRepsMax;
   }
 
   if (restSeconds !== undefined) {
-    if (
-      typeof restSeconds !== "number" ||
-      restSeconds < 1 ||
-      !Number.isInteger(restSeconds)
-    ) {
-      return res
-        .status(400)
-        .json({ error: "Rest seconds must be a positive integer." });
-    }
+    validatePositiveInt("restSeconds", restSeconds);
     data.restSeconds = restSeconds;
   }
 
@@ -151,54 +120,22 @@ async function updateWorkoutDayExercise(req: Request, res: Response) {
   }
 
   if (targetSets !== undefined) {
-    if (
-      typeof targetSets !== "number" ||
-      targetSets < 1 ||
-      !Number.isInteger(targetSets)
-    ) {
-      return res
-        .status(400)
-        .json({ error: "Target sets must be a positive integer." });
-    }
+    validatePositiveInt("targetSets", targetSets);
     data.targetSets = targetSets;
   }
 
   if (targetRepsMin !== undefined) {
-    if (
-      typeof targetRepsMin !== "number" ||
-      targetRepsMin < 1 ||
-      !Number.isInteger(targetRepsMin)
-    ) {
-      return res
-        .status(400)
-        .json({ error: "Minimum target reps must be a positive integer." });
-    }
+    validatePositiveInt("targetRepsMin", targetRepsMin);
     data.targetRepsMin = targetRepsMin;
   }
 
   if (targetRepsMax !== undefined) {
-    if (
-      typeof targetRepsMax !== "number" ||
-      targetRepsMax < 1 ||
-      !Number.isInteger(targetRepsMax)
-    ) {
-      return res
-        .status(400)
-        .json({ error: "Max target reps must be a positive integer." });
-    }
+    validatePositiveInt("targetRepsMax", targetRepsMax);
     data.targetRepsMax = targetRepsMax;
   }
 
   if (restSeconds !== undefined) {
-    if (
-      typeof restSeconds !== "number" ||
-      restSeconds < 1 ||
-      !Number.isInteger(restSeconds)
-    ) {
-      return res
-        .status(400)
-        .json({ error: "Rest seconds must be a positive integer." });
-    }
+    validatePositiveInt("restSeconds", restSeconds);
     data.restSeconds = restSeconds;
   }
 
