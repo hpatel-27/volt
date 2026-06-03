@@ -1,5 +1,5 @@
-// Mock the database
-// This call is hoisted so the db is mocked before the prisma import
+// Unit tests: nutrition service with a mocked database.
+// This call is hoisted so the db is mocked before the prisma import.
 vi.mock("../../../src/db.js");
 
 import type { DeepMockProxy } from "vitest-mock-extended";
@@ -9,234 +9,286 @@ import * as nutritionService from "../../../src/services/nutrition.service.js";
 import { Prisma } from "../../../src/generated/prisma/client.js";
 import { DuplicateEntryError, NotFoundError } from "../../../src/errors.js";
 
-// Mock prisma proxy, otherwise a type error exists when trying to call the mockResolved...
+// Cast to the deep mock proxy so the mockResolved*/mockRejected* helpers type-check.
 const prismaMock = prisma as unknown as DeepMockProxy<typeof prisma>;
 
+// Build a P-coded Prisma error so we can drive the service's catch branches.
+function prismaError(code: string) {
+  return new Prisma.PrismaClientKnownRequestError(`Prisma error ${code}`, {
+    code,
+    clientVersion: "7.4.2",
+  });
+}
+
 describe("Nutrition Service getAllNutritionLogs", () => {
-  beforeEach(() => vi.clearAllMocks());
-
-  test("should throw server error", async () => {
-    const userId = "user-uuid-16";
-    const page = 1;
-    const limit = 10;
-
-    prismaMock.$transaction.mockRejectedValueOnce(
-      new Error("Prisma database at url: someUrl is currently unavailable."),
-    );
-    await expect(
-      nutritionService.getAllNutritionLogs(userId, page, limit),
-    ).rejects.toThrow(
-      new Error("Prisma database at url: someUrl is currently unavailable."),
-    );
+  // getAllNutritionLogs wraps its queries in a CALLBACK-style transaction
+  // (prisma.$transaction(async (tx) => ...)). The default mock implementation
+  // simply runs the callback against the same prisma mock so each inner query
+  // (findMany / count / meal.groupBy) can be stubbed individually.
+  beforeEach(() => {
+    vi.clearAllMocks();
+    prismaMock.$transaction.mockImplementation((cb: any) => cb(prismaMock));
   });
 
-  test("should throw unknown error", async () => {
-    const userId = "user-uuid-16";
-    const page = 1;
-    const limit = 10;
+  test("propagates a server error thrown inside the transaction", async () => {
+    const dbError = new Error("Prisma database is currently unavailable.");
+    prismaMock.$transaction.mockRejectedValueOnce(dbError);
 
+    await expect(
+      nutritionService.getAllNutritionLogs("user-1", 1, 10),
+    ).rejects.toThrow(dbError);
+  });
+
+  test("propagates a non-Error thrown value", async () => {
     prismaMock.$transaction.mockRejectedValueOnce("some invalid non-error");
+
     await expect(
-      nutritionService.getAllNutritionLogs(userId, page, limit),
-    ).rejects.toThrow("some invalid non-error");
+      nutritionService.getAllNutritionLogs("user-1", 1, 10),
+    ).rejects.toBe("some invalid non-error");
   });
 
-  test("should return all nutrition logs for user when there are no logs", async () => {
-    const userId = "user-uuid-16";
-    const page = 1;
-    const limit = 10;
+  test("returns an empty page when the user has no logs", async () => {
+    prismaMock.nutritionLog.findMany.mockResolvedValueOnce([]);
+    prismaMock.nutritionLog.count.mockResolvedValueOnce(0);
+    // groupBy has heavily-overloaded typings, so cast to reach the mock helpers
+    (prismaMock.meal.groupBy as any).mockResolvedValueOnce([]);
 
-    prismaMock.$transaction.mockResolvedValueOnce([[], 0]);
+    const result = await nutritionService.getAllNutritionLogs("user-1", 1, 10);
 
-    const result = await nutritionService.getAllNutritionLogs(
-      userId,
-      page,
-      limit,
-    );
-
-    expect(result.nutritionLogs.length).toBe(0);
-    expect(result.nutritionLogs).toStrictEqual([]);
-    expect(result.total).toBe(0);
-    expect(result.page).toBe(page);
-    expect(result.limit).toBe(limit);
+    expect(result).toStrictEqual({
+      nutritionLogs: [],
+      total: 0,
+      page: 1,
+      limit: 10,
+    });
   });
 
-  test("should return all nutrition logs for user when there are multiple logs", async () => {
-    const userId = "user-uuid-16";
-    const page = 1;
-    const limit = 10;
+  test("maps logs to summaries with aggregated meal totals", async () => {
+    const userId = "user-16";
+    const logA = { id: "log-a", userId, date: new Date("2026-04-14T00:00:00.000Z") };
+    const logB = { id: "log-b", userId, date: new Date("2026-04-13T00:00:00.000Z") };
 
-    const firstLogId = "log-uuid-15";
-    const secondLogId = "log-uuid-18";
-    const firstDate = new Date("2026-04-13T14:48:00.000Z");
-    const secondDate = new Date("2026-04-14T14:48:00.000Z");
-
-    prismaMock.$transaction.mockResolvedValueOnce([
-      [
-        { id: firstLogId, userId, firstDate },
-        { id: secondLogId, userId, secondDate },
-      ],
-      2,
+    prismaMock.nutritionLog.findMany.mockResolvedValueOnce([logA, logB] as any);
+    prismaMock.nutritionLog.count.mockResolvedValueOnce(2);
+    // logA has two meals totalling these macros; logB has none.
+    (prismaMock.meal.groupBy as any).mockResolvedValueOnce([
+      {
+        nutritionLogId: "log-a",
+        _sum: { calories: 700, protein: 50, carbs: 60, fat: 20 },
+        _count: 2,
+      },
     ]);
 
-    const result = await nutritionService.getAllNutritionLogs(
-      userId,
-      page,
-      limit,
-    );
+    const result = await nutritionService.getAllNutritionLogs(userId, 1, 10);
 
-    expect(result.nutritionLogs.length).toBe(2);
-    expect(result.nutritionLogs).toStrictEqual([
-      { id: firstLogId, userId, firstDate },
-      { id: secondLogId, userId, secondDate },
-    ]);
     expect(result.total).toBe(2);
-    expect(result.page).toBe(page);
-    expect(result.limit).toBe(limit);
+    expect(result.page).toBe(1);
+    expect(result.limit).toBe(10);
+    expect(result.nutritionLogs).toStrictEqual([
+      {
+        id: "log-a",
+        date: "2026-04-14",
+        totals: { calories: 700, protein: 50, carbs: 60, fat: 20 },
+        mealCount: 2,
+      },
+      {
+        // logB has no meal group, so totals fall back to zero and mealCount to 0
+        id: "log-b",
+        date: "2026-04-13",
+        totals: { calories: 0, protein: 0, carbs: 0, fat: 0 },
+        mealCount: 0,
+      },
+    ]);
   });
 
-  test("should return logs - Skip 5 Nutrition Logs", async () => {
-    const userId = "user-uuid-16";
-    const page = 2;
-    const limit = 5;
+  test("passes the correct skip/take to findMany for the requested page", async () => {
+    prismaMock.nutritionLog.findMany.mockResolvedValueOnce([]);
+    prismaMock.nutritionLog.count.mockResolvedValueOnce(0);
+    (prismaMock.meal.groupBy as any).mockResolvedValueOnce([]);
 
-    const firstLogId = "log-uuid-15";
-    const secondLogId = "log-uuid-18";
-    const firstDate = new Date("2026-04-13T14:48:00.000Z");
-    const secondDate = new Date("2026-04-14T14:48:00.000Z");
+    await nutritionService.getAllNutritionLogs("user-16", 2, 5);
 
-    prismaMock.$transaction.mockResolvedValueOnce([
-      [
-        { id: firstLogId, userId, firstDate },
-        { id: secondLogId, userId, secondDate },
-      ],
-      2,
-    ]);
-
-    const result = await nutritionService.getAllNutritionLogs(
-      userId,
-      page,
-      limit,
-    );
-
-    // Validate the log data
-    expect(result.nutritionLogs.length).toBe(2);
-    expect(result.nutritionLogs).toStrictEqual([
-      { id: firstLogId, userId, firstDate },
-      { id: secondLogId, userId, secondDate },
-    ]);
-    expect(result.total).toBe(2);
-    expect(result.page).toBe(page);
-    expect(result.limit).toBe(limit);
-    // Check what the skip value resolved to with the page and limit math
+    // page 2, limit 5 => skip (2-1)*5 = 5
     expect(prismaMock.nutritionLog.findMany).toHaveBeenCalledWith({
-      where: { userId },
+      where: { userId: "user-16" },
       skip: 5,
-      take: limit,
+      take: 5,
       orderBy: { date: "desc" },
     });
+  });
+});
+
+describe("Nutrition Service getNutritionLogsByRange", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  test("returns mapped logs and their count for the window", async () => {
+    const from = new Date("2026-04-01T00:00:00.000Z");
+    const to = new Date("2026-04-30T00:00:00.000Z");
+    prismaMock.nutritionLog.findMany.mockResolvedValueOnce([
+      { id: "log-1", userId: "user-1", date: new Date("2026-04-10T00:00:00.000Z") },
+      { id: "log-2", userId: "user-1", date: new Date("2026-04-20T00:00:00.000Z") },
+    ] as any);
+
+    const result = await nutritionService.getNutritionLogsByRange(
+      "user-1",
+      from,
+      to,
+    );
+
+    expect(result.total).toBe(2);
+    expect(result.logs).toStrictEqual([
+      { id: "log-1", date: "2026-04-10" },
+      { id: "log-2", date: "2026-04-20" },
+    ]);
+    expect(prismaMock.nutritionLog.findMany).toHaveBeenCalledWith({
+      where: { userId: "user-1", date: { gte: from, lte: to } },
+      orderBy: { date: "asc" },
+    });
+  });
+
+  test("returns an empty result when nothing falls in range", async () => {
+    prismaMock.nutritionLog.findMany.mockResolvedValueOnce([]);
+
+    const result = await nutritionService.getNutritionLogsByRange(
+      "user-1",
+      new Date("2026-01-01"),
+      new Date("2026-01-02"),
+    );
+
+    expect(result).toStrictEqual({ logs: [], total: 0 });
   });
 });
 
 describe("Nutrition Service getNutritionLogById", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  test("should throw NotFoundError - Log not found", async () => {
-    const userId = "user-uuid-12";
-    const logId = "log-uuid-15";
-
+  test("throws NotFoundError when the log does not exist", async () => {
     // findUnique resolves to null by default, triggering the NotFoundError branch
     await expect(
-      nutritionService.getNutritionLogById(userId, logId),
+      nutritionService.getNutritionLogById("user-1", "log-1"),
     ).rejects.toThrow(new NotFoundError("Nutrition log not found."));
   });
 
-  test("should throw server error", async () => {
-    const userId = "user-uuid-12";
-    const logId = "log-uuid-15";
-
-    prismaMock.nutritionLog.findUnique.mockRejectedValueOnce(
-      new Error("Prisma database at url: someUrl is currently unavailable."),
-    );
+  test("propagates an unexpected error", async () => {
+    const dbError = new Error("Prisma database is currently unavailable.");
+    prismaMock.nutritionLog.findUnique.mockRejectedValueOnce(dbError);
 
     await expect(
-      nutritionService.getNutritionLogById(userId, logId),
-    ).rejects.toThrow(
-      new Error("Prisma database at url: someUrl is currently unavailable."),
+      nutritionService.getNutritionLogById("user-1", "log-1"),
+    ).rejects.toThrow(dbError);
+  });
+
+  test("returns the log with its meals mapped (no userId leaked)", async () => {
+    prismaMock.nutritionLog.findUnique.mockResolvedValueOnce({
+      id: "log-1",
+      userId: "user-1",
+      date: new Date("2026-04-13T00:00:00.000Z"),
+      meals: [
+        {
+          id: "meal-1",
+          nutritionLogId: "log-1",
+          name: "Oats",
+          calories: 300,
+          protein: 10,
+          carbs: 54,
+          fat: 5,
+        },
+      ],
+    } as any);
+
+    const result = await nutritionService.getNutritionLogById("user-1", "log-1");
+
+    expect(result).toStrictEqual({
+      id: "log-1",
+      date: "2026-04-13",
+      meals: [
+        {
+          id: "meal-1",
+          name: "Oats",
+          calories: 300,
+          protein: 10,
+          carbs: 54,
+          fat: 5,
+        },
+      ],
+    });
+  });
+});
+
+describe("Nutrition Service getTodayNutritionLog", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  test("returns null when no log exists for the given day", async () => {
+    // findUnique resolves to null by default
+    const result = await nutritionService.getTodayNutritionLog(
+      "user-1",
+      "2026-04-13",
     );
+    expect(result).toBeNull();
   });
 
-  test("should throw unknown error", async () => {
-    const userId = "user-uuid-12";
-    const logId = "log-uuid-15";
+  test("returns a summary with totals derived from the log's meals", async () => {
+    prismaMock.nutritionLog.findUnique.mockResolvedValueOnce({
+      id: "log-1",
+      userId: "user-1",
+      date: new Date("2026-04-13T00:00:00.000Z"),
+      meals: [
+        { id: "m1", nutritionLogId: "log-1", name: "A", calories: 200, protein: 10, carbs: 20, fat: 5 },
+        { id: "m2", nutritionLogId: "log-1", name: "B", calories: 300, protein: 25, carbs: 30, fat: 10 },
+      ],
+    } as any);
 
-    prismaMock.nutritionLog.findUnique.mockRejectedValueOnce(12);
+    const result = await nutritionService.getTodayNutritionLog(
+      "user-1",
+      "2026-04-13",
+    );
 
-    await expect(
-      nutritionService.getNutritionLogById(userId, logId),
-    ).rejects.toThrow(12);
-  });
-
-  test("should return nutrition log", async () => {
-    const userId = "user-uuid-12";
-    const logId = "log-uuid-15";
-    const date = new Date("2026-04-13T14:48:00.000Z");
-    const log = { id: logId, userId, date };
-
-    prismaMock.nutritionLog.findUnique.mockResolvedValueOnce(log);
-
-    const result = await nutritionService.getNutritionLogById(userId, logId);
-    expect(result).toStrictEqual(log);
+    expect(result).toStrictEqual({
+      id: "log-1",
+      date: "2026-04-13",
+      totals: { calories: 500, protein: 35, carbs: 50, fat: 15 },
+      mealCount: 2,
+    });
+    // Looks up by the (userId, date) composite key
+    expect(prismaMock.nutritionLog.findUnique).toHaveBeenCalledWith({
+      where: { userId_date: { userId: "user-1", date: new Date("2026-04-13") } },
+      include: { meals: true },
+    });
   });
 });
 
 describe("Nutrition Service getNutritionLogByDate", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  test("should throw NotFoundError - Log not found", async () => {
-    const userId = "user-uuid-12";
-    const date = "2026-04-13";
-
-    // findUnique resolves to null by default, triggering the NotFoundError branch
+  test("throws NotFoundError when no log exists for the date", async () => {
     await expect(
-      nutritionService.getNutritionLogByDate(userId, date),
+      nutritionService.getNutritionLogByDate("user-1", "2026-04-13"),
     ).rejects.toThrow(new NotFoundError("Nutrition log not found."));
   });
 
-  test("should throw server error", async () => {
-    const userId = "user-uuid-12";
-    const date = "2026-04-13";
-
-    prismaMock.nutritionLog.findUnique.mockRejectedValueOnce(
-      new Error("Prisma database at url: someUrl is currently unavailable."),
-    );
+  test("propagates an unexpected error", async () => {
+    const dbError = new Error("Prisma database is currently unavailable.");
+    prismaMock.nutritionLog.findUnique.mockRejectedValueOnce(dbError);
 
     await expect(
-      nutritionService.getNutritionLogByDate(userId, date),
-    ).rejects.toThrow(
-      new Error("Prisma database at url: someUrl is currently unavailable."),
-    );
+      nutritionService.getNutritionLogByDate("user-1", "2026-04-13"),
+    ).rejects.toThrow(dbError);
   });
 
-  test("should return nutrition log by date", async () => {
-    const userId = "user-uuid-12";
-    const logId = "log-uuid-15";
+  test("returns the mapped log and queries by composite key", async () => {
     const date = "2026-04-13";
-    const log = {
-      id: logId,
-      userId,
+    prismaMock.nutritionLog.findUnique.mockResolvedValueOnce({
+      id: "log-1",
+      userId: "user-1",
       date: new Date("2026-04-13T00:00:00.000Z"),
       meals: [],
-    };
+    } as any);
 
-    prismaMock.nutritionLog.findUnique.mockResolvedValueOnce(log);
+    const result = await nutritionService.getNutritionLogByDate("user-1", date);
 
-    const result = await nutritionService.getNutritionLogByDate(userId, date);
-    expect(result).toStrictEqual(log);
+    expect(result).toStrictEqual({ id: "log-1", date: "2026-04-13", meals: [] });
     expect(prismaMock.nutritionLog.findUnique).toHaveBeenCalledWith({
-      where: {
-        userId_date: { userId, date: new Date(date) },
-      },
+      where: { userId_date: { userId: "user-1", date: new Date(date) } },
       include: { meals: true },
     });
   });
@@ -245,211 +297,150 @@ describe("Nutrition Service getNutritionLogByDate", () => {
 describe("Nutrition Service createNutritionLog", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  test("should throw DuplicateEntryError - Duplicate date (P2002)", async () => {
-    const logData = {
-      userId: "user-uuid-12",
-      date: new Date("2026-04-13T14:48:00.000Z"),
-    };
+  test("throws DuplicateEntryError on a unique-constraint violation (P2002)", async () => {
+    prismaMock.nutritionLog.create.mockRejectedValueOnce(prismaError("P2002"));
 
-    const error = new Prisma.PrismaClientKnownRequestError(
-      "Unique constraint failed.",
-      { code: "P2002", clientVersion: "7.4.2" },
-    );
-
-    prismaMock.nutritionLog.create.mockRejectedValueOnce(error);
-
-    await expect(nutritionService.createNutritionLog(logData)).rejects.toThrow(
+    await expect(
+      nutritionService.createNutritionLog({
+        userId: "user-1",
+        date: "2026-04-13",
+      }),
+    ).rejects.toThrow(
       new DuplicateEntryError("A nutrition log at this date already exists."),
     );
   });
 
-  test("should throw error", async () => {
-    const logData = {
-      userId: "user-uuid-12",
-      date: new Date("2026-04-13T14:48:00.000Z"),
-    };
+  test("propagates an unexpected error", async () => {
+    const dbError = new Error("Prisma database is currently unavailable.");
+    prismaMock.nutritionLog.create.mockRejectedValueOnce(dbError);
 
-    prismaMock.nutritionLog.create.mockRejectedValueOnce(
-      new Error("Prisma database at url: someUrl is currently unavailable."),
-    );
-
-    await expect(nutritionService.createNutritionLog(logData)).rejects.toThrow(
-      new Error("Prisma database at url: someUrl is currently unavailable."),
-    );
+    await expect(
+      nutritionService.createNutritionLog({ userId: "user-1", date: "2026-04-13" }),
+    ).rejects.toThrow(dbError);
   });
 
-  test("should throw unknown error", async () => {
-    const logData = {
-      userId: "user-uuid-12",
-      date: new Date("2026-04-13T14:48:00.000Z"),
-    };
+  test("returns the created log mapped to a DTO", async () => {
+    prismaMock.nutritionLog.create.mockResolvedValueOnce({
+      id: "log-1",
+      userId: "user-1",
+      date: new Date("2026-04-13T00:00:00.000Z"),
+    } as any);
 
-    prismaMock.nutritionLog.create.mockRejectedValueOnce("undefined");
-    await expect(nutritionService.createNutritionLog(logData)).rejects.toThrow(
-      "undefined",
-    );
+    const result = await nutritionService.createNutritionLog({
+      userId: "user-1",
+      date: "2026-04-13",
+    });
+
+    expect(result).toStrictEqual({ id: "log-1", date: "2026-04-13" });
   });
+});
 
-  test("should create nutrition log", async () => {
-    const userId = "user-uuid-12";
-    const logId = "log-uuid-15";
-    const date = new Date("2026-04-13T14:48:00.000Z");
-    const logData = { userId, date };
-    const createdLog = { id: logId, userId, date };
+describe("Nutrition Service findOrCreateNutritionLogByDate", () => {
+  beforeEach(() => vi.clearAllMocks());
 
-    prismaMock.nutritionLog.create.mockResolvedValueOnce(createdLog);
+  test("upserts by composite key and returns the mapped log", async () => {
+    prismaMock.nutritionLog.upsert.mockResolvedValueOnce({
+      id: "log-1",
+      userId: "user-1",
+      date: new Date("2026-04-13T00:00:00.000Z"),
+    } as any);
 
-    const result = await nutritionService.createNutritionLog(logData);
-    expect(result).toStrictEqual(createdLog);
+    const result = await nutritionService.findOrCreateNutritionLogByDate(
+      "user-1",
+      "2026-04-13",
+    );
+
+    expect(result).toStrictEqual({ id: "log-1", date: "2026-04-13" });
+    expect(prismaMock.nutritionLog.upsert).toHaveBeenCalledWith({
+      where: { userId_date: { userId: "user-1", date: new Date("2026-04-13") } },
+      create: { userId: "user-1", date: new Date("2026-04-13") },
+      update: {},
+    });
   });
 });
 
 describe("Nutrition Service updateNutritionLog", () => {
-  // Note: unlike the meal service, updateNutritionLog does NOT do a separate
-  // findUnique check first — it goes straight to prisma.nutritionLog.update.
-  // The P2025 error from Prisma is what signals "log not found".
+  // updateNutritionLog goes straight to prisma.nutritionLog.update — the P2025
+  // error from Prisma is what signals "log not found"; P2002 signals a duplicate.
   beforeEach(() => vi.clearAllMocks());
 
-  test("should throw NotFoundError - Log not found (P2025)", async () => {
-    const logId = "log-uuid-15";
-    const userId = "user-uuid-12";
-    const logData = { date: new Date("2026-04-14T14:48:00.000Z") };
-
-    const error = new Prisma.PrismaClientKnownRequestError(
-      "Record to update not found.",
-      { code: "P2025", clientVersion: "7.4.2" },
-    );
-
-    prismaMock.nutritionLog.update.mockRejectedValueOnce(error);
+  test("throws NotFoundError when the log to update is missing (P2025)", async () => {
+    prismaMock.nutritionLog.update.mockRejectedValueOnce(prismaError("P2025"));
 
     await expect(
-      nutritionService.updateNutritionLog(logId, userId, logData),
+      nutritionService.updateNutritionLog("log-1", "user-1", {
+        date: "2026-04-14",
+      }),
     ).rejects.toThrow(new NotFoundError("Nutrition log not found."));
   });
 
-  test("should throw DuplicateEntryError - Duplicate date (P2002)", async () => {
-    const logId = "log-uuid-15";
-    const userId = "user-uuid-12";
-    const logData = { date: new Date("2026-04-14T14:48:00.000Z") };
-
-    const error = new Prisma.PrismaClientKnownRequestError(
-      "Unique constraint failed.",
-      { code: "P2002", clientVersion: "7.4.2" },
-    );
-
-    prismaMock.nutritionLog.update.mockRejectedValueOnce(error);
+  test("throws DuplicateEntryError when the new date collides (P2002)", async () => {
+    prismaMock.nutritionLog.update.mockRejectedValueOnce(prismaError("P2002"));
 
     await expect(
-      nutritionService.updateNutritionLog(logId, userId, logData),
+      nutritionService.updateNutritionLog("log-1", "user-1", {
+        date: "2026-04-14",
+      }),
     ).rejects.toThrow(
       new DuplicateEntryError("Nutrition log with this date already exists."),
     );
   });
 
-  test("should throw error", async () => {
-    const logId = "log-uuid-15";
-    const userId = "user-uuid-12";
-    const logData = { date: new Date("2026-04-14T14:48:00.000Z") };
-
-    prismaMock.nutritionLog.update.mockRejectedValueOnce(
-      new Error("Prisma database at url: someUrl is currently unavailable."),
-    );
+  test("propagates an unexpected error", async () => {
+    const dbError = new Error("Prisma database is currently unavailable.");
+    prismaMock.nutritionLog.update.mockRejectedValueOnce(dbError);
 
     await expect(
-      nutritionService.updateNutritionLog(logId, userId, logData),
-    ).rejects.toThrow(
-      new Error("Prisma database at url: someUrl is currently unavailable."),
-    );
+      nutritionService.updateNutritionLog("log-1", "user-1", { date: "2026-04-14" }),
+    ).rejects.toThrow(dbError);
   });
 
-  test("should throw unknown error", async () => {
-    const logId = "log-uuid-15";
-    const userId = "user-uuid-12";
-    const logData = { date: new Date("2026-04-14T14:48:00.000Z") };
+  test("returns the updated log mapped with its meals", async () => {
+    prismaMock.nutritionLog.update.mockResolvedValueOnce({
+      id: "log-1",
+      userId: "user-1",
+      date: new Date("2026-04-14T00:00:00.000Z"),
+      meals: [],
+    } as any);
 
-    prismaMock.nutritionLog.update.mockRejectedValueOnce(false);
+    const result = await nutritionService.updateNutritionLog("log-1", "user-1", {
+      date: "2026-04-14",
+    });
 
-    await expect(
-      nutritionService.updateNutritionLog(logId, userId, logData),
-    ).rejects.toThrow(false);
-  });
-
-  test("should update nutrition log", async () => {
-    const logId = "log-uuid-15";
-    const userId = "user-uuid-12";
-    const newDate = new Date("2026-04-14T14:48:00.000Z");
-    const logData = { date: newDate };
-    const updatedLog = { id: logId, userId, date: newDate };
-
-    prismaMock.nutritionLog.update.mockResolvedValueOnce(updatedLog);
-
-    const result = await nutritionService.updateNutritionLog(
-      logId,
-      userId,
-      logData,
-    );
-    expect(result).toStrictEqual(updatedLog);
+    expect(result).toStrictEqual({ id: "log-1", date: "2026-04-14", meals: [] });
   });
 });
 
 describe("Nutrition Service deleteNutritionLog", () => {
-  // Like updateNutritionLog, deleteNutritionLog goes straight to prisma.nutritionLog.delete —
-  // P2025 is the only "not found" signal, there is no prior findUnique check.
+  // deleteNutritionLog goes straight to prisma.nutritionLog.delete — P2025 is the
+  // only "not found" signal, there is no prior findUnique check.
   beforeEach(() => vi.clearAllMocks());
 
-  test("should throw NotFoundError (P2025)", async () => {
-    const logId = "log-uuid-15";
-    const userId = "user-uuid-12";
-
-    const error = new Prisma.PrismaClientKnownRequestError(
-      "Record to delete not found.",
-      { code: "P2025", clientVersion: "7.4.2" },
-    );
-
-    prismaMock.nutritionLog.delete.mockRejectedValueOnce(error);
+  test("throws NotFoundError when the log does not exist (P2025)", async () => {
+    prismaMock.nutritionLog.delete.mockRejectedValueOnce(prismaError("P2025"));
 
     await expect(
-      nutritionService.deleteNutritionLog(logId, userId),
+      nutritionService.deleteNutritionLog("log-1", "user-1"),
     ).rejects.toThrow(new NotFoundError("Nutrition log not found."));
   });
 
-  test("should throw error", async () => {
-    const logId = "log-uuid-15";
-    const userId = "user-uuid-12";
-
-    prismaMock.nutritionLog.delete.mockRejectedValueOnce(
-      new Error("Prisma database at url: someUrl is currently unavailable."),
-    );
+  test("propagates an unexpected error", async () => {
+    const dbError = new Error("Prisma database is currently unavailable.");
+    prismaMock.nutritionLog.delete.mockRejectedValueOnce(dbError);
 
     await expect(
-      nutritionService.deleteNutritionLog(logId, userId),
-    ).rejects.toThrow(
-      new Error("Prisma database at url: someUrl is currently unavailable."),
-    );
+      nutritionService.deleteNutritionLog("log-1", "user-1"),
+    ).rejects.toThrow(dbError);
   });
 
-  test("should throw unknown error", async () => {
-    const logId = "log-uuid-15";
-    const userId = "user-uuid-12";
-
-    prismaMock.nutritionLog.delete.mockRejectedValueOnce("undefined");
-
-    await expect(
-      nutritionService.deleteNutritionLog(logId, userId),
-    ).rejects.toThrow("undefined");
-  });
-
-  test("should delete nutrition log", async () => {
-    const logId = "log-uuid-15";
-    const userId = "user-uuid-12";
-
+  test("resolves to undefined on success", async () => {
     prismaMock.nutritionLog.delete.mockResolvedValueOnce({
-      id: logId,
-      userId,
-      date: new Date("2026-04-13T14:48:00.000Z"),
-    });
+      id: "log-1",
+      userId: "user-1",
+      date: new Date("2026-04-13T00:00:00.000Z"),
+    } as any);
 
-    const result = await nutritionService.deleteNutritionLog(logId, userId);
+    const result = await nutritionService.deleteNutritionLog("log-1", "user-1");
     expect(result).toBeUndefined();
   });
 });
@@ -457,41 +448,29 @@ describe("Nutrition Service deleteNutritionLog", () => {
 describe("Nutrition Service deleteNutritionLogByDate", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  test("should throw NotFoundError (P2025)", async () => {
-    const userId = "user-uuid-12";
-    const date = "2026-04-15";
-
-    const error = new Prisma.PrismaClientKnownRequestError(
-      "Record to delete not found.",
-      { code: "P2025", clientVersion: "7.4.2" },
-    );
-
-    prismaMock.nutritionLog.delete.mockRejectedValueOnce(error);
+  test("throws NotFoundError when the log does not exist (P2025)", async () => {
+    prismaMock.nutritionLog.delete.mockRejectedValueOnce(prismaError("P2025"));
 
     await expect(
-      nutritionService.deleteNutritionLogByDate(userId, date),
+      nutritionService.deleteNutritionLogByDate("user-1", "2026-04-15"),
     ).rejects.toThrow(new NotFoundError("Nutrition log not found."));
   });
 
-  test("should delete nutrition log by date", async () => {
-    const userId = "user-uuid-12";
-    const date = "2026-04-15";
-
+  test("deletes by composite key and resolves to undefined", async () => {
     prismaMock.nutritionLog.delete.mockResolvedValueOnce({
-      id: "log-uuid-15",
-      userId,
+      id: "log-1",
+      userId: "user-1",
       date: new Date("2026-04-15T00:00:00.000Z"),
-    });
+    } as any);
 
     const result = await nutritionService.deleteNutritionLogByDate(
-      userId,
-      date,
+      "user-1",
+      "2026-04-15",
     );
+
     expect(result).toBeUndefined();
     expect(prismaMock.nutritionLog.delete).toHaveBeenCalledWith({
-      where: {
-        userId_date: { userId, date: new Date(date) },
-      },
+      where: { userId_date: { userId: "user-1", date: new Date("2026-04-15") } },
     });
   });
 });

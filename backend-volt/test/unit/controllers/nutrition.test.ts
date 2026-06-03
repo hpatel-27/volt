@@ -1,55 +1,89 @@
-// Mock the nutrition service
-// This call is hoisted so the service is mocked before the import
+// Unit tests: nutrition controller with the service layer mocked.
+// These calls are hoisted so the modules are mocked before import.
 vi.mock("../../../src/services/nutrition.service.js");
-// Mock the database
-// This call is hoisted so the db is mocked before anything else
 vi.mock("../../../src/db.js");
+
 import type { Request, Response } from "express";
 import { expect, it, describe, vi, beforeEach } from "vitest";
 import * as nutritionService from "../../../src/services/nutrition.service.js";
 import * as nutritionController from "../../../src/controllers/nutrition.controller.js";
-import { NotFoundError, DuplicateEntryError } from "../../../src/errors.js";
+import { NotFoundError, BadRequestError } from "../../../src/errors.js";
+
+// Minimal Response double: status/json/send all chain via mockReturnThis.
+function mockResponse(locals: Record<string, unknown> = {}) {
+  return {
+    locals,
+    status: vi.fn().mockReturnThis(),
+    json: vi.fn().mockReturnThis(),
+    send: vi.fn().mockReturnThis(),
+  } as unknown as Response;
+}
 
 describe("Nutrition Controller getAllNutritionLogs", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  // Bad Request paths
-  it("should return 200 and return 0 nutrition logs", async () => {
+  it("passes pagination through and returns the service payload", async () => {
     const mReq = {
-      user: { id: "user-uuid-1" },
+      user: { id: "user-1" },
       pagination: { page: 1, limit: 10 },
     } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
+    const mRes = mockResponse();
 
-    vi.mocked(nutritionService.getAllNutritionLogs).mockResolvedValueOnce({
-      nutritionLogs: [],
-      total: 0,
-      page: 1,
-      limit: 10,
-    } as any);
+    const payload = { nutritionLogs: [], total: 0, page: 1, limit: 10 };
+    vi.mocked(nutritionService.getAllNutritionLogs).mockResolvedValueOnce(
+      payload as any,
+    );
 
     await nutritionController.getAllNutritionLogs(mReq, mRes);
-    expect(mRes.json).toHaveBeenCalledWith({
-      nutritionLogs: [],
-      total: 0,
-      page: 1,
-      limit: 10,
-    });
+
+    expect(nutritionService.getAllNutritionLogs).toHaveBeenCalledWith(
+      "user-1",
+      1,
+      10,
+    );
+    expect(mRes.json).toHaveBeenCalledWith(payload);
   });
 
-  // Caught Error paths
-  it("should return 500 - service throws Error", async () => {
+  it("returns multiple summaries from the service", async () => {
     const mReq = {
-      user: { id: "user-uuid-16" },
+      user: { id: "user-1" },
+      pagination: { page: 1, limit: 10 },
+    } as unknown as Request;
+    const mRes = mockResponse();
+
+    const payload = {
+      nutritionLogs: [
+        {
+          id: "log-1",
+          date: "2026-04-11",
+          totals: { calories: 500, protein: 30, carbs: 50, fat: 15 },
+          mealCount: 2,
+        },
+        {
+          id: "log-2",
+          date: "2026-04-13",
+          totals: { calories: 0, protein: 0, carbs: 0, fat: 0 },
+          mealCount: 0,
+        },
+      ],
+      total: 2,
+      page: 1,
+      limit: 10,
+    };
+    vi.mocked(nutritionService.getAllNutritionLogs).mockResolvedValueOnce(
+      payload as any,
+    );
+
+    await nutritionController.getAllNutritionLogs(mReq, mRes);
+    expect(mRes.json).toHaveBeenCalledWith(payload);
+  });
+
+  it("propagates a service Error to the error middleware", async () => {
+    const mReq = {
+      user: { id: "user-1" },
       pagination: { page: 1, limit: 5 },
     } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
+    const mRes = mockResponse();
 
     vi.mocked(nutritionService.getAllNutritionLogs).mockRejectedValueOnce(
       new Error("Server error."),
@@ -57,18 +91,15 @@ describe("Nutrition Controller getAllNutritionLogs", () => {
 
     await expect(
       nutritionController.getAllNutritionLogs(mReq, mRes),
-    ).rejects.toThrow(Error);
+    ).rejects.toThrow("Server error.");
   });
 
-  it("should throw unknown error", async () => {
+  it("propagates a non-Error thrown value", async () => {
     const mReq = {
-      user: { id: "user-uuid-16" },
+      user: { id: "user-1" },
       pagination: { page: 1, limit: 10 },
     } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
+    const mRes = mockResponse();
 
     vi.mocked(nutritionService.getAllNutritionLogs).mockRejectedValueOnce(
       "someunknownvalue",
@@ -76,76 +107,158 @@ describe("Nutrition Controller getAllNutritionLogs", () => {
 
     await expect(
       nutritionController.getAllNutritionLogs(mReq, mRes),
-    ).rejects.toThrow("someunknownvalue");
+    ).rejects.toBe("someunknownvalue");
+  });
+});
+
+describe("Nutrition Controller getNutritionLogsByRange", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("passes the parsed from/to dates and returns the logs", async () => {
+    const fromDate = new Date("2026-04-01T00:00:00.000Z");
+    const toDate = new Date("2026-04-14T00:00:00.000Z");
+    const mReq = { user: { id: "user-1" } } as unknown as Request;
+    const mRes = mockResponse({ fromDate, toDate });
+
+    const payload = {
+      logs: [
+        { id: "log-1", date: "2026-04-02" },
+        { id: "log-2", date: "2026-04-10" },
+      ],
+      total: 2,
+    };
+    vi.mocked(nutritionService.getNutritionLogsByRange).mockResolvedValueOnce(
+      payload as any,
+    );
+
+    await nutritionController.getNutritionLogsByRange(mReq, mRes);
+
+    expect(nutritionService.getNutritionLogsByRange).toHaveBeenCalledWith(
+      "user-1",
+      fromDate,
+      toDate,
+    );
+    expect(mRes.json).toHaveBeenCalledWith(payload);
   });
 
-  it("should return 200 and return multiple nutrition logs", async () => {
-    const mReq = {
-      user: { id: "user-uuid-1" },
-      pagination: { page: 1, limit: 10 },
-    } as unknown as Request;
-    const mRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    const firstDate = new Date("2026-04-11T14:48:00.000Z");
-    const secondDate = new Date("2026-04-13T14:48:00.000Z");
-
-    vi.mocked(nutritionService.getAllNutritionLogs).mockResolvedValueOnce({
-      nutritionLogs: [
-        { id: "log-uuid-15", userId: "user-uuid-1", date: firstDate },
-        { id: "log-uuid-18", userId: "user-uuid-1", date: secondDate },
-      ],
-      total: 2,
-      page: 1,
-      limit: 10,
-    } as any);
-
-    await nutritionController.getAllNutritionLogs(mReq, mRes);
-    expect(mRes.json).toHaveBeenCalledWith({
-      nutritionLogs: [
-        { id: "log-uuid-15", userId: "user-uuid-1", date: firstDate },
-        { id: "log-uuid-18", userId: "user-uuid-1", date: secondDate },
-      ],
-      total: 2,
-      page: 1,
-      limit: 10,
+  it("propagates a service error", async () => {
+    const mReq = { user: { id: "user-1" } } as unknown as Request;
+    const mRes = mockResponse({
+      fromDate: new Date("2026-04-01"),
+      toDate: new Date("2026-04-14"),
     });
+
+    vi.mocked(nutritionService.getNutritionLogsByRange).mockRejectedValueOnce(
+      new Error("db down"),
+    );
+
+    await expect(
+      nutritionController.getNutritionLogsByRange(mReq, mRes),
+    ).rejects.toThrow("db down");
+  });
+});
+
+describe("Nutrition Controller getTodayNutritionLog", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("returns 400 when the date query param is missing", async () => {
+    const mReq = { user: { id: "user-1" }, query: {} } as unknown as Request;
+    const mRes = mockResponse();
+
+    await expect(
+      nutritionController.getTodayNutritionLog(mReq, mRes),
+    ).rejects.toThrow(BadRequestError);
+  });
+
+  it("returns 400 when the date query param is malformed", async () => {
+    const mReq = {
+      user: { id: "user-1" },
+      query: { date: "04-13-2026" },
+    } as unknown as Request;
+    const mRes = mockResponse();
+
+    await expect(
+      nutritionController.getTodayNutritionLog(mReq, mRes),
+    ).rejects.toThrow(BadRequestError);
+  });
+
+  it("returns null when nothing is logged for today", async () => {
+    const mReq = {
+      user: { id: "user-1" },
+      query: { date: "2026-04-13" },
+    } as unknown as Request;
+    const mRes = mockResponse();
+
+    vi.mocked(nutritionService.getTodayNutritionLog).mockResolvedValueOnce(null);
+
+    await nutritionController.getTodayNutritionLog(mReq, mRes);
+
+    expect(nutritionService.getTodayNutritionLog).toHaveBeenCalledWith(
+      "user-1",
+      "2026-04-13",
+    );
+    expect(mRes.json).toHaveBeenCalledWith(null);
+  });
+
+  it("returns today's summary when one exists", async () => {
+    const mReq = {
+      user: { id: "user-1" },
+      query: { date: "2026-04-13" },
+    } as unknown as Request;
+    const mRes = mockResponse();
+
+    const summary = {
+      id: "log-1",
+      date: "2026-04-13",
+      totals: { calories: 500, protein: 35, carbs: 50, fat: 15 },
+      mealCount: 2,
+    };
+    vi.mocked(nutritionService.getTodayNutritionLog).mockResolvedValueOnce(
+      summary as any,
+    );
+
+    await nutritionController.getTodayNutritionLog(mReq, mRes);
+    expect(mRes.json).toHaveBeenCalledWith(summary);
   });
 });
 
 describe("Nutrition Controller getNutritionLogByDate", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("should throw error", async () => {
-    const mReq = {
-      user: { id: "user-uuid-1" },
-    } as unknown as Request;
-    const mRes = {
-      locals: { date: "2026-04-15" },
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
+  it("returns the log for the resolved date", async () => {
+    const mReq = { user: { id: "user-1" } } as unknown as Request;
+    const mRes = mockResponse({ date: "2026-04-15" });
+
+    const log = { id: "log-5", date: "2026-04-15", meals: [] };
+    vi.mocked(nutritionService.getNutritionLogByDate).mockResolvedValueOnce(
+      log as any,
+    );
+
+    await nutritionController.getNutritionLogByDate(mReq, mRes);
+
+    expect(nutritionService.getNutritionLogByDate).toHaveBeenCalledWith(
+      "user-1",
+      "2026-04-15",
+    );
+    expect(mRes.json).toHaveBeenCalledWith(log);
+  });
+
+  it("propagates a NotFoundError from the service", async () => {
+    const mReq = { user: { id: "user-1" } } as unknown as Request;
+    const mRes = mockResponse({ date: "2026-04-15" });
 
     vi.mocked(nutritionService.getNutritionLogByDate).mockRejectedValueOnce(
-      new Error("Error fetching nutrition log from database."),
+      new NotFoundError("Nutrition log not found."),
     );
 
     await expect(
       nutritionController.getNutritionLogByDate(mReq, mRes),
-    ).rejects.toThrow(Error);
+    ).rejects.toThrow(NotFoundError);
   });
 
-  it("should throw unknown error", async () => {
-    const mReq = {
-      user: { id: "user-uuid-1" },
-    } as unknown as Request;
-    const mRes = {
-      locals: { date: "2026-04-15" },
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
+  it("propagates a non-Error thrown value", async () => {
+    const mReq = { user: { id: "user-1" } } as unknown as Request;
+    const mRes = mockResponse({ date: "2026-04-15" });
 
     vi.mocked(nutritionService.getNutritionLogByDate).mockRejectedValueOnce(
       "unknown",
@@ -153,45 +266,36 @@ describe("Nutrition Controller getNutritionLogByDate", () => {
 
     await expect(
       nutritionController.getNutritionLogByDate(mReq, mRes),
-    ).rejects.toThrow("unknown");
-  });
-
-  it("should return 200 - success", async () => {
-    const mReq = {
-      user: { id: "user-uuid-1" },
-    } as unknown as Request;
-    const mRes = {
-      locals: { date: "2026-04-15" },
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    const mockLog = {
-      id: "log-uuid-5",
-      userId: "user-uuid-1",
-      date: new Date("2026-04-15T00:00:00.000Z"),
-    };
-    vi.mocked(nutritionService.getNutritionLogByDate).mockResolvedValueOnce(
-      mockLog as any,
-    );
-
-    await nutritionController.getNutritionLogByDate(mReq, mRes);
-    expect(mRes.json).toHaveBeenCalledWith(mockLog);
+    ).rejects.toBe("unknown");
   });
 });
 
 describe("Nutrition Controller createNutritionLog", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("should throw error", async () => {
-    const mReq = {
-      user: { id: "user-uuid-1" },
-    } as unknown as Request;
-    const mRes = {
-      locals: { date: "2026-04-12T00:00:00.000Z" },
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
+  it("builds the input from userId + normalized date and returns 201", async () => {
+    // parseDate middleware normalizes the body date to a full ISO string in res.locals.date
+    const mReq = { user: { id: "user-1" } } as unknown as Request;
+    const mRes = mockResponse({ date: "2026-04-15T00:00:00.000Z" });
+
+    const created = { id: "log-7", date: "2026-04-15" };
+    vi.mocked(nutritionService.createNutritionLog).mockResolvedValueOnce(
+      created as any,
+    );
+
+    await nutritionController.createNutritionLog(mReq, mRes);
+
+    expect(nutritionService.createNutritionLog).toHaveBeenCalledWith({
+      userId: "user-1",
+      date: "2026-04-15T00:00:00.000Z",
+    });
+    expect(mRes.status).toHaveBeenCalledWith(201);
+    expect(mRes.json).toHaveBeenCalledWith(created);
+  });
+
+  it("propagates a service error", async () => {
+    const mReq = { user: { id: "user-1" } } as unknown as Request;
+    const mRes = mockResponse({ date: "2026-04-12T00:00:00.000Z" });
 
     vi.mocked(nutritionService.createNutritionLog).mockRejectedValueOnce(
       new Error("Error creating nutrition log in database."),
@@ -202,76 +306,28 @@ describe("Nutrition Controller createNutritionLog", () => {
     ).rejects.toThrow(Error);
   });
 
-  it("should throw unknown error", async () => {
-    const mReq = {
-      user: { id: "user-uuid-1" },
-    } as unknown as Request;
-    const mRes = {
-      locals: { date: "2026-04-20T00:00:00.000Z" },
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
+  it("propagates a non-Error thrown value", async () => {
+    const mReq = { user: { id: "user-1" } } as unknown as Request;
+    const mRes = mockResponse({ date: "2026-04-20T00:00:00.000Z" });
 
-    vi.mocked(nutritionService.createNutritionLog).mockRejectedValueOnce(
-      456345,
-    );
+    vi.mocked(nutritionService.createNutritionLog).mockRejectedValueOnce(456345);
 
     await expect(
       nutritionController.createNutritionLog(mReq, mRes),
-    ).rejects.toThrow(456345);
-  });
-
-  it("should return 201 - success, date is converted to ISO format before service call", async () => {
-    // The date middleware converts the raw date string to a full ISO-8601 timestamp.
-    // "2026-04-15" becomes "2026-04-15T00:00:00.000Z" — the service receives the
-    // normalized value, not the raw input.
-    const mReq = {
-      user: { id: "user-uuid-1" },
-    } as unknown as Request;
-    const mRes = {
-      locals: { date: "2026-04-15T00:00:00.000Z" },
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    const mockLog = {
-      id: "log-uuid-7",
-      userId: "user-uuid-1",
-      date: new Date("2026-04-15T00:00:00.000Z"),
-    };
-    vi.mocked(nutritionService.createNutritionLog).mockResolvedValueOnce(
-      mockLog as any,
-    );
-
-    await nutritionController.createNutritionLog(mReq, mRes);
-
-    expect(vi.mocked(nutritionService.createNutritionLog)).toHaveBeenCalledWith(
-      {
-        userId: "user-uuid-1",
-        date: "2026-04-15T00:00:00.000Z",
-      },
-    );
-    expect(mRes.status).toHaveBeenCalledWith(201);
-    expect(mRes.json).toHaveBeenCalledWith(mockLog);
+    ).rejects.toBe(456345);
   });
 });
 
 describe("Nutrition Controller updateNutritionLog", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  // Since date is the URL key, PATCH always returns 405
-  it("should return 405 - date cannot be changed via PATCH", async () => {
-    const mReq = {
-      user: { id: "user-uuid-1" },
-      body: {},
-    } as unknown as Request;
-    const mRes = {
-      locals: { date: "2026-04-16" },
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-    } as unknown as Response;
+  // date is the URL key, so PATCH always returns 405 without touching the service
+  it("returns 405 because the date cannot be changed via PATCH", async () => {
+    const mReq = { user: { id: "user-1" }, body: {} } as unknown as Request;
+    const mRes = mockResponse({ date: "2026-04-16" });
 
     await nutritionController.updateNutritionLog(mReq, mRes);
+
     expect(mRes.status).toHaveBeenCalledWith(405);
     expect(mRes.json).toHaveBeenCalledWith({
       error:
@@ -283,16 +339,27 @@ describe("Nutrition Controller updateNutritionLog", () => {
 describe("Nutrition Controller deleteNutritionLog", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("should throw error", async () => {
-    const mReq = {
-      user: { id: "user-uuid-1" },
-    } as unknown as Request;
-    const mRes = {
-      locals: { date: "2026-04-15" },
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-      send: vi.fn().mockReturnThis(),
-    } as unknown as Response;
+  it("deletes by date and returns 204", async () => {
+    const mReq = { user: { id: "user-1" } } as unknown as Request;
+    const mRes = mockResponse({ date: "2026-04-15" });
+
+    vi.mocked(nutritionService.deleteNutritionLogByDate).mockResolvedValueOnce(
+      undefined,
+    );
+
+    await nutritionController.deleteNutritionLog(mReq, mRes);
+
+    expect(nutritionService.deleteNutritionLogByDate).toHaveBeenCalledWith(
+      "user-1",
+      "2026-04-15",
+    );
+    expect(mRes.status).toHaveBeenCalledWith(204);
+    expect(mRes.send).toHaveBeenCalled();
+  });
+
+  it("propagates a NotFoundError from the service", async () => {
+    const mReq = { user: { id: "user-1" } } as unknown as Request;
+    const mRes = mockResponse({ date: "2026-04-15" });
 
     vi.mocked(nutritionService.deleteNutritionLogByDate).mockRejectedValueOnce(
       new NotFoundError("Nutrition log not found."),
@@ -303,16 +370,9 @@ describe("Nutrition Controller deleteNutritionLog", () => {
     ).rejects.toThrow(NotFoundError);
   });
 
-  it("should throw unknown error", async () => {
-    const mReq = {
-      user: { id: "user-uuid-1" },
-    } as unknown as Request;
-    const mRes = {
-      locals: { date: "2026-04-15" },
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-      send: vi.fn().mockReturnThis(),
-    } as unknown as Response;
+  it("propagates a non-Error thrown value", async () => {
+    const mReq = { user: { id: "user-1" } } as unknown as Request;
+    const mRes = mockResponse({ date: "2026-04-15" });
 
     vi.mocked(nutritionService.deleteNutritionLogByDate).mockRejectedValueOnce(
       "unknown",
@@ -320,26 +380,6 @@ describe("Nutrition Controller deleteNutritionLog", () => {
 
     await expect(
       nutritionController.deleteNutritionLog(mReq, mRes),
-    ).rejects.toThrow("unknown");
-  });
-
-  it("should return 204 - success", async () => {
-    const mReq = {
-      user: { id: "user-uuid-1" },
-    } as unknown as Request;
-    const mRes = {
-      locals: { date: "2026-04-15" },
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis(),
-      send: vi.fn().mockReturnThis(),
-    } as unknown as Response;
-
-    vi.mocked(nutritionService.deleteNutritionLogByDate).mockResolvedValueOnce(
-      undefined,
-    );
-
-    await nutritionController.deleteNutritionLog(mReq, mRes);
-    expect(mRes.status).toHaveBeenCalledWith(204);
-    expect(mRes.send).toHaveBeenCalled();
+    ).rejects.toBe("unknown");
   });
 });

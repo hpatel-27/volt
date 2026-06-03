@@ -1,7 +1,9 @@
-// This call is hoisted so the service is mocked before the import
+// Integration tests: nutrition controller via the real Express app + DB.
+// Clerk auth is stubbed so requests resolve to a known test user.
+// This call is hoisted so the module is mocked before the import.
 vi.mock("@clerk/express", () => {
   return {
-    clerkMiddleware: () => (req: any, res: Response, next: NextFunction) => {
+    clerkMiddleware: () => (req: any, _res: Response, next: NextFunction) => {
       req.auth = "integration_test_nutrition_controller_user";
       next();
     },
@@ -20,12 +22,11 @@ import { createApp } from "../../../src/app.js";
 
 const app = createApp({ skipRateLimit: true });
 
-// Unique clerkId so this test user doesn't collide with other test files running in parallel
+// Unique clerkId so this test user doesn't collide with other suites running in parallel
 const TEST_CLERK_ID = "integration_test_nutrition_controller_user";
 let testUserId: string;
 
 beforeAll(async () => {
-  // Upsert a test user — same pattern as userMiddleware
   const user = await prisma.user.upsert({
     where: { clerkId: TEST_CLERK_ID },
     update: {},
@@ -35,18 +36,16 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  // Meals cascade-delete when the nutrition log is deleted,
-  // so we only need to remove logs then the user
+  // Meals cascade-delete with their nutrition log, so removing logs then the user is enough
   await prisma.nutritionLog.deleteMany({ where: { userId: testUserId } });
   await prisma.user.delete({ where: { id: testUserId } });
 });
 
 describe("GET /api/v1/nutrition-logs", () => {
-  // Sending query parameters are always going to be strings when they are sent,
-  // so only when they are not provided can they be of another type (undefined)
+  // Query params arrive as strings; only omission yields a non-string (undefined).
 
-  // Page query param validation
-  it("returns 400 when missing page query parameter / not a string", async () => {
+  // Page param validation
+  it("returns 400 when page is missing", async () => {
     await request(app)
       .get("/api/v1/nutrition-logs")
       .query({})
@@ -56,167 +55,265 @@ describe("GET /api/v1/nutrition-logs", () => {
       .expect({ error: "Page and limit must be positive integers" });
   });
 
-  it("returns 400 when page not parsed to number", async () => {
+  it("returns 400 when page is not numeric", async () => {
     await request(app)
       .get("/api/v1/nutrition-logs")
       .query({ page: "notanumber", limit: "5" })
-      .set("Accept", "application/json")
-      .expect("Content-Type", /json/)
       .expect(400)
       .expect({ error: "Page and limit must be positive integers" });
   });
 
-  it("returns 400 when page not parsed to positive number", async () => {
+  it("returns 400 when page is negative", async () => {
     await request(app)
       .get("/api/v1/nutrition-logs")
       .query({ page: "-999", limit: "5" })
-      .set("Accept", "application/json")
-      .expect("Content-Type", /json/)
       .expect(400)
       .expect({ error: "Page and limit must be positive integers" });
   });
 
-  it("returns 400 when page not parsed to positive number (boundary)", async () => {
+  it("returns 400 when page is 0 (boundary)", async () => {
     await request(app)
       .get("/api/v1/nutrition-logs")
       .query({ page: "0", limit: "5" })
-      .set("Accept", "application/json")
-      .expect("Content-Type", /json/)
       .expect(400)
       .expect({ error: "Page and limit must be positive integers" });
   });
 
-  // Limit query param validation
-  it("returns 400 when missing limit query parameter / not a string", async () => {
+  // Limit param validation
+  it("returns 400 when limit is missing", async () => {
     await request(app)
       .get("/api/v1/nutrition-logs")
       .query({ page: "2" })
-      .set("Accept", "application/json")
-      .expect("Content-Type", /json/)
       .expect(400)
       .expect({ error: "Page and limit must be positive integers" });
   });
 
-  it("returns 400 when limit not parseable to number", async () => {
+  it("returns 400 when limit is not numeric", async () => {
     await request(app)
       .get("/api/v1/nutrition-logs")
       .query({ page: "2", limit: "fjklsdjf" })
-      .set("Accept", "application/json")
-      .expect("Content-Type", /json/)
       .expect(400)
       .expect({ error: "Page and limit must be positive integers" });
   });
 
-  it("returns 400 when limit < 1", async () => {
+  it("returns 400 when limit is negative", async () => {
     await request(app)
       .get("/api/v1/nutrition-logs")
       .query({ page: "2", limit: "-100" })
-      .set("Accept", "application/json")
-      .expect("Content-Type", /json/)
       .expect(400)
       .expect({ error: "Page and limit must be positive integers" });
   });
 
-  it("returns 400 when limit < 1 (boundary)", async () => {
+  it("returns 400 when limit is 0 (boundary)", async () => {
     await request(app)
       .get("/api/v1/nutrition-logs")
       .query({ page: "2", limit: "0" })
-      .set("Accept", "application/json")
-      .expect("Content-Type", /json/)
       .expect(400)
       .expect({ error: "Page and limit must be positive integers" });
   });
 
   // Success states
-
-  it("returns 200 with empty array", async () => {
+  it("returns 200 with an empty page shape", async () => {
     await request(app)
       .get("/api/v1/nutrition-logs")
       .query({ page: 1, limit: 10 })
-      .set("Accept", "application/json")
       .expect("Content-Type", /json/)
-      .expect(200);
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.page).toBe(1);
+        expect(res.body.limit).toBe(10);
+        expect(Array.isArray(res.body.nutritionLogs)).toBe(true);
+      });
   });
 
-  it("returns 200 with 2 logs for the user", async () => {
-    const dateOne = new Date("2026-04-15T00:00:00.000Z");
-    const dateTwo = new Date("2026-04-16T00:00:00.000Z");
-    const log1 = await prisma.nutritionLog.create({
-      data: { userId: testUserId, date: dateOne },
+  it("returns 200 with summaries (totals + mealCount) in descending date order", async () => {
+    const earlier = await prisma.nutritionLog.create({
+      data: { userId: testUserId, date: new Date("2026-04-15T00:00:00.000Z") },
     });
-    const log2 = await prisma.nutritionLog.create({
-      data: { userId: testUserId, date: dateTwo },
+    const later = await prisma.nutritionLog.create({
+      data: { userId: testUserId, date: new Date("2026-04-16T00:00:00.000Z") },
+    });
+    await prisma.meal.create({
+      data: { nutritionLogId: later.id, name: "Lunch", calories: 700, protein: 40, carbs: 80, fat: 20 },
     });
 
     await request(app)
       .get("/api/v1/nutrition-logs")
       .query({ page: 1, limit: 5 })
-      .set("Accept", "application/json")
-      .expect("Content-Type", /json/)
       .expect(200)
       .expect((res) => {
         expect(res.body.limit).toBe(5);
         expect(res.body.page).toBe(1);
         expect(res.body.total).toBeGreaterThanOrEqual(2);
 
-        // Check the two most-recent logs are present (descending order)
-        const ids = res.body.nutritionLogs.map((l: any) => l.id);
-        expect(ids).toContain(log2.id);
-        expect(ids).toContain(log1.id);
+        const byId = Object.fromEntries(
+          res.body.nutritionLogs.map((l: any) => [l.id, l]),
+        );
+        expect(byId[later.id].mealCount).toBe(1);
+        expect(byId[later.id].totals).toStrictEqual({
+          calories: 700,
+          protein: 40,
+          carbs: 80,
+          fat: 20,
+        });
+        expect(byId[earlier.id].mealCount).toBe(0);
+        // summaries never leak userId
+        expect(byId[later.id]).not.toHaveProperty("userId");
+      });
+
+    await prisma.nutritionLog.deleteMany({ where: { userId: testUserId } });
+  });
+});
+
+describe("GET /api/v1/nutrition-logs/range", () => {
+  afterAll(async () => {
+    await prisma.nutritionLog.deleteMany({ where: { userId: testUserId } });
+  });
+
+  it("returns 400 when from/to are missing", async () => {
+    await request(app)
+      .get("/api/v1/nutrition-logs/range")
+      .expect(400)
+      .expect({ error: "The FROM and TO dates must both be provided" });
+  });
+
+  it("returns 400 when the range exceeds the 14-day maximum", async () => {
+    await request(app)
+      .get("/api/v1/nutrition-logs/range")
+      .query({ from: "2026-01-01", to: "2026-02-01" })
+      .expect(400)
+      .expect({ error: "Date range is limited to a maximum of 14 days." });
+  });
+
+  it("returns 200 with only the logs inside the window (ascending)", async () => {
+    await prisma.nutritionLog.createMany({
+      data: [
+        { userId: testUserId, date: new Date("2026-03-01T00:00:00.000Z") },
+        { userId: testUserId, date: new Date("2026-03-05T00:00:00.000Z") },
+        { userId: testUserId, date: new Date("2026-03-20T00:00:00.000Z") },
+      ],
+    });
+
+    await request(app)
+      .get("/api/v1/nutrition-logs/range")
+      .query({ from: "2026-03-01", to: "2026-03-10" })
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.total).toBe(2);
+        expect(res.body.logs.map((l: any) => l.date)).toStrictEqual([
+          "2026-03-01",
+          "2026-03-05",
+        ]);
       });
   });
 });
 
-// Get NutritionLog by date
+describe("GET /api/v1/nutrition-logs/today", () => {
+  afterAll(async () => {
+    await prisma.nutritionLog.deleteMany({ where: { userId: testUserId } });
+  });
+
+  it("returns 400 when the date query param is malformed", async () => {
+    await request(app)
+      .get("/api/v1/nutrition-logs/today")
+      .query({ date: "04-13-2026" })
+      .expect(400)
+      .expect((res) => {
+        expect(res.body.error).toBe(
+          "date query param must be in YYYY-MM-DD format",
+        );
+      });
+  });
+
+  it("returns 200 with null when nothing is logged today", async () => {
+    await request(app)
+      .get("/api/v1/nutrition-logs/today")
+      .query({ date: "2099-12-31" })
+      .expect(200)
+      .expect((res) => {
+        expect(res.body ?? null).toBeNull();
+      });
+  });
+
+  it("returns 200 with the day's summary when a log exists", async () => {
+    const log = await prisma.nutritionLog.create({
+      data: { userId: testUserId, date: new Date("2026-07-07T00:00:00.000Z") },
+    });
+    await prisma.meal.create({
+      data: { nutritionLogId: log.id, name: "Snack", calories: 250, protein: 12, carbs: 20, fat: 10 },
+    });
+
+    await request(app)
+      .get("/api/v1/nutrition-logs/today")
+      .query({ date: "2026-07-07" })
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.id).toBe(log.id);
+        expect(res.body.date).toBe("2026-07-07");
+        expect(res.body.mealCount).toBe(1);
+        expect(res.body.totals).toStrictEqual({
+          calories: 250,
+          protein: 12,
+          carbs: 20,
+          fat: 10,
+        });
+      });
+  });
+});
 
 describe("GET /api/v1/nutrition-logs/:date", () => {
-  it("returns 400 when date is not in YYYY-MM-DD format", async () => {
+  afterAll(async () => {
+    await prisma.nutritionLog.deleteMany({ where: { userId: testUserId } });
+  });
+
+  it("returns 400 when the date param is not YYYY-MM-DD", async () => {
     await request(app)
       .get("/api/v1/nutrition-logs/notadate")
-      .set("Accept", "application/json")
-      .expect("Content-Type", /json/)
       .expect(400)
       .expect({ error: "date must be a date in YYYY-MM-DD format" });
   });
 
-  it("returns 404 when log not found for that date", async () => {
+  it("returns 404 when no log exists for that date", async () => {
     await request(app)
       .get("/api/v1/nutrition-logs/2099-12-31")
-      .set("Accept", "application/json")
-      .expect("Content-Type", /json/)
       .expect(404)
       .expect((res) => {
         expect(res.body.error).toBe("Nutrition log not found.");
       });
   });
 
-  it("returns 200 with the log", async () => {
+  it("returns 200 with the log and its meals (no userId)", async () => {
     const log = await prisma.nutritionLog.create({
       data: { userId: testUserId, date: new Date("2026-01-01T00:00:00.000Z") },
+    });
+    await prisma.meal.create({
+      data: { nutritionLogId: log.id, name: "Eggs", calories: 150, protein: 13, carbs: 1, fat: 10 },
     });
 
     await request(app)
       .get("/api/v1/nutrition-logs/2026-01-01")
-      .set("Accept", "application/json")
-      .expect("Content-Type", /json/)
       .expect(200)
       .expect((res) => {
         expect(res.body.id).toBe(log.id);
-        expect(res.body.userId).toBe(testUserId);
+        expect(res.body.date).toBe("2026-01-01");
+        expect(res.body).not.toHaveProperty("userId");
+        expect(res.body.meals).toHaveLength(1);
+        expect(res.body.meals[0].name).toBe("Eggs");
+        expect(res.body.meals[0]).not.toHaveProperty("nutritionLogId");
       });
   });
 });
 
-// Create NutritionLogs
-
 describe("POST /api/v1/nutrition-logs", () => {
-  it("returns 400 when missing date", async () => {
+  afterAll(async () => {
+    await prisma.nutritionLog.deleteMany({ where: { userId: testUserId } });
+  });
+
+  it("returns 400 when date is missing", async () => {
     await request(app)
       .post("/api/v1/nutrition-logs")
-      .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .send({})
-      .expect("Content-Type", /json/)
       .expect(400)
       .expect({ error: "Date must be a string in ISO 8601 format" });
   });
@@ -224,10 +321,8 @@ describe("POST /api/v1/nutrition-logs", () => {
   it("returns 400 when date is not a string", async () => {
     await request(app)
       .post("/api/v1/nutrition-logs")
-      .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .send({ date: 12345 })
-      .expect("Content-Type", /json/)
       .expect(400)
       .expect({ error: "Date must be a string in ISO 8601 format" });
   });
@@ -235,10 +330,8 @@ describe("POST /api/v1/nutrition-logs", () => {
   it("returns 400 when date is not valid ISO 8601", async () => {
     await request(app)
       .post("/api/v1/nutrition-logs")
-      .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .send({ date: "not-a-date" })
-      .expect("Content-Type", /json/)
       .expect(400)
       .expect({ error: "Date must be a string in ISO 8601 format" });
   });
@@ -251,54 +344,47 @@ describe("POST /api/v1/nutrition-logs", () => {
 
     await request(app)
       .post("/api/v1/nutrition-logs")
-      .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .send({ date })
-      .expect("Content-Type", /json/)
       .expect(409)
       .expect((res) => {
-        expect(res.body.error).toBe("A nutrition log at this date already exists.");
+        expect(res.body.error).toBe(
+          "A nutrition log at this date already exists.",
+        );
       });
   });
 
-  it("returns 201 with the created log", async () => {
+  it("returns 201 with the created log (id + date, no userId)", async () => {
     const date = "2026-01-15T00:00:00.000Z";
 
     await request(app)
       .post("/api/v1/nutrition-logs")
-      .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .send({ date })
-      .expect("Content-Type", /json/)
       .expect(201)
       .expect((res) => {
         expect(res.body.id).toBeDefined();
-        expect(res.body.userId).toBe(testUserId);
+        expect(res.body.date).toBe("2026-01-15");
+        expect(res.body).not.toHaveProperty("userId");
       });
   });
 });
 
-// PATCH /nutrition-logs/:date — always 405 since date is the URL key
-
 describe("PATCH /api/v1/nutrition-logs/:date", () => {
-  it("returns 400 when date param is not in YYYY-MM-DD format", async () => {
+  it("returns 400 when the date param is not YYYY-MM-DD", async () => {
     await request(app)
       .patch("/api/v1/nutrition-logs/notadate")
-      .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .send({})
-      .expect("Content-Type", /json/)
       .expect(400)
       .expect({ error: "date must be a date in YYYY-MM-DD format" });
   });
 
-  it("returns 405 when date param is valid (date cannot be changed)", async () => {
+  it("returns 405 because the date is the URL key and cannot be changed", async () => {
     await request(app)
       .patch("/api/v1/nutrition-logs/2026-02-01")
-      .set("Accept", "application/json")
       .set("Content-Type", "application/json")
       .send({})
-      .expect("Content-Type", /json/)
       .expect(405)
       .expect({
         error:
@@ -308,33 +394,38 @@ describe("PATCH /api/v1/nutrition-logs/:date", () => {
 });
 
 describe("DELETE /api/v1/nutrition-logs/:date", () => {
-  it("returns 400 when date is not in YYYY-MM-DD format", async () => {
+  afterAll(async () => {
+    await prisma.nutritionLog.deleteMany({ where: { userId: testUserId } });
+  });
+
+  it("returns 400 when the date param is not YYYY-MM-DD", async () => {
     await request(app)
       .delete("/api/v1/nutrition-logs/notadate")
-      .set("Accept", "application/json")
-      .expect("Content-Type", /json/)
       .expect(400)
       .expect({ error: "date must be a date in YYYY-MM-DD format" });
   });
 
-  it("returns 404 when log not found for that date", async () => {
+  it("returns 404 when no log exists for that date", async () => {
     await request(app)
       .delete("/api/v1/nutrition-logs/2099-12-31")
-      .set("Accept", "application/json")
-      .expect("Content-Type", /json/)
       .expect(404)
       .expect((res) => {
         expect(res.body.error).toBe("Nutrition log not found.");
       });
   });
 
-  it("returns 204 when log is deleted", async () => {
+  it("returns 204 and removes the log", async () => {
     await prisma.nutritionLog.create({
       data: { userId: testUserId, date: new Date("2026-02-25T00:00:00.000Z") },
     });
 
-    await request(app)
-      .delete("/api/v1/nutrition-logs/2026-02-25")
-      .expect(204);
+    await request(app).delete("/api/v1/nutrition-logs/2026-02-25").expect(204);
+
+    const gone = await prisma.nutritionLog.findUnique({
+      where: {
+        userId_date: { userId: testUserId, date: new Date("2026-02-25") },
+      },
+    });
+    expect(gone).toBeNull();
   });
 });
