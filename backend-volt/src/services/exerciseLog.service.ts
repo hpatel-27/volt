@@ -5,6 +5,8 @@ import type {
   CreateExerciseLogInput,
   UpdateExerciseLogInput,
 } from "../types/exerciseLog.dto.js";
+import { EXERCISE_REF_SELECT } from "../prisma/selects.js";
+import { toExerciseLogDto } from "../mappers/exerciseLog.mapper.js";
 
 async function getAllExerciseLogs(logId: string, userId: string) {
   const workoutLog = await prisma.workoutLog.findUnique({
@@ -12,7 +14,7 @@ async function getAllExerciseLogs(logId: string, userId: string) {
     include: {
       exerciseLogs: {
         include: {
-          exercise: true,
+          exercise: { select: EXERCISE_REF_SELECT },
           sets: { orderBy: { setNumber: "asc" } },
         },
       },
@@ -23,7 +25,7 @@ async function getAllExerciseLogs(logId: string, userId: string) {
     throw new NotFoundError("Workout log not found.");
   }
 
-  return { exerciseLogs: workoutLog.exerciseLogs };
+  return { exerciseLogs: workoutLog.exerciseLogs.map(toExerciseLogDto) };
 }
 
 async function getExerciseLogById(
@@ -38,7 +40,7 @@ async function getExerciseLogById(
       workoutLog: { userId },
     },
     include: {
-      exercise: true,
+      exercise: { select: EXERCISE_REF_SELECT },
       sets: { orderBy: { setNumber: "asc" } },
     },
   });
@@ -47,7 +49,7 @@ async function getExerciseLogById(
     throw new NotFoundError("Exercise log not found.");
   }
 
-  return exerciseLog;
+  return toExerciseLogDto(exerciseLog);
 }
 
 async function createExerciseLog(
@@ -70,10 +72,14 @@ async function createExerciseLog(
       throw new NotFoundError("Exercise not found.");
     }
 
-    return await tx.exerciseLog.create({
+    const newLog = await tx.exerciseLog.create({
       data,
-      include: { exercise: true },
+      include: {
+        exercise: { select: EXERCISE_REF_SELECT },
+        sets: { orderBy: { setNumber: "asc" } },
+      },
     });
+    return toExerciseLogDto(newLog);
   });
 }
 
@@ -84,7 +90,7 @@ async function updateExerciseLog(
   data: UpdateExerciseLogInput,
 ) {
   try {
-    const updated = await prisma.exerciseLog.update({
+    const updatedLog = await prisma.exerciseLog.update({
       where: {
         id: exerciseLogId,
         workoutLogId: logId,
@@ -92,11 +98,11 @@ async function updateExerciseLog(
       },
       data,
       include: {
-        exercise: true,
+        exercise: { select: EXERCISE_REF_SELECT },
         sets: { orderBy: { setNumber: "asc" } },
       },
     });
-    return updated;
+    return toExerciseLogDto(updatedLog);
   } catch (error: unknown) {
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&
