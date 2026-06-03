@@ -29,18 +29,7 @@ async function createSetLog(req: Request, res: Response) {
   const userId = user.id;
   const logId = res.locals.logId as string;
   const exerciseLogId = res.locals.exerciseLogId as string;
-  const { setNumber, reps, weight } = req.body;
-
-  if (
-    setNumber === undefined ||
-    typeof setNumber !== "number" ||
-    setNumber < 1 ||
-    !Number.isInteger(setNumber)
-  ) {
-    return res
-      .status(400)
-      .json({ error: "setNumber is required and must be a positive integer." });
-  }
+  const { reps, weight } = req.body;
 
   if (
     reps === undefined ||
@@ -61,7 +50,6 @@ async function createSetLog(req: Request, res: Response) {
 
   const data: CreateSetLogInput = {
     exerciseLogId,
-    setNumber,
     reps,
     weight,
   };
@@ -79,22 +67,9 @@ async function updateSetLog(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
   const setId = res.locals.setId as string;
-  const { setNumber, reps, weight } = req.body;
+  const { reps, weight } = req.body;
 
   const data: UpdateSetLogInput = {};
-
-  if (setNumber !== undefined) {
-    if (
-      typeof setNumber !== "number" ||
-      setNumber < 1 ||
-      !Number.isInteger(setNumber)
-    ) {
-      return res
-        .status(400)
-        .json({ error: "setNumber must be a positive integer." });
-    }
-    data.setNumber = setNumber;
-  }
 
   if (reps !== undefined) {
     if (typeof reps !== "number" || reps < 1 || !Number.isInteger(reps)) {
