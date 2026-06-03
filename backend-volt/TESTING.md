@@ -21,7 +21,7 @@ For each module, in order:
 4. Hand back, in the chat:
    - a **PR title**
    - a **PR description** (Summary / Changes / Testing sections)
-   - a **squash commit message + body** (ending with the `Co-Authored-By` trailer)
+   - a **squash commit message + body** 
 5. **Stop and wait** for the user to review/open the PR before starting the next
    module. Each module ships as its own PR and is squash-merged.
 
