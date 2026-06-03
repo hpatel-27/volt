@@ -60,7 +60,6 @@ async function createSetLog(
         workoutLogId: logId,
         workoutLog: { userId },
       },
-      include: { _count: { select: { sets: true } } },
     });
     if (!existingExerciseLog) {
       throw new NotFoundError("Exercise log not found.");
