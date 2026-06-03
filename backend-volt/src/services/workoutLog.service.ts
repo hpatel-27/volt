@@ -1,44 +1,49 @@
 import { prisma } from "../db.js";
 import { Prisma } from "../generated/prisma/client.js";
 import { NotFoundError } from "../errors.js";
-import type {
-  CreateWorkoutLogInput,
-  UpdateWorkoutLogInput,
+import {
+  WORKOUT_LOG_DETAIL_INCLUDE,
+  WORKOUT_LOG_SUMMARY_INCLUDE,
+  type CreateWorkoutLogInput,
+  type UpdateWorkoutLogInput,
 } from "../types/workoutLog.dto.js";
+import {
+  toWorkoutLogDetailDto,
+  toWorkoutLogSummaryDto,
+} from "../mappers/workoutLog.mapper.js";
 
 async function getAllWorkoutLogs(userId: string, page: number, limit: number) {
-  const [workoutLogs, total] = await prisma.$transaction([
-    prisma.workoutLog.findMany({
+  const { workoutLogs, total } = await prisma.$transaction(async (tx) => {
+    const workoutLogs = await tx.workoutLog.findMany({
       where: { userId },
       skip: (page - 1) * limit,
       take: limit,
       orderBy: { date: "desc" },
-      include: { workoutDay: true },
-    }),
-    prisma.workoutLog.count({ where: { userId } }),
-  ]);
-  return { workoutLogs, total, page, limit };
+      include: WORKOUT_LOG_SUMMARY_INCLUDE,
+    });
+    const total = await tx.workoutLog.count({ where: { userId } });
+
+    return { workoutLogs, total };
+  });
+  return {
+    workoutLogs: workoutLogs.map(toWorkoutLogSummaryDto),
+    total,
+    page,
+    limit,
+  };
 }
 
 async function getWorkoutLogById(userId: string, logId: string) {
   const workoutLog = await prisma.workoutLog.findUnique({
     where: { id: logId, userId },
-    include: {
-      workoutDay: true,
-      exerciseLogs: {
-        include: {
-          exercise: true,
-          sets: { orderBy: { setNumber: "asc" } },
-        },
-      },
-    },
+    include: WORKOUT_LOG_DETAIL_INCLUDE,
   });
 
   if (!workoutLog) {
     throw new NotFoundError("Workout log not found.");
   }
 
-  return workoutLog;
+  return toWorkoutLogDetailDto(workoutLog);
 }
 
 async function createWorkoutLog(userId: string, data: CreateWorkoutLogInput) {
@@ -55,17 +60,19 @@ async function createWorkoutLog(userId: string, data: CreateWorkoutLogInput) {
         throw new NotFoundError("Workout day not found.");
       }
 
-      return await tx.workoutLog.create({
+      const createdLog = await tx.workoutLog.create({
         data,
-        include: { workoutDay: true },
+        include: WORKOUT_LOG_DETAIL_INCLUDE,
       });
+      return toWorkoutLogDetailDto(createdLog);
     });
   }
 
-  return await prisma.workoutLog.create({
+  const createdWorkoutLog = await prisma.workoutLog.create({
     data,
-    include: { workoutDay: true },
+    include: WORKOUT_LOG_DETAIL_INCLUDE,
   });
+  return toWorkoutLogDetailDto(createdWorkoutLog);
 }
 
 async function updateWorkoutLog(
@@ -87,11 +94,12 @@ async function updateWorkoutLog(
       }
 
       try {
-        return await tx.workoutLog.update({
+        const updatedLog = await tx.workoutLog.update({
           where: { id: logId, userId },
           data,
-          include: { workoutDay: true },
+          include: WORKOUT_LOG_DETAIL_INCLUDE,
         });
+        return toWorkoutLogDetailDto(updatedLog);
       } catch (error: unknown) {
         if (
           error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -109,9 +117,9 @@ async function updateWorkoutLog(
     const updatedLog = await prisma.workoutLog.update({
       where: { id: logId, userId },
       data,
-      include: { workoutDay: true },
+      include: WORKOUT_LOG_DETAIL_INCLUDE,
     });
-    return updatedLog;
+    return toWorkoutLogDetailDto(updatedLog);
   } catch (error: unknown) {
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&
