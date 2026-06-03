@@ -6,7 +6,6 @@ import {
   type CreateExerciseLogInput,
   type UpdateExerciseLogInput,
 } from "../types/exerciseLog.dto.js";
-import { EXERCISE_REF_SELECT } from "../prisma/selects.js";
 import { toExerciseLogDto } from "../mappers/exerciseLog.mapper.js";
 
 async function getAllExerciseLogs(logId: string, userId: string) {
