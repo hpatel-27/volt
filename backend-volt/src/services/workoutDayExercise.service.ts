@@ -77,10 +77,14 @@ async function createWorkoutDayExercise(
     }
 
     // The new day for the plan will always be the newest/last in the order
-    const currentExerciseCount = existingDay._count.exercises;
-    data.order = currentExerciseCount + 1;
+    const lastExercise = await tx.workoutDayExercise.findFirst({
+      where: { workoutDayId: existingDay.id },
+      orderBy: { order: "desc" },
+      select: { order: true },
+    });
+    const orderNumber = (lastExercise?.order ?? 0) + 1;
     const dayExercise = await tx.workoutDayExercise.create({
-      data,
+      data: { ...data, order: orderNumber },
       include: { exercise: { select: EXERCISE_REF_SELECT } },
     });
 
