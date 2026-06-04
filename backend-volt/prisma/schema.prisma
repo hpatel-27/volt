@@ -96,6 +96,7 @@ model WorkoutDay {
   exercises   WorkoutDayExercise[]
   workoutLogs WorkoutLog[]
 
+  @@unique([workoutPlanId, order])
   @@map("workout_days")
 }
 
@@ -112,7 +113,7 @@ model WorkoutDayExercise {
 
   workoutDay    WorkoutDay @relation(fields: [workoutDayId], references: [id], onDelete: Cascade)
   exercise      Exercise   @relation(fields: [exerciseId], references: [id])
-
+  @@unique([workoutDayId, order])
   @@map("workout_day_exercises")
 }
 
