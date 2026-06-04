@@ -65,9 +65,15 @@ async function createWorkoutDay(
     }
 
     // The new day for the plan will always be the newest/last in the order
-    const days = existingPlan._count.workoutDays;
-    data.order = days + 1;
-    const day = await tx.workoutDay.create({ data });
+    const lastDay = await tx.workoutDay.findFirst({
+      where: { workoutPlanId: existingPlan.id },
+      orderBy: { order: "desc" },
+      select: { order: true },
+    });
+    const orderNumber = (lastDay?.order ?? 0) + 1;
+    const day = await tx.workoutDay.create({
+      data: { ...data, order: orderNumber },
+    });
 
     // Nested update to the Workout Plan with no data
     // This updates the updatedAt field on the plan
