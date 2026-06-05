@@ -15,7 +15,7 @@ const FULL_BASE = `${import.meta.env.VITE_API_BASE_URL}/workout-logs`;
 const FLAT_BASE = `${import.meta.env.VITE_API_BASE_URL}/sets`;
 
 export const setLogKeys = {
-  all: ["exerciseLog"] as const,
+  all: ["setLog"] as const,
   lists: () => [...setLogKeys.all, "list"] as const,
   list: (workoutLogId: string, exerciseLogId: string) =>
     [...setLogKeys.lists(), workoutLogId, exerciseLogId] as const,
@@ -54,13 +54,17 @@ export function useCreateSetLog() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (variables: CreateSetLogVariables) => {
+    mutationFn: async ({
+      workoutLogId,
+      exerciseLogId,
+      input,
+    }: CreateSetLogVariables) => {
       const data = await authedFetch<SetLog>(
-        `${FULL_BASE}/${variables.workoutLogId}/exercises/${variables.exerciseLogId}/sets`,
+        `${FULL_BASE}/${workoutLogId}/exercises/${exerciseLogId}/sets`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(variables),
+          body: JSON.stringify(input),
         },
       );
       if (!data)
