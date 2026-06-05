@@ -129,9 +129,9 @@ export function useDeleteExerciseLog() {
   return useMutation({
     mutationFn: async ({
       workoutLogId,
-      exerciseId,
+      exerciseLogId,
     }: DeleteExerciseLogVariables) => {
-      const url = `${BASE}/${workoutLogId}/exercises/${exerciseId}`;
+      const url = `${BASE}/${workoutLogId}/exercises/${exerciseLogId}`;
       await authedFetch(url, { method: "DELETE" });
     },
     // On success takes up to 3 parameters (data returned from mutationFn,
@@ -146,7 +146,7 @@ export function useDeleteExerciseLog() {
       queryClient.removeQueries({
         queryKey: exerciseLogKeys.detail(
           variables.workoutLogId,
-          variables.exerciseId,
+          variables.exerciseLogId,
         ),
       });
     },
