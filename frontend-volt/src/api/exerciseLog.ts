@@ -78,7 +78,9 @@ export function useCreateExerciseLog() {
       queryClient.invalidateQueries({
         queryKey: workoutLogKeys.detail(variables.workoutLogId),
       });
-      queryClient.invalidateQueries({ queryKey: exerciseLogKeys.lists() });
+      queryClient.invalidateQueries({
+        queryKey: exerciseLogKeys.list(variables.workoutLogId),
+      });
       queryClient.invalidateQueries({
         queryKey: exerciseLogKeys.detail(variables.workoutLogId, data.id),
       });
@@ -107,11 +109,12 @@ export function useUpdateExerciseLog() {
       return data;
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: workoutLogKeys.lists() });
       queryClient.invalidateQueries({
         queryKey: workoutLogKeys.detail(variables.workoutLogId),
       });
-      queryClient.invalidateQueries({ queryKey: exerciseLogKeys.lists() });
+      queryClient.invalidateQueries({
+        queryKey: exerciseLogKeys.list(variables.workoutLogId),
+      });
       queryClient.invalidateQueries({
         queryKey: exerciseLogKeys.detail(
           variables.workoutLogId,
@@ -142,7 +145,9 @@ export function useDeleteExerciseLog() {
       queryClient.invalidateQueries({
         queryKey: workoutLogKeys.detail(variables.workoutLogId),
       });
-      queryClient.invalidateQueries({ queryKey: exerciseLogKeys.lists() });
+      queryClient.invalidateQueries({
+        queryKey: exerciseLogKeys.list(variables.workoutLogId),
+      });
       queryClient.removeQueries({
         queryKey: exerciseLogKeys.detail(
           variables.workoutLogId,
