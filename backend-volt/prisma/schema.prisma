@@ -122,7 +122,8 @@ model WorkoutLog {
   id           String      @id @default(uuid())
   userId       String
   workoutDayId String?     // nullable — user may log an ad-hoc session
-  date         DateTime    @default(now())
+  date         DateTime    @default(now())   // user's calendar day, pinned to UTC midnight
+  createdAt    DateTime    @default(now())   // insertion order; tie-breaks multiple sessions in one day
 
   user         User        @relation(fields: [userId], references: [id])
   workoutDay   WorkoutDay? @relation(fields: [workoutDayId], references: [id], onDelete: SetNull)

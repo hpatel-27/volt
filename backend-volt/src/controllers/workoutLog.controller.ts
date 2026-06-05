@@ -1,9 +1,14 @@
 import type { Request, Response } from "express";
 import * as workoutLogService from "../services/workoutLog.service.js";
+import { BadRequestError } from "../errors.js";
 import type {
   CreateWorkoutLogInput,
   UpdateWorkoutLogInput,
 } from "../types/workoutLog.dto.js";
+
+// YYYY-MM-DD format check — client sends its local "today" so we respect the
+// user's timezone rather than deriving the date server-side.
+const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
 async function getAllWorkoutLogs(req: Request, res: Response) {
   const user = req.user!;
@@ -21,6 +26,22 @@ async function getWorkoutLogById(req: Request, res: Response) {
 
   const log = await workoutLogService.getWorkoutLogById(userId, logId);
   res.json(log);
+}
+
+// Return today's workout sessions as summaries (empty array if none yet). A day can
+// hold multiple sessions, so this is a list. The client passes its local date via
+// ?date=YYYY-MM-DD.
+async function getTodayWorkoutLogs(req: Request, res: Response) {
+  const user = req.user!;
+  const userId = user.id;
+  const { date } = req.query;
+
+  if (typeof date !== "string" || !DATE_REGEX.test(date)) {
+    throw new BadRequestError("date query param must be in YYYY-MM-DD format");
+  }
+
+  const summaries = await workoutLogService.getTodayWorkoutLogs(userId, date);
+  res.json(summaries);
 }
 
 async function createWorkoutLog(req: Request, res: Response) {
@@ -94,6 +115,7 @@ async function deleteWorkoutLog(req: Request, res: Response) {
 
 export {
   getAllWorkoutLogs,
+  getTodayWorkoutLogs,
   getWorkoutLogById,
   createWorkoutLog,
   updateWorkoutLog,

@@ -22,7 +22,7 @@ export const workoutLogKeys = {
   today: () => [...workoutLogKeys.all, "today"] as const,
 };
 
-export function useWorkoutLogToday(date: string) {
+export function useWorkoutLogsToday(date: string) {
   const authedFetch = useFetch();
   return useQuery({
     queryKey: workoutLogKeys.today(),
@@ -30,8 +30,10 @@ export function useWorkoutLogToday(date: string) {
       // Today route passes date, since we can compute the local date for the user,
       // and send that to the server, since they might not be in the same timezone
       const url = `${BASE}/today?date=${encodeURIComponent(date)}`;
-      // Server returns the summary or `null` (raw JSON null) when no log exists.
-      return await authedFetch<WorkoutLogSummary | null>(url);
+      // A day can hold multiple sessions, so the server returns an array of
+      // summaries (empty when nothing has been logged today).
+      const data = await authedFetch<WorkoutLogSummary[]>(url);
+      return data ?? [];
     },
   });
 }
