@@ -104,7 +104,7 @@ export function useUpdateWorkoutLog() {
   return useMutation({
     mutationFn: async ({ id, input }: UpdateWorkoutLogVariables) => {
       const url = `${BASE}/${id}`;
-      const data = await authedFetch<WorkoutLogSummary>(url, {
+      const data = await authedFetch<WorkoutLog>(url, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(input),
@@ -115,6 +115,7 @@ export function useUpdateWorkoutLog() {
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: workoutLogKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: workoutLogKeys.today() });
       queryClient.invalidateQueries({
         queryKey: workoutLogKeys.detail(variables.id),
       });
