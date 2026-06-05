@@ -29,9 +29,9 @@ export function useSetLogs(workoutLogId: string, exerciseLogId: string) {
     queryKey: setLogKeys.list(workoutLogId, exerciseLogId),
     queryFn: async () => {
       const url = `${FULL_BASE}/${workoutLogId}/exercises/${exerciseLogId}/sets`;
-      const data = await authedFetch<SetLog[]>(url);
+      const data = await authedFetch<{ sets: SetLog[] }>(url);
       if (!data) throw new Error("Expected set logs list, got empty response");
-      return data;
+      return data.sets;
     },
   });
 }

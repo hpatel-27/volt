@@ -26,10 +26,10 @@ export function useExerciseLogs(workoutLogId: string) {
     queryKey: exerciseLogKeys.list(workoutLogId),
     queryFn: async () => {
       const url = `${BASE}/${workoutLogId}/exercises`;
-      const data = await authedFetch<ExerciseLog[]>(url);
+      const data = await authedFetch<{ exerciseLogs: ExerciseLog[] }>(url);
       if (!data)
         throw new Error("Expected exercise logs list, got empty response");
-      return data;
+      return data.exerciseLogs;
     },
   });
 }
