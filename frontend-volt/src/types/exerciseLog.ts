@@ -30,5 +30,5 @@ export type UpdateExerciseLogVariables = {
 
 export type DeleteExerciseLogVariables = {
   workoutLogId: string;
-  exerciseId: string;
+  exerciseLogId: string;
 };
