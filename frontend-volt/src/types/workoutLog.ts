@@ -2,12 +2,12 @@ import type { ExerciseLog } from "./exerciseLog";
 
 export type CreateWorkoutLogInput = {
   date: string;
-  workoutDay?: { id: string; name: string } | null;
+  workoutDayId?: string | null;
 };
 
 export type UpdateWorkoutLogInput = {
   date?: string;
-  workoutDay?: { id: string; name: string } | null;
+  workoutDayId?: string | null;
 };
 
 export type UpdateWorkoutLogVariables = {
