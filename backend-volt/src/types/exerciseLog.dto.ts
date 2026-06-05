@@ -5,10 +5,11 @@ import type { SetLog } from "./setLog.dto.js";
 export interface CreateExerciseLogInput {
   workoutLogId: string;
   exerciseId: string;
-  notes?: string;
+  notes?: string | null;
 }
 
 export interface UpdateExerciseLogInput {
+  exerciseId?: string;
   notes?: string | null;
 }
 

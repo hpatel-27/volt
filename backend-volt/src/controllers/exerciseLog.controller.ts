@@ -72,15 +72,22 @@ async function updateExerciseLog(req: Request, res: Response) {
   const userId = user.id;
   const logId = res.locals.logId as string;
   const exerciseLogId = res.locals.exerciseLogId as string;
-  const { notes } = req.body;
+  const exerciseId = req.body?.exerciseId;
+  const notes = req.body?.notes;
 
   const data: UpdateExerciseLogInput = {};
 
-  if (notes !== undefined) {
-    if (notes !== null && typeof notes !== "string") {
+  if (exerciseId !== undefined) {
+    if (typeof exerciseId !== "string" || exerciseId.length < 1)
       return res
         .status(400)
-        .json({ error: "Notes must be a string or null." });
+        .json({ error: "exerciseId is required and cannot be empty." });
+    data.exerciseId = exerciseId;
+  }
+
+  if (notes !== undefined) {
+    if (notes !== null && typeof notes !== "string") {
+      return res.status(400).json({ error: "Notes must be a string or null." });
     }
     data.notes = notes;
   }
