@@ -95,7 +95,8 @@ export function useCreateNutrition() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(input),
       });
-      if (!data) throw new Error("Expected created weight, got empty response");
+      if (!data)
+        throw new Error("Expected created nutrition log, got empty response");
       return data;
     },
     // On success takes up to 3 parameters (data returned from mutationFn,
