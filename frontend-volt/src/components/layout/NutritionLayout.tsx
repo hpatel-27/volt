@@ -14,11 +14,14 @@ const NutritionLayout = () => {
   const params = useParams();
   const selectedDate = params.date ?? todayLocalIso();
   const [sheetOpen, setSheetOpen] = useState(false);
+  // Bumped on each open so the sheet remounts and re-picks its lazy initial state.
+  const [sheetKey, setSheetKey] = useState(0);
   const [editingMeal, setEditingMeal] = useState<Meal | null>(null);
 
   const context: NutritionOutletContext = {
     openMealSheet: (meal?: Meal) => {
       setEditingMeal(meal ?? null);
+      setSheetKey((k) => k + 1);
       setSheetOpen(true);
     },
   };
@@ -28,6 +31,7 @@ const NutritionLayout = () => {
       <DayStrip selectedDate={selectedDate} />
       <Outlet context={context} />
       <MealEntrySheet
+        key={sheetKey}
         open={sheetOpen}
         onClose={() => setSheetOpen(false)}
         date={selectedDate}
