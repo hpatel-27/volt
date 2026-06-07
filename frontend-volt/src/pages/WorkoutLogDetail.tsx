@@ -1,6 +1,6 @@
 import { useParams, Link } from "react-router";
 import { useState } from "react";
-import { ArrowLeft, Plus } from "lucide-react";
+import { ArrowLeft, Pencil, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
@@ -8,6 +8,7 @@ import { Spinner } from "../components/ui/Spinner";
 import { ExerciseLogCard } from "../components/workout/ExerciseLogCard";
 import { ExercisePickerSheet } from "../components/workout/ExercisePickerSheet";
 import { SetLoggerSheet } from "../components/workout/SetLoggerSheet";
+import { WorkoutLogEntrySheet } from "../components/workout/WorkoutLogEntrySheet";
 import { useWorkoutLogDetail } from "@/api/workoutLog";
 import { useCreateExerciseLog, useDeleteExerciseLog } from "@/api/exerciseLog";
 import { formatRelativeDate } from "@/lib/date";
@@ -48,9 +49,18 @@ export default function WorkoutLogDetail() {
   // Retained across the sheet's close animation so ids stay valid while it slides out.
   const [setTarget, setSetTarget] = useState<SetTarget | null>(null);
 
+  const [editOpen, setEditOpen] = useState(false);
+  // Bumped on open so the edit sheet remounts and re-seeds its date from the log.
+  const [editKey, setEditKey] = useState(0);
+
   function openPicker() {
     setPickerKey((k) => k + 1);
     setPickerOpen(true);
+  }
+
+  function openEditSheet() {
+    setEditKey((k) => k + 1);
+    setEditOpen(true);
   }
 
   function openSetSheet(exerciseLog: ExerciseLog, set: SetLog | null = null) {
@@ -110,13 +120,25 @@ export default function WorkoutLogDetail() {
             {log ? formatRelativeDate(log.date) : "Log"}
           </h1>
         </div>
-        <Button
-          size="sm"
-          leading={<Plus className="h-4 w-4" />}
-          onClick={openPicker}
-        >
-          Exercise
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            leading={<Plus className="h-4 w-4" />}
+            onClick={openPicker}
+          >
+            Exercise
+          </Button>
+          {log && (
+            <Button
+              size="sm"
+              variant="ghost"
+              leading={<Pencil className="h-4 w-4 text-bone-500" />}
+              onClick={openEditSheet}
+              aria-label="Edit workout"
+              className="w-9 px-0"
+            />
+          )}
+        </div>
       </header>
 
       {/* The session's dominant number — one figure at display scale. */}
@@ -170,6 +192,15 @@ export default function WorkoutLogDetail() {
         onClose={() => setPickerOpen(false)}
         onSelect={handleSelectExercise}
       />
+
+      {log && (
+        <WorkoutLogEntrySheet
+          key={`edit-${editKey}`}
+          open={editOpen}
+          onClose={() => setEditOpen(false)}
+          log={log}
+        />
+      )}
 
       {setTarget && workoutLogId && (
         <SetLoggerSheet

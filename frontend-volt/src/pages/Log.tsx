@@ -1,18 +1,13 @@
-import { Link, useNavigate } from "react-router";
+import { Link } from "react-router";
 import { useState } from "react";
 import { ChevronLeft, ChevronRight, Dumbbell, Plus } from "lucide-react";
-import { toast } from "sonner";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
-import { WorkoutDatePickerSheet } from "../components/workout/WorkoutDatePickerSheet";
+import { WorkoutLogEntrySheet } from "../components/workout/WorkoutLogEntrySheet";
 import { Spinner } from "@/components/ui/Spinner";
-import {
-  useCreateWorkoutLog,
-  useWorkoutLogs,
-  useWorkoutLogsToday,
-} from "@/api/workoutLog";
+import { useWorkoutLogs, useWorkoutLogsToday } from "@/api/workoutLog";
 import { formatRelativeDate, todayLocalIso } from "@/lib/date";
-import { LIMIT, DATE_REGEX } from "@/types/shared";
+import { LIMIT } from "@/types/shared";
 import type { WorkoutLogSummary } from "@/types/workoutLog";
 
 function computeTodayStats(today: WorkoutLogSummary[]): {
@@ -27,11 +22,10 @@ function computeTodayStats(today: WorkoutLogSummary[]): {
 }
 
 export default function Log() {
-  const navigate = useNavigate();
   const [page, setPage] = useState(1);
 
-  // Date-picker sheet: creation is deferred until the user confirms a date,
-  // so an accidental tap no longer writes an empty log. Bumping the key on
+  // Entry sheet in create mode: creation is deferred until the user confirms a
+  // date, so an accidental tap no longer writes an empty log. Bumping the key on
   // open remounts the sheet so its date field resets to today each time.
   const [dateSheetOpen, setDateSheetOpen] = useState(false);
   const [dateSheetKey, setDateSheetKey] = useState(0);
@@ -46,7 +40,6 @@ export default function Log() {
 
   const todayIso = todayLocalIso();
   const todayQuery = useWorkoutLogsToday(todayIso);
-  const createLog = useCreateWorkoutLog();
 
   const todayStats = computeTodayStats(todayQuery.data ?? []);
   const logs = pageQuery.data?.workoutLogs ?? [];
@@ -54,27 +47,6 @@ export default function Log() {
   function openDateSheet() {
     setDateSheetKey((k) => k + 1);
     setDateSheetOpen(true);
-  }
-
-  function handleConfirmDate(date: string) {
-    if (!date || !DATE_REGEX.test(date) || todayIso < date) {
-      toast.error("Invalid date provided.");
-      return;
-    }
-    createLog.mutate(
-      { date },
-      {
-        onSuccess: (data) => {
-          setDateSheetOpen(false);
-          toast.success(`Workout log created for: ${formatRelativeDate(date)}`);
-          navigate(`/workouts/${data.id}`);
-        },
-        onError: () =>
-          toast.error(
-            `Could not create workout log for: ${formatRelativeDate(date)}. Please try again.`,
-          ),
-      },
-    );
   }
 
   return (
@@ -91,7 +63,6 @@ export default function Log() {
           size="sm"
           leading={<Plus className="h-4 w-4" />}
           onClick={openDateSheet}
-          disabled={createLog.isPending}
         >
           Start
         </Button>
@@ -177,7 +148,6 @@ export default function Log() {
             size="sm"
             leading={<Plus className="h-4 w-4" />}
             onClick={openDateSheet}
-            disabled={createLog.isPending}
             className="mt-1"
           >
             Start workout
@@ -185,12 +155,10 @@ export default function Log() {
         </div>
       )}
 
-      <WorkoutDatePickerSheet
+      <WorkoutLogEntrySheet
         key={`date-${dateSheetKey}`}
         open={dateSheetOpen}
         onClose={() => setDateSheetOpen(false)}
-        onConfirm={handleConfirmDate}
-        submitting={createLog.isPending}
       />
     </div>
   );
