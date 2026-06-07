@@ -158,6 +158,7 @@ model SetLog {
 
   exerciseLog   ExerciseLog @relation(fields: [exerciseLogId], references: [id], onDelete: Cascade)
 
+  @@unique([exerciseLogId, setNumber])
   @@map("set_logs")
 }
 

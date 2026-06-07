@@ -1,6 +1,6 @@
 import { prisma } from "../db.js";
 import { Prisma } from "../generated/prisma/client.js";
-import { NotFoundError } from "../errors.js";
+import { DuplicateEntryError, NotFoundError } from "../errors.js";
 import type {
   CreateSetLogInput,
   UpdateSetLogInput,
@@ -72,8 +72,25 @@ async function createSetLog(
       select: { setNumber: true },
     });
     const setNumber = (last?.setNumber ?? 0) + 1;
-    const createdLog = await tx.setLog.create({ data: { ...data, setNumber } });
-    return toSetLogDto(createdLog);
+    try {
+      const createdLog = await tx.setLog.create({
+        data: { ...data, setNumber },
+      });
+      return toSetLogDto(createdLog);
+    } catch (error: unknown) {
+      // A concurrent insert may have claimed this setNumber first, tripping the
+      // @@unique([exerciseLogId, setNumber]) constraint.
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2002"
+      ) {
+        throw new DuplicateEntryError(
+          "A set with this set number already exists.",
+          { cause: error },
+        );
+      }
+      throw error;
+    }
   });
 }
 
