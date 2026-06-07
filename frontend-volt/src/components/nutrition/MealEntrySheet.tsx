@@ -8,6 +8,8 @@ import type {
   Meal,
   UpdateMealVariables,
 } from "@/types/meal";
+import { todayLocalIso } from "@/lib/date";
+import { DATE_REGEX } from "@/types/shared";
 
 interface MealEntrySheetProps {
   open: boolean;
@@ -56,6 +58,10 @@ export function MealEntrySheet({
 
     if (!name.trim()) {
       toast.error("Please give this meal a name.");
+      return;
+    }
+    if (!date || !DATE_REGEX.test(date) || todayLocalIso() < date) {
+      toast.error("Please provide a valid date.");
       return;
     }
 
