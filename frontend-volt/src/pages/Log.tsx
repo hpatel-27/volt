@@ -62,16 +62,16 @@ export default function Log() {
       return;
     }
     createLog.mutate(
-      { date, workoutDayId: null },
+      { date },
       {
         onSuccess: (data) => {
           setDateSheetOpen(false);
-          toast.success(`Workout log created for ${formatRelativeDate(date)}`);
+          toast.success(`Workout log created for: ${formatRelativeDate(date)}`);
           navigate(`/workouts/${data.id}`);
         },
         onError: () =>
           toast.error(
-            `Could not create workout log for ${formatRelativeDate(date)}. Please try again.`,
+            `Could not create workout log for: ${formatRelativeDate(date)}. Please try again.`,
           ),
       },
     );
