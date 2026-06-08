@@ -12,6 +12,9 @@ export interface NavItem {
   label: string;
   icon: ReactNode;
   primary?: boolean;
+  // Shown in the desktop sidebar but not the mobile bottom nav. Keeps the
+  // bottom nav at an odd count so the raised "Log" tab stays centered.
+  desktopOnly?: boolean;
 }
 
 export const navItems: NavItem[] = [
@@ -45,5 +48,6 @@ export const navItems: NavItem[] = [
     to: "/profile",
     label: "Profile",
     icon: <User size={20} />,
+    desktopOnly: true,
   },
 ];
