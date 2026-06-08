@@ -1,6 +1,7 @@
 import { NavLink } from "react-router";
 import { navItems } from "./navItems";
 import { cn } from "../../lib/cn";
+import { AccountButton } from "./AccountButton";
 
 export function Sidebar() {
   return (
@@ -35,6 +36,10 @@ export function Sidebar() {
           </NavLink>
         ))}
       </nav>
+
+      <div className="mt-auto flex items-center gap-3 px-2 pt-4">
+        <AccountButton />
+      </div>
     </aside>
   );
 }

@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { UserButton } from "@clerk/clerk-react";
 import { Pencil } from "lucide-react";
 import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
@@ -41,12 +40,9 @@ export default function Profile() {
     <div className="space-y-4">
       <h1 className="font-display text-2xl font-bold">Profile</h1>
 
-      <Card className="flex items-center gap-4">
-        <UserButton />
-        <div>
-          <div className="font-semibold">{fullName}</div>
-          <div className="text-xs text-bone-500">{user.email}</div>
-        </div>
+      <Card>
+        <div className="font-semibold">{fullName}</div>
+        <div className="text-xs text-bone-500">{user.email}</div>
       </Card>
 
       <Card>
