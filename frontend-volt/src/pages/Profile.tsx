@@ -69,15 +69,10 @@ export default function Profile() {
           <div className="flex items-center justify-between bg-ink-850 px-4 py-3">
             <dt className="text-sm text-bone-300">Height</dt>
             <dd className="font-mono text-sm font-medium text-bone-50">
-              {user.height != null ? `${user.height} cm` : "—"}
+              {user.height != null ? `${user.height} cm` : "-"}
             </dd>
           </div>
         </dl>
-      </Card>
-
-      <Card className="space-y-1">
-        <div className="text-sm text-bone-300">Units</div>
-        <div className="text-xs text-bone-500">lbs · ft/in · kcal</div>
       </Card>
 
       <ProfileEntrySheet
