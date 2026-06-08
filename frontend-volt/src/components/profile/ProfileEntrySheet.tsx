@@ -27,17 +27,19 @@ function buildUpdatePayload(
   // Don't add empty string or invalid values to the payload
   // Empty strings and falsy values will throw an error on the backend
   const payload: UpdateUserInput = {};
+  const firstName = form.firstName.trim();
+  const lastName = form.lastName.trim();
+  const height = form.height.trim();
 
-  if (form.firstName.trim() && form.firstName.trim() !== original.firstName)
-    payload.firstName = form.firstName;
-  if (form.lastName.trim() && form.lastName.trim() !== original.lastName)
-    payload.lastName = form.lastName;
-  if (
-    form.height.trim() &&
-    parseFloat(form.height) > 0 &&
-    parseFloat(form.height) !== original.height
-  )
-    payload.height = parseFloat(form.height);
+  if (firstName && firstName !== original.firstName)
+    payload.firstName = firstName;
+  if (lastName && lastName !== original.lastName) payload.lastName = lastName;
+
+  if (height) {
+    const heightNum = Number(height);
+    if (isNaN(heightNum) || heightNum < 1) return null;
+    if (heightNum !== original.height) payload.height = heightNum;
+  }
 
   return payload;
 }
