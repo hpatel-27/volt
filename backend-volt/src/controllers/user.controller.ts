@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import { toUserDto } from "../mappers/user.mapper.js";
 import * as userService from "../services/user.service.js";
 import type { UpdateUserInput } from "../types/user.dto.js";
+
 async function getCurrentUser(req: Request, res: Response) {
   const user = req.user!;
   res.json(toUserDto(user));
