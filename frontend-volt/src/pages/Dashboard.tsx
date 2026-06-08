@@ -1,4 +1,3 @@
-import { UserButton } from "@clerk/clerk-react";
 import { Card } from "../components/ui/Card";
 import { Stat } from "../components/ui/Stat";
 import { Link } from "react-router";
@@ -20,13 +19,9 @@ const recentPR = {
 export default function Dashboard() {
   return (
     <div className="space-y-4">
-      <header className="flex items-center justify-between">
-        <div>
-          <div className="text-caption">Saturday, Apr 26</div>
-          <h1 className="font-display text-2xl font-bold">Hey, Harsh</h1>
-        </div>
-        {/* <div className="w-10 h-10 rounded-full bg-ink-700" /> */}
-        <UserButton />
+      <header>
+        <div className="text-caption">Saturday, Apr 26</div>
+        <h1 className="font-display text-2xl font-bold">Hey, Harsh</h1>
       </header>
 
       <Link to="/log" className="block">

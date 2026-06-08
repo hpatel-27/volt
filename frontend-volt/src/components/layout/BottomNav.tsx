@@ -9,7 +9,9 @@ export function BottomNav() {
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       <ul className="flex items-end justify-around h-16 px-2 py-2.5">
-        {navItems.map((item) => (
+        {navItems
+          .filter((item) => !item.desktopOnly)
+          .map((item) => (
           <li key={item.to} className="flex-1">
             <NavLink
               to={item.to}

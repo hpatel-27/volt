@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import { getUser } from "../services/user.service.js";
-import { getAuth } from "@clerk/express";
+import { clerkClient, getAuth } from "@clerk/express";
 
 export async function userMiddleware(
   req: Request,
@@ -15,8 +15,14 @@ export async function userMiddleware(
   }
 
   // Look up the user
+  const clerkUser = await clerkClient.users.getUser(userId);
   try {
-    const user = await getUser(userId);
+    const user = await getUser(
+      userId,
+      clerkUser.emailAddresses[0]?.emailAddress ?? null,
+      clerkUser.firstName,
+      clerkUser.lastName,
+    );
     req.user = user;
     next();
   } catch (error) {

@@ -7,3 +7,9 @@ export interface User {
   createdAt: string | null;
   updatedAt: string | null;
 }
+
+export interface UpdateUserInput {
+  firstName?: string;
+  lastName?: string;
+  height?: number;
+}
