@@ -1,6 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import useFetch from "@/hooks/useFetch";
-import type { User } from "@/types/user";
+import type { UpdateUserInput, User } from "@/types/user";
 
 const BASE = `${import.meta.env.VITE_API_BASE_URL}/users`;
 
@@ -17,6 +17,29 @@ export function useCurrentUser() {
       const data = await authedFetch<User>(`${BASE}/me`);
       if (!data) throw new Error("Expected current user, got empty response");
       return data;
+    },
+  });
+}
+
+export function useUpdateProfile() {
+  const authedFetch = useFetch();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: UpdateUserInput) => {
+      const url = `${BASE}/me`;
+      const data = await authedFetch<User>(url, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(input),
+      });
+      if (!data)
+        throw new Error("Expected updated user profile, got empty response");
+      return data;
+    },
+    onSuccess: () => {
+      // Refetch the user profile info
+      queryClient.invalidateQueries({ queryKey: userKeys.me() });
     },
   });
 }
