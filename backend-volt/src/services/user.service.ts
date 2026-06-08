@@ -2,6 +2,7 @@ import { prisma } from "../db.js";
 import { NotFoundError } from "../errors.js";
 import { Prisma } from "../generated/prisma/client.js";
 import { toUserDto } from "../mappers/user.mapper.js";
+import type { UpdateUserInput } from "../types/user.dto.js";
 
 // Get the user by their Clerk user ID, or create a new user if they don't exist
 async function getUser(
@@ -13,7 +14,7 @@ async function getUser(
   const user = await prisma.user.upsert({
     where: { clerkId },
     update: {},
-    create: { clerkId, emailAddress, firstName, lastName },
+    create: { clerkId, email: emailAddress, firstName, lastName },
   });
   // Don't wrap with DTO since we use this for the userMiddleware upsert
   // This doesn't get sent to the frontend
@@ -21,14 +22,7 @@ async function getUser(
 }
 
 // update the user's updatable fields (firstName, lastName, height)
-async function updateUser(
-  userId: string,
-  data: {
-    firstName?: string;
-    lastName?: string;
-    height?: number;
-  },
-) {
+async function updateUser(userId: string, data: UpdateUserInput) {
   try {
     const updatedUser = await prisma.user.update({
       where: { id: userId },
