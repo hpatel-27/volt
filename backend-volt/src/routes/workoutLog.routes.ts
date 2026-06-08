@@ -16,6 +16,10 @@ router.get(
   workoutLogController.getAllWorkoutLogs,
 );
 
+// Get today's workout session summaries (empty array if none exist yet).
+// Registered before /:logId so "today" is not interpreted as a UUID param.
+router.get("/today", userMiddleware, workoutLogController.getTodayWorkoutLogs);
+
 // Get a single workout log with exercise logs and sets
 router.get(
   "/:logId",

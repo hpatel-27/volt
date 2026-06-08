@@ -1,7 +1,7 @@
 import { prisma } from "../db.js";
 import { Prisma } from "../generated/prisma/client.js";
 import { EXERCISE_REF_SELECT } from "../prisma/selects.js";
-import { NotFoundError } from "../errors.js";
+import { DuplicateEntryError, NotFoundError } from "../errors.js";
 import type {
   CreateWorkoutDayExerciseInput,
   UpdateWorkoutDayExerciseInput,
@@ -83,16 +83,31 @@ async function createWorkoutDayExercise(
       select: { order: true },
     });
     const orderNumber = (lastExercise?.order ?? 0) + 1;
-    const dayExercise = await tx.workoutDayExercise.create({
-      data: { ...data, order: orderNumber },
-      include: { exercise: { select: EXERCISE_REF_SELECT } },
-    });
+    try {
+      const dayExercise = await tx.workoutDayExercise.create({
+        data: { ...data, order: orderNumber },
+        include: { exercise: { select: EXERCISE_REF_SELECT } },
+      });
 
-    // Nested update to the Workout Plan with no data
-    // This updates the updatedAt field on the plan
-    await tx.workoutPlan.update({ where: { id: planId }, data: {} });
+      // Nested update to the Workout Plan with no data
+      // This updates the updatedAt field on the plan
+      await tx.workoutPlan.update({ where: { id: planId }, data: {} });
 
-    return toWorkoutDayExerciseDto(dayExercise);
+      return toWorkoutDayExerciseDto(dayExercise);
+    } catch (error: unknown) {
+      // A concurrent insert may have claimed this order first, tripping the
+      // @@unique([workoutDayId, order]) constraint.
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2002"
+      ) {
+        throw new DuplicateEntryError(
+          "A workout day exercise with this order already exists.",
+          { cause: error },
+        );
+      }
+      throw error;
+    }
   });
 }
 

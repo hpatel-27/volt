@@ -12,6 +12,7 @@ import Log from "./pages/Log";
 import Exercises from "./pages/Exercises";
 import Nutrition from "./pages/Nutrition";
 import NutritionLog from "./pages/NutritionLog";
+import WorkoutLogDetail from "./pages/WorkoutLogDetail";
 import Weight from "./pages/Weight";
 import Profile from "./pages/Profile";
 import NutritionLayout from "./components/layout/NutritionLayout";
@@ -55,6 +56,10 @@ export function App() {
           <Route path="/plans" element={<Workouts />} />
           <Route path="/plans/:planId" element={<WorkoutPlan />} />
           <Route path="/workouts" element={<Log />} />
+          <Route
+            path="/workouts/:workoutLogId"
+            element={<WorkoutLogDetail />}
+          />
           <Route path="/exercises" element={<Exercises />} />
           <Route element={<NutritionLayout />}>
             <Route path="/nutrition" element={<Nutrition />} />

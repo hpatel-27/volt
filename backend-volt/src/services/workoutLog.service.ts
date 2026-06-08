@@ -18,7 +18,8 @@ async function getAllWorkoutLogs(userId: string, page: number, limit: number) {
       where: { userId },
       skip: (page - 1) * limit,
       take: limit,
-      orderBy: { date: "desc" },
+      // createdAt as a secondary key gives same-day sessions a stable order
+      orderBy: [{ date: "desc" }, { createdAt: "desc" }],
       include: WORKOUT_LOG_SUMMARY_INCLUDE,
     });
     const total = await tx.workoutLog.count({ where: { userId } });
@@ -31,6 +32,22 @@ async function getAllWorkoutLogs(userId: string, page: number, limit: number) {
     page,
     limit,
   };
+}
+
+// Return today's workout sessions as summaries (empty array if none yet). A day can
+// hold multiple sessions (e.g. morning cardio + evening lifting), so this is a list,
+// not a single log. The client sends its local date as YYYY-MM-DD; createWorkoutLog
+// normalizes that to UTC midnight, so the same parse here lines both sides up on one
+// instant — no timezone drift. Since same-day logs share that midnight instant, we
+// order by createdAt (insertion order ≈ chronological) for a stable list.
+async function getTodayWorkoutLogs(userId: string, date: string) {
+  const logs = await prisma.workoutLog.findMany({
+    where: { userId, date: new Date(date) },
+    orderBy: { createdAt: "asc" },
+    include: WORKOUT_LOG_SUMMARY_INCLUDE,
+  });
+
+  return logs.map(toWorkoutLogSummaryDto);
 }
 
 async function getWorkoutLogById(userId: string, logId: string) {
@@ -150,6 +167,7 @@ async function deleteWorkoutLog(userId: string, logId: string) {
 
 export {
   getAllWorkoutLogs,
+  getTodayWorkoutLogs,
   getWorkoutLogById,
   createWorkoutLog,
   updateWorkoutLog,

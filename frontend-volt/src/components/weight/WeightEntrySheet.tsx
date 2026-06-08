@@ -9,6 +9,7 @@ import {
 } from "../../api/weights";
 import type { CreateWeightInput, Weight } from "../../types/weight";
 import { todayLocalIso } from "../../lib/date";
+import { DATE_REGEX } from "@/types/shared";
 
 interface WeightEntrySheetProps {
   open: boolean;
@@ -50,7 +51,7 @@ export function WeightEntrySheet({
     } else if (Number(amount) >= 1000.0) {
       toast.error("That weight looks too high, please double-check the value.");
       return;
-    } else if (!date || date > todayLocalIso()) {
+    } else if (!date || !DATE_REGEX.test(date) || todayLocalIso() < date) {
       toast.error("Please select a valid date for this weight entry.");
       return;
     }

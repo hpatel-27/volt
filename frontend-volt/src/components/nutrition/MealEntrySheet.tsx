@@ -8,6 +8,8 @@ import type {
   Meal,
   UpdateMealVariables,
 } from "@/types/meal";
+import { todayLocalIso } from "@/lib/date";
+import { DATE_REGEX } from "@/types/shared";
 
 interface MealEntrySheetProps {
   open: boolean;
@@ -25,11 +27,17 @@ export function MealEntrySheet({
 }: MealEntrySheetProps) {
   const isEdit = !!meal;
 
-  const [name, setName] = useState("");
-  const [calories, setCalories] = useState("");
-  const [protein, setProtein] = useState("");
-  const [carbs, setCarbs] = useState("");
-  const [fat, setFat] = useState("");
+  // Parent remounts this sheet via a changing key, so these lazy initializers
+  // re-run with the current meal on each open (same pattern as the plan sheets).
+  const [name, setName] = useState(() => (meal ? meal.name : ""));
+  const [calories, setCalories] = useState(() =>
+    meal ? String(meal.calories) : "",
+  );
+  const [protein, setProtein] = useState(() =>
+    meal ? String(meal.protein) : "",
+  );
+  const [carbs, setCarbs] = useState(() => (meal ? String(meal.carbs) : ""));
+  const [fat, setFat] = useState(() => (meal ? String(meal.fat) : ""));
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const nameRef = useRef<HTMLInputElement>(null);
 
@@ -37,38 +45,6 @@ export function MealEntrySheet({
   const updateMeal = useMealUpdate();
   const deleteMeal = useMealDelete();
   const isPending = createMeal.isPending || updateMeal.isPending;
-
-  // Sync form to the sheet's purpose when it opens, or when it switches
-  // to a different meal while open. This uses the render-time "adjust state on
-  // prop change" pattern (see Sheet.tsx).
-  const [prevOpen, setPrevOpen] = useState(false);
-  const [prevMealId, setPrevMealId] = useState<string | null>(null);
-  const mealId = meal?.id ?? null;
-
-  if (open && (!prevOpen || prevMealId !== mealId)) {
-    setPrevOpen(true);
-    setPrevMealId(mealId);
-    setConfirmingDelete(false);
-
-    // Prefill from existing meal or reset to "" for new entry
-    if (meal) {
-      setName(meal.name);
-      setCalories(String(meal.calories));
-      setProtein(String(meal.protein));
-      setCarbs(String(meal.carbs));
-      setFat(String(meal.fat));
-    } else {
-      setName("");
-      setCalories("");
-      setProtein("");
-      setCarbs("");
-      setFat("");
-    }
-  }
-
-  if (!open && prevOpen) {
-    setPrevOpen(false);
-  }
 
   function parseNonNegative(value: string): number | null {
     if (value === "") return null;
@@ -82,6 +58,10 @@ export function MealEntrySheet({
 
     if (!name.trim()) {
       toast.error("Please give this meal a name.");
+      return;
+    }
+    if (!date || !DATE_REGEX.test(date) || todayLocalIso() < date) {
+      toast.error("Please provide a valid date.");
       return;
     }
 

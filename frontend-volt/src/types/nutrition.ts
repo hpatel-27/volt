@@ -2,7 +2,6 @@ import type { Meal } from "./meal";
 
 export type NutritionLog = {
   id: string;
-  userId: string;
   date: string;
   meals: Meal[];
 };

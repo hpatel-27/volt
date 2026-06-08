@@ -7,7 +7,7 @@ import { expect, test, describe, vi, beforeEach } from "vitest";
 import { prisma } from "../../../src/db.js";
 import * as svc from "../../../src/services/workoutDayExercise.service.js";
 import { Prisma } from "../../../src/generated/prisma/client.js";
-import { NotFoundError } from "../../../src/errors.js";
+import { DuplicateEntryError, NotFoundError } from "../../../src/errors.js";
 
 // Cast to the deep mock proxy so the mockResolved*/mockRejected* helpers type-check.
 const prismaMock = prisma as unknown as DeepMockProxy<typeof prisma>;
@@ -222,12 +222,16 @@ describe("WorkoutDayExercise Service createWorkoutDayExercise", () => {
     expect(prismaMock.workoutDayExercise.create).not.toHaveBeenCalled();
   });
 
-  test("assigns order = existing slot count + 1 and touches the plan", async () => {
-    // Day already has 2 slots, so the new one should land at order 3.
+  test("assigns order = current max order + 1 and touches the plan", async () => {
+    // The highest existing order is 2, so the new slot lands at order 3.
     prismaMock.workoutDay.findFirst.mockResolvedValueOnce({
+      id: "day-1",
       _count: { exercises: 2 },
     } as any);
     prismaMock.exercise.findUnique.mockResolvedValueOnce({ id: "ex-1" } as any);
+    prismaMock.workoutDayExercise.findFirst.mockResolvedValueOnce({
+      order: 2,
+    } as any);
     prismaMock.workoutDayExercise.create.mockResolvedValueOnce(
       rawSlot({ id: "wde-3", order: 3 }),
     );
@@ -240,6 +244,14 @@ describe("WorkoutDayExercise Service createWorkoutDayExercise", () => {
       { workoutDayId: "day-1", exerciseId: "ex-1", order: -1 },
     );
 
+    // The next order is derived from the current max, not the row count.
+    expect(prismaMock.workoutDayExercise.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { workoutDayId: "day-1" },
+        orderBy: { order: "desc" },
+        select: { order: true },
+      }),
+    );
     // The placeholder order (-1) from the controller is overwritten with 3.
     expect(prismaMock.workoutDayExercise.create).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -257,9 +269,12 @@ describe("WorkoutDayExercise Service createWorkoutDayExercise", () => {
 
   test("assigns order 1 for the day's first slot", async () => {
     prismaMock.workoutDay.findFirst.mockResolvedValueOnce({
+      id: "day-1",
       _count: { exercises: 0 },
     } as any);
     prismaMock.exercise.findUnique.mockResolvedValueOnce({ id: "ex-1" } as any);
+    // No existing slots, so the max-order lookup comes back null → order 1.
+    prismaMock.workoutDayExercise.findFirst.mockResolvedValueOnce(null);
     prismaMock.workoutDayExercise.create.mockResolvedValueOnce(
       rawSlot({ order: 1 }),
     );
@@ -276,11 +291,39 @@ describe("WorkoutDayExercise Service createWorkoutDayExercise", () => {
     );
   });
 
-  test("propagates an unexpected error", async () => {
+  test("maps a P2002 unique violation to DuplicateEntryError (409)", async () => {
+    // A concurrent insert claimed this order first, so create trips the
+    // @@unique([workoutDayId, order]) constraint.
     prismaMock.workoutDay.findFirst.mockResolvedValueOnce({
+      id: "day-1",
       _count: { exercises: 0 },
     } as any);
     prismaMock.exercise.findUnique.mockResolvedValueOnce({ id: "ex-1" } as any);
+    prismaMock.workoutDayExercise.findFirst.mockResolvedValueOnce(null);
+    prismaMock.workoutDayExercise.create.mockRejectedValueOnce(
+      prismaError("P2002"),
+    );
+
+    await expect(
+      svc.createWorkoutDayExercise("plan-1", "day-1", "user-1", {
+        workoutDayId: "day-1",
+        exerciseId: "ex-1",
+        order: -1,
+      }),
+    ).rejects.toThrow(
+      new DuplicateEntryError(
+        "A workout day exercise with this order already exists.",
+      ),
+    );
+  });
+
+  test("propagates an unexpected error", async () => {
+    prismaMock.workoutDay.findFirst.mockResolvedValueOnce({
+      id: "day-1",
+      _count: { exercises: 0 },
+    } as any);
+    prismaMock.exercise.findUnique.mockResolvedValueOnce({ id: "ex-1" } as any);
+    prismaMock.workoutDayExercise.findFirst.mockResolvedValueOnce(null);
     const dbError = new Error("Prisma database is currently unavailable.");
     prismaMock.workoutDayExercise.create.mockRejectedValueOnce(dbError);
 
