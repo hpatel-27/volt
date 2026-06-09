@@ -38,7 +38,7 @@ export function PlanDayCard() {
           to="/plans"
           className="inline-flex h-9 items-center rounded-xl bg-volt-500 px-4 text-sm font-semibold text-ink-950"
         >
-          Create <ArrowRight size={14} />
+          <p className="mb-1 pr-1">Create</p> <ArrowRight size={14} />
         </Link>
       </Card>
     );
