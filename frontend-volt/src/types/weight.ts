@@ -30,3 +30,4 @@ export type UpdateWeightVariables = { id: string; input: UpdateWeightInput };
 export type DeleteWeightVariables = { id: string };
 
 export type WeightFilter = "7D" | "30D" | "90D" | "All";
+export type WeightDelta = { value: string; direction: "up" | "down" | "flat" };

@@ -34,6 +34,9 @@ export function useCreateWorkoutDay() {
       queryClient.invalidateQueries({
         queryKey: workoutPlanKeys.detail(variables.planId),
       });
+      queryClient.invalidateQueries({
+        queryKey: workoutPlanKeys.active(),
+      });
     },
   });
 }
@@ -74,6 +77,9 @@ export function useDeleteWorkoutDay() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: workoutPlanKeys.detail(variables.planId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: workoutPlanKeys.active(),
       });
     },
   });

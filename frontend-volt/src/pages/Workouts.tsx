@@ -51,7 +51,7 @@ export default function Workouts() {
   return (
     <div className="space-y-4">
       <header className="flex items-center justify-between">
-        <h1 className="font-display text-2xl font-bold">Plans</h1>
+        <h1 className="text-h1">Plans</h1>
         <Button
           size="sm"
           leading={<Plus className="w-4 h-4" />}
@@ -91,7 +91,7 @@ export default function Workouts() {
 
       {isLoading ? (
         <div className="pt-8">
-          <Spinner />
+          <Spinner fullscreen />
         </div>
       ) : hasNoPlans ? (
         <div className="flex flex-col items-center gap-3 min-h-[60vh] justify-center text-center">

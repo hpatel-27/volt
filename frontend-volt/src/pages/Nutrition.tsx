@@ -37,7 +37,7 @@ export default function Nutrition() {
             {formatRelativeDate(todayIso)} · {todayQuery.data?.mealCount ?? 0}{" "}
             meals
           </div>
-          <h1 className="font-display text-2xl font-bold">Nutrition</h1>
+          <h1 className="text-h1">Nutrition</h1>
         </div>
         <Button
           size="sm"
