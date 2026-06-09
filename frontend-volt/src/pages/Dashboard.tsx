@@ -3,6 +3,7 @@ import { useCurrentUser } from "@/api/user";
 import { PlanDayCard } from "../components/dashboard/PlanDayCard";
 import { CalorieCard } from "../components/dashboard/CalorieCard";
 import { WeightCard } from "../components/dashboard/WeightCard";
+import { VolumeCard } from "../components/dashboard/VolumeCard";
 
 export default function Dashboard() {
   const todayIso = todayLocalIso();
@@ -24,6 +25,8 @@ export default function Dashboard() {
         <CalorieCard />
         <WeightCard />
       </div>
+
+      <VolumeCard />
     </div>
   );
 }
