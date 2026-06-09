@@ -73,15 +73,15 @@ Defined in `src/index.css` via Tailwind v4 `@theme`. Same tokens duplicated in `
 
 ```
 Public                 App (Clerk-protected)
-─ /                    ─ /app/dashboard
-─ /login               ─ /app/workouts
-─ /register            ─ /app/workouts/:planId
-                       ─ /app/log
-                       ─ /app/exercises
-                       ─ /app/nutrition
-                       ─ /app/nutrition/:logId
-                       ─ /app/weight
-                       ─ /app/profile
+─ /                    ─ /dashboard
+─ /login               ─ /workouts
+─ /register            ─ /workouts/:planId
+                       ─ /log
+                       ─ /exercises
+                       ─ /nutrition
+                       ─ /nutrition/:logId
+                       ─ /weight
+                       ─ /profile
 ```
 
 Bottom-tab order: **Home · Workouts · Log (center, raised, volt) · Nutrition · Weight**.
@@ -109,11 +109,11 @@ Bottom-tab order: **Home · Workouts · Log (center, raised, volt) · Nutrition 
 
 ## 7. UX Flows (locked)
 
-**Create a workout plan:** `/app/workouts` → `+ New Plan` (bottom sheet) → `/app/workouts/:planId` builder with empty day cards → tap day → `+ Add exercise` opens picker → auto-saves (no Save button).
+**Create a workout plan:** `/workouts` → `+ New Plan` (bottom sheet) → `/workouts/:planId` builder with empty day cards → tap day → `+ Add exercise` opens picker → auto-saves (no Save button).
 
-**Log a workout:** Dashboard "Today" card → `/app/log?planDayId=…` → big number inputs per set, ✓ on right → all sets complete reveals Rest Timer sheet → PR detection triggers blaze flash + haptic → `Finish` → summary (no confetti — show stats).
+**Log a workout:** Dashboard "Today" card → `/log?planDayId=…` → big number inputs per set, ✓ on right → all sets complete reveals Rest Timer sheet → PR detection triggers blaze flash + haptic → `Finish` → summary (no confetti — show stats).
 
-**Nutrition log:** No explicit "create log" — log is auto-created on first meal-add for that calendar day. `/app/nutrition` shows today + 6 past days. Tap → `/app/nutrition/:logId` → `+ Meal` opens sheet (name, type pills, kcal + macro steppers).
+**Nutrition log:** No explicit "create log" — log is auto-created on first meal-add for that calendar day. `/nutrition` shows today + 6 past days. Tap → `/nutrition/:logId` → `+ Meal` opens sheet (name, type pills, kcal + macro steppers).
 
 **Weight:** Hero current weight, 7d delta chip, range tabs (7/30/90/all), line chart, paginated entries. FAB `+` for quick add (weight, date default today, optional note).
 
