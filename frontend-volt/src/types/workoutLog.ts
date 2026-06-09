@@ -27,6 +27,8 @@ export type WorkoutLogSummary = {
   id: string;
   date: string;
   exerciseCount: number;
+  // Total tonnage for the session: Σ (weight × reps) across all sets, in lbs.
+  totalVolume: number;
   workoutDay: { id: string; name: string } | null;
 };
 
