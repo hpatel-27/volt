@@ -94,7 +94,7 @@ export default function Weight() {
   return (
     <div className="space-y-4 py-4 px-2">
       <header className="flex items-center justify-between">
-        <h1 className="font-display text-2xl font-bold">Weight</h1>
+        <h1 className="text-h1">Weight</h1>
         <button
           onClick={() => openSheet()}
           className="w-10 h-10 rounded-full bg-volt-500 hover:bg-volt-600 active:bg-volt-700 text-ink-950
@@ -181,7 +181,7 @@ export default function Weight() {
         </div>
       ) : weightsQuery.data && weightsQuery.data.weights.length === 0 ? (
         <div className="text-center py-8 text-sm text-bone-500">
-          No entries yet — tap + to log your first weight.
+          No entries yet. Tap + to log your first weight.
         </div>
       ) : (
         <div>

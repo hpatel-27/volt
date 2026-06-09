@@ -57,7 +57,7 @@ export default function Log() {
             {formatRelativeDate(todayIso)} · {todayStats.sessions}{" "}
             {todayStats.sessions === 1 ? "session" : "sessions"}
           </div>
-          <h1 className="font-display text-2xl font-bold">Workouts</h1>
+          <h1 className="text-h1">Workouts</h1>
         </div>
         <Button
           size="sm"

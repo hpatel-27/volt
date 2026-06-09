@@ -12,7 +12,7 @@ const exercises = [
 export default function Exercises() {
   return (
     <div className="space-y-4">
-      <h1 className="font-display text-2xl font-bold">Exercises</h1>
+      <h1 className="text-h1">Exercises</h1>
       <Input placeholder="Search exercises…" />
       <div className="space-y-2">
         {exercises.map((ex) => (

@@ -13,7 +13,7 @@ export default function Dashboard() {
     <div className="space-y-4">
       <header>
         <div className="text-caption">{formatFullDate(todayIso)}</div>
-        <h1 className="font-display text-2xl font-bold">
+        <h1 className="text-h1">
           {firstName ? `Hey, ${firstName}` : `Welcome, LeBron`}
         </h1>
       </header>

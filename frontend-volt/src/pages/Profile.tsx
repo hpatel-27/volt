@@ -22,7 +22,7 @@ export default function Profile() {
   if (userQuery.isError || !userQuery.data) {
     return (
       <div className="space-y-4">
-        <h1 className="font-display text-2xl font-bold">Profile</h1>
+        <h1 className="text-h1">Profile</h1>
         <Card>
           <p className="text-sm text-bone-300">
             We couldn't load your profile. Please try again.
@@ -38,7 +38,7 @@ export default function Profile() {
 
   return (
     <div className="space-y-4">
-      <h1 className="font-display text-2xl font-bold">Profile</h1>
+      <h1 className="text-h1">Profile</h1>
 
       <Card>
         <div className="font-semibold">{fullName}</div>
