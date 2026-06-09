@@ -3,7 +3,14 @@ import { Card } from "../ui/Card";
 import { useLatestWeight, useWeightsRange } from "@/api/weights";
 import { filterToRange } from "@/lib/date";
 import type { Weight, WeightDelta } from "@/types/weight";
-import { ArrowRight } from "lucide-react";
+import {
+  ArrowRight,
+  ChartLine,
+  Minus,
+  TrendingDown,
+  TrendingUp,
+  type LucideIcon,
+} from "lucide-react";
 
 /**
  * Reduce a 7-day window of weight entries to a single delta for the card.
@@ -25,10 +32,10 @@ function computeSevenDayDelta(weights: Weight[]): WeightDelta | null {
   }
 }
 
-const deltaArrow: Record<WeightDelta["direction"], string> = {
-  up: "▲",
-  down: "▼",
-  flat: "▬",
+const deltaIcon: Record<WeightDelta["direction"], LucideIcon> = {
+  up: TrendingUp,
+  down: TrendingDown,
+  flat: Minus,
 };
 
 export function WeightCard() {
@@ -45,10 +52,10 @@ export function WeightCard() {
           <div className="text-caption">Weight · 7d</div>
           <div className="mt-auto pt-4">
             <div className="font-display text-4xl font-bold tracking-tight text-bone-500">
-              --
+              <ChartLine size={36} />
             </div>
-            <div className="mt-2 flex items-center gap-1 text-xs text-bone-500">
-              Start tracking <ArrowRight size={12} />
+            <div className="mt-2 flex items-center gap-1 text-sm text-bone-500">
+              <p className="mb-1">Start tracking</p> <ArrowRight size={16} />
             </div>
           </div>
         </Card>
@@ -67,12 +74,16 @@ export function WeightCard() {
             </span>
             <span className="text-sm font-medium text-bone-500">lbs</span>
           </div>
-          {delta && (
-            <div className="mt-2 flex items-center gap-1 text-xs font-medium text-bone-300">
-              <span>{deltaArrow[delta.direction]}</span>
-              <span>{delta.value} lbs</span>
-            </div>
-          )}
+          {delta &&
+            (() => {
+              const Icon = deltaIcon[delta.direction];
+              return (
+                <div className="mt-2 flex items-center gap-1 text-xs font-medium text-bone-300">
+                  <Icon className="h-3.5 w-3.5" />
+                  <span>{delta.value} lbs</span>
+                </div>
+              );
+            })()}
         </div>
       </Card>
     </Link>

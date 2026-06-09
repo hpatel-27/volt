@@ -2,7 +2,15 @@ import { Card } from "../components/ui/Card";
 import { Spinner } from "../components/ui/Spinner";
 import { useLatestWeight, useWeights, useWeightsRange } from "../api/weights";
 import { useState } from "react";
-import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Plus,
+  ChevronLeft,
+  ChevronRight,
+  Minus,
+  TrendingDown,
+  TrendingUp,
+  type LucideIcon,
+} from "lucide-react";
 import { WeightEntrySheet } from "../components/weight/WeightEntrySheet";
 import {
   filterToRange,
@@ -32,13 +40,29 @@ function formatWhen(dateIso: string): string {
 }
 
 function formatDelta(delta: number): {
+  Icon: LucideIcon;
   label: string;
   tone: "good" | "neutral";
 } {
   if (delta < 0)
-    return { label: `▼ ${Math.abs(delta).toFixed(1)} lbs`, tone: "good" };
-  if (delta > 0) return { label: `▲ ${delta.toFixed(1)} lbs`, tone: "neutral" };
-  return { label: "0.0", tone: "neutral" };
+    return {
+      Icon: TrendingDown,
+      label: `${Math.abs(delta).toFixed(1)} lbs`,
+      tone: "good",
+    };
+  else if (delta > 0) {
+    return {
+      Icon: TrendingUp,
+      label: `${Math.abs(delta).toFixed(1)} lbs`,
+      tone: "good",
+    };
+  } else {
+    return {
+      Icon: Minus,
+      label: `${Math.abs(delta).toFixed(1)} lbs`,
+      tone: "neutral",
+    };
+  }
 }
 
 export default function Weight() {
@@ -88,29 +112,34 @@ export default function Weight() {
       />
 
       <div>
-        <div className="text-caption">Current</div>
-        <div className="flex items-baseline gap-2 mt-1">
-          <span className="text-display">
-            {latestWeight.data ? latestWeight.data.amount.toFixed(1) : "—"}
-          </span>
-          <span className="text-bone-500 font-medium">lbs</span>
-        </div>
+        {latestWeight.data && (
+          <div>
+            <div className="text-caption">Current</div>
+            <div className="flex items-baseline gap-2 mt-1">
+              <span className="text-display">
+                {latestWeight.data.amount.toFixed(1)}
+              </span>
+              <span className="text-bone-500 font-medium">lbs</span>
+            </div>
+          </div>
+        )}
         {(() => {
           const rangeWeights = weightsRangeQuery.data?.weights ?? [];
           if (rangeWeights.length < 2) return null;
           const delta =
             rangeWeights[rangeWeights.length - 1].amount -
             rangeWeights[0].amount;
-          const { label, tone } = formatDelta(delta);
+          const { Icon, label, tone } = formatDelta(delta);
           return (
             <div
               className={cn(
-                "mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold",
+                "mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold",
                 tone === "good"
                   ? "bg-volt-500/10 border border-volt-500/20 text-volt-500"
                   : "bg-ink-800 border border-ink-700 text-bone-500",
               )}
             >
+              <Icon className="h-3.5 w-3.5" />
               {label} · {FILTER_LABELS[filter]}
             </div>
           );
@@ -160,7 +189,7 @@ export default function Weight() {
             {weightsQuery.data?.weights.map((w, i, arr) => {
               const previous = arr[i + 1];
               const delta = previous ? w.amount - previous.amount : 0;
-              const { label, tone } = formatDelta(delta);
+              const { Icon, label, tone } = formatDelta(delta);
               return (
                 <button
                   key={w.id}
@@ -178,10 +207,11 @@ export default function Weight() {
                   </div>
                   <span
                     className={cn(
-                      "font-mono text-xs font-semibold",
+                      "inline-flex items-center gap-1 font-mono text-xs font-semibold",
                       tone === "good" ? "text-volt-500" : "text-bone-500",
                     )}
                   >
+                    <Icon className="h-3.5 w-3.5" />
                     {label}
                   </span>
                   <ChevronRight className="h-4 w-4 shrink-0 text-bone-600" />
