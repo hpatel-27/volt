@@ -86,8 +86,8 @@ const Landing = () => {
                 <span className="text-volt-500">TRACK.</span>
               </h1>
               <p className="mt-8 text-lg text-bone-300 max-w-xl">
-                The training log for tracking lifts, macros, and bodyweight in
-                one place.
+                A training log for tracking lifts, macros, and bodyweight in one
+                place.
               </p>
               <div className="mt-10 flex flex-wrap gap-3">
                 <Link to="/register">

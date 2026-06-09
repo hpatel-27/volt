@@ -24,7 +24,7 @@ export function AuthLayout({ children }: { children: ReactNode }) {
             <span className="text-volt-500">Track everything.</span>
           </h1>
           <p className="mt-6 text-bone-300 max-w-md">
-            The training log for people who want to track their progress over
+            A training log for people who want to track their progress over
             time.
           </p>
         </div>
