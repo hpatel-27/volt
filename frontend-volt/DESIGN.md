@@ -56,9 +56,9 @@ Defined in `src/index.css` via Tailwind v4 `@theme`. Same tokens duplicated in `
 
 | Class | Size / weight | Use |
 |---|---|---|
-| `text-display` | clamp(2.75rem → 4rem) / 700 / -0.03em | Hero stat |
-| `text-stat` | 2rem / 700 / -0.02em | Card stat |
-| `text-h1` | 28px / 700 | Page title |
+| `text-display` | clamp(2.75rem → 4.5rem) / 700 / -0.03em | Hero stat (fluid) |
+| `text-stat` | clamp(1.75rem → 2.25rem) / 700 / -0.02em | Card stat (fluid) |
+| `text-h1` | clamp(1.5rem → 1.75rem) / 700 / -0.02em | Page title (fluid; 24px on phones → 28px wide) |
 | `text-h2` | 20px / 600 | Card title |
 | `text-body` | 15px / 400 | Default |
 | `text-caption` | 11px / 500 / uppercase / 0.08em | Labels |
