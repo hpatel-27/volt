@@ -50,6 +50,19 @@ async function getTodayWorkoutLogs(userId: string, date: string) {
   return logs.map(toWorkoutLogSummaryDto);
 }
 
+// Return a user's workout sessions whose `date` falls within [from, to] as
+// summaries (each carrying its totalVolume), oldest first. Unpaginated: the
+// dashboard's weekly volume card buckets these by weekday on the client.
+async function getWorkoutLogsByRange(userId: string, from: Date, to: Date) {
+  const logs = await prisma.workoutLog.findMany({
+    where: { userId, date: { gte: from, lte: to } },
+    orderBy: { date: "asc" },
+    include: WORKOUT_LOG_SUMMARY_INCLUDE,
+  });
+
+  return logs.map(toWorkoutLogSummaryDto);
+}
+
 async function getWorkoutLogById(userId: string, logId: string) {
   const workoutLog = await prisma.workoutLog.findUnique({
     where: { id: logId, userId },
@@ -168,6 +181,7 @@ async function deleteWorkoutLog(userId: string, logId: string) {
 export {
   getAllWorkoutLogs,
   getTodayWorkoutLogs,
+  getWorkoutLogsByRange,
   getWorkoutLogById,
   createWorkoutLog,
   updateWorkoutLog,
