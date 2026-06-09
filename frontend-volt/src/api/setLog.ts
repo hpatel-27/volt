@@ -79,6 +79,11 @@ export function useCreateSetLog() {
       queryClient.invalidateQueries({
         queryKey: workoutLogKeys.detail(variables.workoutLogId),
       });
+      // A set's weight/reps feed the summary totalVolume, so the list, today,
+      // and weekly-range summary queries are now stale too.
+      queryClient.invalidateQueries({ queryKey: workoutLogKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: workoutLogKeys.today() });
+      queryClient.invalidateQueries({ queryKey: workoutLogKeys.ranges() });
       queryClient.invalidateQueries({ queryKey: exerciseLogKeys.lists() });
       queryClient.invalidateQueries({
         queryKey: exerciseLogKeys.detail(
@@ -113,6 +118,11 @@ export function useUpdateSetLog() {
       queryClient.invalidateQueries({
         queryKey: workoutLogKeys.detail(variables.workoutLogId),
       });
+      // A set's weight/reps feed the summary totalVolume, so the list, today,
+      // and weekly-range summary queries are now stale too.
+      queryClient.invalidateQueries({ queryKey: workoutLogKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: workoutLogKeys.today() });
+      queryClient.invalidateQueries({ queryKey: workoutLogKeys.ranges() });
       queryClient.invalidateQueries({ queryKey: exerciseLogKeys.lists() });
       queryClient.invalidateQueries({
         queryKey: exerciseLogKeys.detail(
@@ -144,6 +154,11 @@ export function useDeleteSetLog() {
       queryClient.invalidateQueries({
         queryKey: workoutLogKeys.detail(variables.workoutLogId),
       });
+      // A set's weight/reps feed the summary totalVolume, so the list, today,
+      // and weekly-range summary queries are now stale too.
+      queryClient.invalidateQueries({ queryKey: workoutLogKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: workoutLogKeys.today() });
+      queryClient.invalidateQueries({ queryKey: workoutLogKeys.ranges() });
       queryClient.invalidateQueries({ queryKey: exerciseLogKeys.lists() });
       queryClient.invalidateQueries({
         queryKey: exerciseLogKeys.detail(

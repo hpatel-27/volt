@@ -75,6 +75,7 @@ export function useCreateExerciseLog() {
       // so we need to update the list, today, and that log's detail
       queryClient.invalidateQueries({ queryKey: workoutLogKeys.lists() });
       queryClient.invalidateQueries({ queryKey: workoutLogKeys.today() });
+      queryClient.invalidateQueries({ queryKey: workoutLogKeys.ranges() });
       queryClient.invalidateQueries({
         queryKey: workoutLogKeys.detail(variables.workoutLogId),
       });
@@ -142,6 +143,7 @@ export function useDeleteExerciseLog() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: workoutLogKeys.lists() });
       queryClient.invalidateQueries({ queryKey: workoutLogKeys.today() });
+      queryClient.invalidateQueries({ queryKey: workoutLogKeys.ranges() });
       queryClient.invalidateQueries({
         queryKey: workoutLogKeys.detail(variables.workoutLogId),
       });
