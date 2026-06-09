@@ -1,20 +1,11 @@
 // Integration tests: workout log controller via the real Express app + DB.
 // Clerk auth is stubbed so requests resolve to a known test user.
 // This call is hoisted so the module is mocked before the import.
-vi.mock("@clerk/express", () => {
-  return {
-    clerkMiddleware: () => (req: any, _res: Response, next: NextFunction) => {
-      req.auth = "integration_test_workoutLog_controller_user";
-      next();
-    },
-    getAuth: (req: any) => ({
-      isAuthenticated: true,
-      userId: req.auth,
-    }),
-  };
+vi.mock("@clerk/express", async () => {
+  const { makeClerkMock } = await import("../../helpers/clerkMock.js");
+  return makeClerkMock("integration_test_workoutLog_controller_user");
 });
 
-import type { Response, NextFunction } from "express";
 import { it, describe, vi, beforeAll, afterAll, beforeEach, expect } from "vitest";
 import { prisma } from "../../../src/db.js";
 import request from "supertest";
@@ -178,6 +169,75 @@ describe("GET /api/v1/workout-logs/today", () => {
       .expect((res) => {
         expect(res.body).toHaveLength(1);
         expect(res.body[0].date).toBe("2026-06-07");
+      });
+  });
+});
+
+describe("GET /api/v1/workout-logs/range", () => {
+  beforeEach(reset);
+  afterAll(reset);
+
+  // The 400 branches below come from parseDateRange(31), proving the middleware is
+  // wired onto this route before the controller runs.
+  it("returns 400 when from/to are missing", async () => {
+    await request(app)
+      .get("/api/v1/workout-logs/range")
+      .expect(400)
+      .expect({ error: "The FROM and TO dates must both be provided" });
+  });
+
+  it("returns 400 when from is after to", async () => {
+    await request(app)
+      .get("/api/v1/workout-logs/range")
+      .query({ from: "2026-06-10", to: "2026-06-01" })
+      .expect(400)
+      .expect({ error: "The FROM date must be on or before TO" });
+  });
+
+  it("returns 400 when the dates are not valid ISO strings", async () => {
+    await request(app)
+      .get("/api/v1/workout-logs/range")
+      .query({ from: "not-a-date", to: "also-bad" })
+      .expect(400)
+      .expect({ error: "The FROM and TO dates must be valid ISO date strings" });
+  });
+
+  it("returns 400 when the window exceeds the 31-day cap", async () => {
+    await request(app)
+      .get("/api/v1/workout-logs/range")
+      .query({ from: "2026-06-01", to: "2026-07-15" })
+      .expect(400)
+      .expect({ error: "Date range is limited to a maximum of 31 days." });
+  });
+
+  it("returns 200 with only the in-window sessions (ascending), each carrying totalVolume", async () => {
+    // Inside the window, with two sets → tonnage = 135×10 + 145×8 = 2510.
+    const inWindow = await prisma.workoutLog.create({
+      data: { userId: testUserId, date: new Date("2026-06-03") },
+    });
+    const exerciseLog = await prisma.exerciseLog.create({
+      data: { workoutLogId: inWindow.id, exerciseId },
+    });
+    await prisma.setLog.createMany({
+      data: [
+        { exerciseLogId: exerciseLog.id, setNumber: 1, reps: 10, weight: 135 },
+        { exerciseLogId: exerciseLog.id, setNumber: 2, reps: 8, weight: 145 },
+      ],
+    });
+    // Outside the window → must be excluded.
+    await prisma.workoutLog.create({
+      data: { userId: testUserId, date: new Date("2026-06-20") },
+    });
+
+    await request(app)
+      .get("/api/v1/workout-logs/range")
+      .query({ from: "2026-06-01", to: "2026-06-07" })
+      .expect(200)
+      .expect((res) => {
+        expect(res.body).toHaveLength(1);
+        expect(res.body[0].date).toBe("2026-06-03");
+        expect(res.body[0].totalVolume).toBe(2510);
+        expect(res.body[0]).not.toHaveProperty("userId");
       });
   });
 });

@@ -230,6 +230,72 @@ describe("getTodayWorkoutLogs", () => {
   });
 });
 
+describe("getWorkoutLogsByRange", () => {
+  beforeEach(reset);
+  afterAll(reset);
+
+  it("returns only the in-window sessions, oldest first, each with its totalVolume", async () => {
+    // Two sessions inside [06-01, 06-07]; one (06-03) carries sets so we can prove
+    // the summary tonnage is summed from the included sets.
+    const early = await prisma.workoutLog.create({
+      data: { userId: testUserId, date: new Date("2026-06-03") },
+    });
+    const exerciseLog = await prisma.exerciseLog.create({
+      data: { workoutLogId: early.id, exerciseId },
+    });
+    await prisma.setLog.createMany({
+      data: [
+        { exerciseLogId: exerciseLog.id, setNumber: 1, reps: 10, weight: 135 },
+        { exerciseLogId: exerciseLog.id, setNumber: 2, reps: 8, weight: 145 },
+      ],
+    });
+    await prisma.workoutLog.create({
+      data: { userId: testUserId, date: new Date("2026-06-06") },
+    });
+    // Outside the window → excluded.
+    await prisma.workoutLog.create({
+      data: { userId: testUserId, date: new Date("2026-06-20") },
+    });
+
+    const result = await workoutLogService.getWorkoutLogsByRange(
+      testUserId,
+      new Date("2026-06-01"),
+      new Date("2026-06-07"),
+    );
+
+    expect(result.map((l) => l.date)).toStrictEqual(["2026-06-03", "2026-06-06"]);
+    // 135×10 + 145×8 = 2510 for the session with sets; the empty one is 0.
+    expect(result[0]!.totalVolume).toBe(2510);
+    expect(result[1]!.totalVolume).toBe(0);
+  });
+
+  it("returns an empty array when nothing falls in the window", async () => {
+    await prisma.workoutLog.create({
+      data: { userId: testUserId, date: new Date("2026-06-20") },
+    });
+
+    const result = await workoutLogService.getWorkoutLogsByRange(
+      testUserId,
+      new Date("2026-06-01"),
+      new Date("2026-06-07"),
+    );
+    expect(result).toStrictEqual([]);
+  });
+
+  it("does not return another user's sessions in the window", async () => {
+    await prisma.workoutLog.create({
+      data: { userId: otherUserId, date: new Date("2026-06-03") },
+    });
+
+    const result = await workoutLogService.getWorkoutLogsByRange(
+      testUserId,
+      new Date("2026-06-01"),
+      new Date("2026-06-07"),
+    );
+    expect(result).toStrictEqual([]);
+  });
+});
+
 describe("getWorkoutLogById", () => {
   beforeEach(reset);
   afterAll(reset);

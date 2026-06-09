@@ -1,20 +1,11 @@
 // Integration tests: workout day controller via the real Express app + DB.
 // Clerk auth is stubbed so requests resolve to a known test user.
 // This call is hoisted so the module is mocked before the import.
-vi.mock("@clerk/express", () => {
-  return {
-    clerkMiddleware: () => (req: any, _res: Response, next: NextFunction) => {
-      req.auth = "integration_test_workoutDay_controller_user";
-      next();
-    },
-    getAuth: (req: any) => ({
-      isAuthenticated: true,
-      userId: req.auth,
-    }),
-  };
+vi.mock("@clerk/express", async () => {
+  const { makeClerkMock } = await import("../../helpers/clerkMock.js");
+  return makeClerkMock("integration_test_workoutDay_controller_user");
 });
 
-import type { Response, NextFunction } from "express";
 import { it, describe, vi, beforeAll, afterAll, beforeEach, expect } from "vitest";
 import { prisma } from "../../../src/db.js";
 import request from "supertest";
