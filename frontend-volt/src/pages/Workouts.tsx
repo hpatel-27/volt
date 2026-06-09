@@ -91,7 +91,7 @@ export default function Workouts() {
 
       {isLoading ? (
         <div className="pt-8">
-          <Spinner />
+          <Spinner fullscreen />
         </div>
       ) : hasNoPlans ? (
         <div className="flex flex-col items-center gap-3 min-h-[60vh] justify-center text-center">
