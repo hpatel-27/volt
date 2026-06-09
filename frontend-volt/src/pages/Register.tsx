@@ -4,9 +4,9 @@ import { AuthLayout } from "../components/layout/AuthLayout";
 import { Button } from "../components/ui/Button";
 
 const perks = [
-  "Log sets with ease",
-  "Track macros without the math",
-  "See your progress over time",
+  "Sets, reps, and weight in seconds",
+  "Macros counted for each day",
+  "Your weight trend at a glance",
 ];
 
 export default function Register() {
@@ -18,20 +18,25 @@ export default function Register() {
 
       <SignedOut>
         <AuthLayout>
+          <div className="mb-5 font-mono text-xs tracking-[0.3em] text-bone-500">
+            // CREATE ACCOUNT
+          </div>
           <h1 className="font-display text-4xl font-bold leading-none mb-2">
-            Start your streak.
+            Log day one.
           </h1>
           <p className="text-bone-300 text-sm mb-10">
-            Set up takes under a minute. Your first log takes ten seconds.
+            Setup takes a minute. Your first set takes ten seconds.
           </p>
 
           <ul className="flex flex-col gap-3 mb-10">
-            {perks.map((perk) => (
+            {perks.map((perk, i) => (
               <li
                 key={perk}
                 className="flex items-center gap-3 text-sm text-bone-200"
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-volt-500" />
+                <span className="font-mono text-[11px] tabular-nums text-volt-500">
+                  0{i + 1}
+                </span>
                 {perk}
               </li>
             ))}

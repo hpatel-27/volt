@@ -12,6 +12,9 @@ export default function Login() {
 
       <SignedOut>
         <AuthLayout>
+          <div className="mb-5 font-mono text-xs tracking-[0.3em] text-bone-500">
+            // SIGN IN
+          </div>
           <h1 className="font-display text-4xl font-bold leading-none mb-2">
             Welcome back.
           </h1>
