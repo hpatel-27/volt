@@ -72,10 +72,16 @@ export function useActivateWorkoutPlan() {
   });
 }
 
-export function useWorkoutPlanDetail(id: string) {
+export function useWorkoutPlanDetail(
+  id: string,
+  options?: { enabled?: boolean },
+) {
   const authedFetch = useFetch();
   return useQuery({
     queryKey: workoutPlanKeys.detail(id),
+    // Gate so dependent callers (e.g. "load the active plan's days") don't fire
+    // with an empty id before the prerequisite query has resolved.
+    enabled: options?.enabled ?? true,
     queryFn: async () => {
       const url = `${BASE}/${id}`;
       const data = await authedFetch<WorkoutPlan>(url);
