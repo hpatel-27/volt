@@ -20,3 +20,7 @@ export const WORKOUT_TYPES = [
 ];
 
 export const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+
+// Shared across skeleton, empty, and resolved states so the dashboard doesn't
+// shift height as data loads in.
+export const MIN_H = "min-h-40";

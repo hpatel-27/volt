@@ -177,7 +177,7 @@ export default function Weight() {
       <div className="text-caption">Entries</div>
       {weightsQuery.isPending ? (
         <div className="flex justify-center py-8">
-          <Spinner />
+          <Spinner fullscreen />
         </div>
       ) : weightsQuery.data && weightsQuery.data.weights.length === 0 ? (
         <div className="text-center py-8 text-sm text-bone-500">

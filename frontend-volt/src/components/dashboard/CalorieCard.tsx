@@ -2,7 +2,7 @@ import { Link } from "react-router";
 import { Card } from "../ui/Card";
 import { useNutritionToday } from "@/api/nutrition";
 import { todayLocalIso } from "@/lib/date";
-import { GOALS } from "@/types/shared";
+import { GOALS, MIN_H } from "@/types/shared";
 
 /**
  * Calories-remaining card for today. The headline number is what's left
@@ -10,13 +10,21 @@ import { GOALS } from "@/types/shared";
  * matching the nutrition page's calorie treatment.
  */
 export function CalorieCard() {
-  const { data } = useNutritionToday(todayLocalIso());
+  const { data, isLoading: todayLoading } = useNutritionToday(todayLocalIso());
 
   const goal = GOALS.calories;
   const consumed = data?.totals.calories ?? 0;
   // Clamp so going over goal reads 0 left / 100% bar rather than inverting.
   const remaining = Math.max(0, goal - consumed);
   const consumedPct = Math.min(100, (consumed / goal) * 100);
+
+  if (todayLoading) {
+    return (
+      <div
+        className={`${MIN_H} rounded-2xl border border-white/5 bg-ink-900 animate-pulse`}
+      />
+    );
+  }
 
   return (
     <Link to="/nutrition" className="block h-full">
