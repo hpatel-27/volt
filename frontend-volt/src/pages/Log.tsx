@@ -90,7 +90,7 @@ export default function Log() {
 
       {pageQuery.isLoading ? (
         <div className="pt-8">
-          <Spinner />
+          <Spinner fullscreen />
         </div>
       ) : logs.length > 0 ? (
         <div>

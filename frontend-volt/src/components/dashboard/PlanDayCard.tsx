@@ -4,12 +4,8 @@ import { useActiveWorkoutPlan, useWorkoutPlanDetail } from "@/api/workoutPlan";
 import { useWorkoutLogs } from "@/api/workoutLog";
 import { selectNextPlanDay } from "@/lib/plan";
 import { useMounted } from "@/lib/useMounted";
-import { LIMIT } from "@/types/shared";
+import { LIMIT, MIN_H } from "@/types/shared";
 import { ArrowRight } from "lucide-react";
-
-// Shared across skeleton, empty, and resolved states so the dashboard doesn't
-// shift height as data loads in.
-const MIN_H = "min-h-40";
 
 /**
  * Hero card for the user's active plan. Surfaces the next day in the plan's

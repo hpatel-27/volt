@@ -4,6 +4,7 @@ import { useWorkoutLogsRange } from "@/api/workoutLog";
 import { currentWeekRange, dayIndexMon0, todayLocalIso } from "@/lib/date";
 import { cn } from "@/lib/cn";
 import type { WorkoutLogSummary } from "@/types/workoutLog";
+import { MIN_H } from "@/types/shared";
 
 const DAY_LABELS = ["M", "T", "W", "T", "F", "S", "S"];
 
@@ -22,7 +23,7 @@ function bucketWeeklyVolume(logs: WorkoutLogSummary[]): number[] {
 
 export function VolumeCard() {
   const week = currentWeekRange();
-  const { data } = useWorkoutLogsRange(week);
+  const { data, isLoading: logsLoading } = useWorkoutLogsRange(week);
   const logs = data ?? [];
 
   const dailyVolume = bucketWeeklyVolume(logs);
@@ -30,6 +31,14 @@ export function VolumeCard() {
   // Normalize bar heights against the busiest day; guard against divide-by-zero.
   const max = Math.max(...dailyVolume, 1);
   const todayIdx = dayIndexMon0(todayLocalIso());
+
+  if (logsLoading) {
+    return (
+      <div
+        className={`${MIN_H} rounded-2xl border border-white/5 bg-ink-900 animate-pulse`}
+      />
+    );
+  }
 
   return (
     <Link to="/workouts" className="block">

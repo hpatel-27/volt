@@ -11,7 +11,7 @@ import {
   TrendingUp,
   type LucideIcon,
 } from "lucide-react";
-import { LIMIT } from "@/types/shared";
+import { LIMIT, MIN_H } from "@/types/shared";
 
 /**
  * Reduce a 7-day window of weight entries to a single delta for the card.
@@ -40,10 +40,21 @@ const deltaIcon: Record<WeightDelta["direction"], LucideIcon> = {
 };
 
 export function WeightCard() {
-  const { data: latest } = useLatestWeight();
-  const { data: range } = useWeightsRange(filterToRange("7D"));
+  const { data: latest, isLoading: currentLoading } = useLatestWeight();
+  const { data: range, isLoading: rangeLoading } = useWeightsRange(
+    filterToRange("7D"),
+  );
   useWeights({ page: 1, limit: LIMIT });
   const delta = range ? computeSevenDayDelta(range.weights) : null;
+
+  const showSkeleton = currentLoading || rangeLoading;
+  if (showSkeleton) {
+    return (
+      <div
+        className={`${MIN_H} rounded-2xl border border-white/5 bg-ink-900 animate-pulse`}
+      />
+    );
+  }
 
   // Empty state: no weight logged yet = invite the user to start tracking.
   if (!latest) {
