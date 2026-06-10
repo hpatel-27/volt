@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 import { Card } from "../ui/Card";
-import { useLatestWeight, useWeightsRange } from "@/api/weights";
+import { useLatestWeight, useWeights, useWeightsRange } from "@/api/weights";
 import { filterToRange } from "@/lib/date";
 import type { Weight, WeightDelta } from "@/types/weight";
 import {
@@ -11,6 +11,7 @@ import {
   TrendingUp,
   type LucideIcon,
 } from "lucide-react";
+import { LIMIT } from "@/types/shared";
 
 /**
  * Reduce a 7-day window of weight entries to a single delta for the card.
@@ -41,7 +42,7 @@ const deltaIcon: Record<WeightDelta["direction"], LucideIcon> = {
 export function WeightCard() {
   const { data: latest } = useLatestWeight();
   const { data: range } = useWeightsRange(filterToRange("7D"));
-
+  useWeights({ page: 1, limit: LIMIT });
   const delta = range ? computeSevenDayDelta(range.weights) : null;
 
   // Empty state: no weight logged yet = invite the user to start tracking.
