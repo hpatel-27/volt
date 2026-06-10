@@ -24,7 +24,7 @@ export default function Dashboard() {
       <header>
         <div className="text-caption">{formatFullDate(todayIso)}</div>
         <h1 className="text-h1">
-          {!firstName ? `Hey, ${firstName}` : `Let's get to work`}
+          {firstName ? `Hey, ${firstName}` : `Let's get to work`}
         </h1>
       </header>
 
