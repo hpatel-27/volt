@@ -44,6 +44,23 @@ async function getTodayWorkoutLogs(req: Request, res: Response) {
   res.json(summaries);
 }
 
+// Return the user's workout summaries within [from, to] (no pagination). Feeds the
+// dashboard's weekly volume card. parseDateRange has already validated the window
+// and set fromDate/toDate on res.locals.
+async function getWorkoutLogsByRange(req: Request, res: Response) {
+  const user = req.user!;
+  const userId = user.id;
+  const fromDate = res.locals.fromDate as Date;
+  const toDate = res.locals.toDate as Date;
+
+  const summaries = await workoutLogService.getWorkoutLogsByRange(
+    userId,
+    fromDate,
+    toDate,
+  );
+  res.json(summaries);
+}
+
 async function createWorkoutLog(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
@@ -116,6 +133,7 @@ async function deleteWorkoutLog(req: Request, res: Response) {
 export {
   getAllWorkoutLogs,
   getTodayWorkoutLogs,
+  getWorkoutLogsByRange,
   getWorkoutLogById,
   createWorkoutLog,
   updateWorkoutLog,

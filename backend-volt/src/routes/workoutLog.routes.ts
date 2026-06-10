@@ -5,7 +5,11 @@ import * as workoutLogController from "../controllers/workoutLog.controller.js";
 import { userMiddleware } from "../middleware/user.middleware.js";
 import { parseUuidParam } from "../middleware/param.middleware.js";
 import { paginationMiddleware } from "../middleware/pagination.middleware.js";
-import { parseDate, parseOptionalDate } from "../middleware/date.middleware.js";
+import {
+  parseDate,
+  parseOptionalDate,
+  parseDateRange,
+} from "../middleware/date.middleware.js";
 import exerciseLogRouter from "./exerciseLog.routes.js";
 
 // Get all workout logs for the authenticated user
@@ -19,6 +23,15 @@ router.get(
 // Get today's workout session summaries (empty array if none exist yet).
 // Registered before /:logId so "today" is not interpreted as a UUID param.
 router.get("/today", userMiddleware, workoutLogController.getTodayWorkoutLogs);
+
+// Get workout summaries within a date range (for the dashboard weekly volume
+// card). Also registered before /:logId so "range" is not parsed as a UUID.
+router.get(
+  "/range",
+  userMiddleware,
+  parseDateRange(31),
+  workoutLogController.getWorkoutLogsByRange,
+);
 
 // Get a single workout log with exercise logs and sets
 router.get(

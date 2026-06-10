@@ -13,12 +13,17 @@ import type { WorkoutLogSummary } from "@/types/workoutLog";
 function computeTodayStats(today: WorkoutLogSummary[]): {
   sessions: number;
   exercises: number;
+  totalVolume: number;
 } {
   const exerciseCount = today.reduce(
     (sum, workoutSession) => sum + workoutSession.exerciseCount,
     0,
   );
-  return { sessions: today.length, exercises: exerciseCount };
+  const totalVolume = today.reduce(
+    (sum, workoutSession) => sum + workoutSession.totalVolume,
+    0,
+  );
+  return { sessions: today.length, exercises: exerciseCount, totalVolume };
 }
 
 export default function Log() {
@@ -76,6 +81,11 @@ export default function Log() {
         <span className="text-caption text-bone-500">
           {todayStats.exercises === 1 ? "exercise" : "exercises"} today
         </span>
+        {todayStats.totalVolume > 0 && (
+          <span className="mt-2 font-mono text-xs text-bone-500">
+            {todayStats.totalVolume.toLocaleString()} lbs
+          </span>
+        )}
       </Card>
 
       {pageQuery.isLoading ? (
@@ -100,6 +110,9 @@ export default function Log() {
                     {log.workoutDay ? `${log.workoutDay.name} · ` : ""}
                     {log.exerciseCount}{" "}
                     {log.exerciseCount === 1 ? "exercise" : "exercises"}
+                    {log.totalVolume > 0
+                      ? ` · ${log.totalVolume.toLocaleString()} lbs`
+                      : ""}
                   </div>
                 </div>
                 <ChevronRight className="h-4 w-4 shrink-0 text-bone-500" />

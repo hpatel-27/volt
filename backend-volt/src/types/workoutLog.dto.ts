@@ -16,6 +16,9 @@ export interface UpdateWorkoutLogInput {
 export const WORKOUT_LOG_SUMMARY_INCLUDE = {
   workoutDay: { select: { id: true, name: true } },
   _count: { select: { exerciseLogs: true } },
+  // Per-set scalars needed to compute total volume (Σ weight × reps). Only the two
+  // numeric columns are hydrated, so the summary query stays lightweight.
+  exerciseLogs: { select: { sets: { select: { weight: true, reps: true } } } },
 } as const satisfies Prisma.WorkoutLogInclude;
 
 export type WorkoutLogWithSummary = Prisma.WorkoutLogGetPayload<{
@@ -47,5 +50,7 @@ export interface WorkoutLogSummary {
   id: string;
   date: string;
   exerciseCount: number;
+  // Total tonnage for the session: Σ (weight × reps) across all sets, in lbs.
+  totalVolume: number;
   workoutDay: { id: string; name: string } | null;
 }

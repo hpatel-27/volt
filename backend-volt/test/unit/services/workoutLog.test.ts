@@ -20,10 +20,14 @@ function prismaError(code: string) {
   });
 }
 
-// A raw WorkoutLog row as Prisma returns it for the SUMMARY (list/today) query:
-// the userId + workoutDayId FKs and createdAt are present and must be stripped
-// by the mapper; workoutDay is the denormalized {id,name} ref (or null), and
-// _count.exerciseLogs becomes `exerciseCount`.
+// A raw WorkoutLog row as Prisma returns it for the SUMMARY (list/today/range)
+// query: the userId + workoutDayId FKs and createdAt are present and must be
+// stripped by the mapper; workoutDay is the denormalized {id,name} ref (or null),
+// and _count.exerciseLogs becomes `exerciseCount`. The SUMMARY include also
+// hydrates each set's {weight, reps} so the mapper can sum total volume:
+//   Σ weight × reps = (135×10 + 145×8) + (90×12) = 1350 + 1160 + 1080 = 3590.
+// `_count` and the `exerciseLogs` sets are independent fields here, so a test can
+// override either alone (e.g. an empty session: exerciseLogs [] → totalVolume 0).
 function rawSummary(overrides: Record<string, unknown> = {}) {
   return {
     id: "log-1",
@@ -33,6 +37,10 @@ function rawSummary(overrides: Record<string, unknown> = {}) {
     createdAt: new Date("2026-06-07T08:00:00.000Z"),
     workoutDay: { id: "day-1", name: "Push" },
     _count: { exerciseLogs: 3 },
+    exerciseLogs: [
+      { sets: [{ weight: 135, reps: 10 }, { weight: 145, reps: 8 }] },
+      { sets: [{ weight: 90, reps: 12 }] },
+    ],
     ...overrides,
   } as any;
 }
@@ -142,12 +150,14 @@ describe("WorkoutLog Service getAllWorkoutLogs", () => {
   test("maps rows to summaries (FKs + createdAt stripped, _count → exerciseCount)", async () => {
     prismaMock.workoutLog.findMany.mockResolvedValueOnce([
       rawSummary({ id: "log-a", date: new Date("2026-06-07T00:00:00.000Z") }),
-      // An ad-hoc session has no template day → workoutDay is null.
+      // An ad-hoc session has no template day → workoutDay is null, and with no
+      // exercise logs its total volume is 0.
       rawSummary({
         id: "log-b",
         workoutDayId: null,
         workoutDay: null,
         _count: { exerciseLogs: 0 },
+        exerciseLogs: [],
       }),
     ]);
     prismaMock.workoutLog.count.mockResolvedValueOnce(2);
@@ -161,12 +171,14 @@ describe("WorkoutLog Service getAllWorkoutLogs", () => {
         date: "2026-06-07",
         workoutDay: { id: "day-1", name: "Push" },
         exerciseCount: 3,
+        totalVolume: 3590,
       },
       {
         id: "log-b",
         date: "2026-06-07",
         workoutDay: null,
         exerciseCount: 0,
+        totalVolume: 0,
       },
     ]);
     // FKs and the insertion-order timestamp never leak into the DTO.
@@ -213,7 +225,11 @@ describe("WorkoutLog Service getTodayWorkoutLogs", () => {
   test("maps the rows to summary DTOs", async () => {
     prismaMock.workoutLog.findMany.mockResolvedValueOnce([
       rawSummary({ id: "log-a" }),
-      rawSummary({ id: "log-b", _count: { exerciseLogs: 1 } }),
+      rawSummary({
+        id: "log-b",
+        _count: { exerciseLogs: 1 },
+        exerciseLogs: [{ sets: [{ weight: 100, reps: 5 }] }],
+      }),
     ]);
 
     const result = await workoutLogService.getTodayWorkoutLogs(
@@ -227,12 +243,14 @@ describe("WorkoutLog Service getTodayWorkoutLogs", () => {
         date: "2026-06-07",
         workoutDay: { id: "day-1", name: "Push" },
         exerciseCount: 3,
+        totalVolume: 3590,
       },
       {
         id: "log-b",
         date: "2026-06-07",
         workoutDay: { id: "day-1", name: "Push" },
         exerciseCount: 1,
+        totalVolume: 500,
       },
     ]);
   });
@@ -254,6 +272,77 @@ describe("WorkoutLog Service getTodayWorkoutLogs", () => {
 
     await expect(
       workoutLogService.getTodayWorkoutLogs("user-1", "2026-06-07"),
+    ).rejects.toThrow(dbError);
+  });
+});
+
+describe("WorkoutLog Service getWorkoutLogsByRange", () => {
+  beforeEach(() => mockReset(prismaMock));
+
+  test("filters to the [from, to] window, orders oldest-first, and maps to summaries with totalVolume", async () => {
+    const from = new Date("2026-06-01T00:00:00.000Z");
+    const to = new Date("2026-06-07T00:00:00.000Z");
+    prismaMock.workoutLog.findMany.mockResolvedValueOnce([
+      rawSummary({ id: "log-a", date: new Date("2026-06-02T00:00:00.000Z") }),
+      rawSummary({
+        id: "log-b",
+        date: new Date("2026-06-06T00:00:00.000Z"),
+        _count: { exerciseLogs: 1 },
+        exerciseLogs: [{ sets: [{ weight: 100, reps: 5 }] }],
+      }),
+    ]);
+
+    const result = await workoutLogService.getWorkoutLogsByRange(
+      "user-1",
+      from,
+      to,
+    );
+
+    // Each summary carries its own tonnage; the dashboard buckets these by weekday.
+    expect(result).toStrictEqual([
+      {
+        id: "log-a",
+        date: "2026-06-02",
+        workoutDay: { id: "day-1", name: "Push" },
+        exerciseCount: 3,
+        totalVolume: 3590,
+      },
+      {
+        id: "log-b",
+        date: "2026-06-06",
+        workoutDay: { id: "day-1", name: "Push" },
+        exerciseCount: 1,
+        totalVolume: 500,
+      },
+    ]);
+    // The window is enforced in the WHERE clause (inclusive both ends), scoped to
+    // the owner, and ordered ascending so the client can chart chronologically.
+    expect(prismaMock.workoutLog.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { userId: "user-1", date: { gte: from, lte: to } },
+        orderBy: { date: "asc" },
+      }),
+    );
+  });
+
+  test("returns an empty array when no sessions fall in the window", async () => {
+    prismaMock.workoutLog.findMany.mockResolvedValueOnce([]);
+
+    const result = await workoutLogService.getWorkoutLogsByRange(
+      "user-1",
+      new Date("2026-01-01T00:00:00.000Z"),
+      new Date("2026-01-02T00:00:00.000Z"),
+    );
+
+    expect(result).toStrictEqual([]);
+  });
+
+  test("propagates an unexpected error", async () => {
+    const dbError = new Error("Prisma database is currently unavailable.");
+    prismaMock.workoutLog.findMany.mockRejectedValueOnce(dbError);
+
+    await expect(
+      workoutLogService.getWorkoutLogsByRange("user-1", new Date(), new Date()),
     ).rejects.toThrow(dbError);
   });
 });

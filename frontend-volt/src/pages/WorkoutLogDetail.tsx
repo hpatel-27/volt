@@ -20,16 +20,17 @@ type SetTarget = { exerciseLog: ExerciseLog; set: SetLog | null };
 
 function computeSessionStats(exercises: ExerciseLog[]): {
   totalSets: number;
+  totalVolume: number;
 } {
-  // Total volume could be an interesting metric but doesn't really have value
-  // other than being cool
-
   // Compute the total sets across all the exercises
   const totalSets = exercises.reduce(
     (sum, exercise) => sum + exercise.sets.length,
     0,
   );
-  return { totalSets };
+  const totalVolume = exercises
+    .flatMap((e) => e.sets)
+    .reduce((sum, set) => sum + set.reps * set.weight, 0);
+  return { totalSets, totalVolume };
 }
 
 export default function WorkoutLogDetail() {
@@ -149,8 +150,11 @@ export default function WorkoutLogDetail() {
         <span className="text-caption text-bone-500">
           {stats.totalSets === 1 ? "set" : "sets"} logged
         </span>
-        <span className="mt-2 font-mono text-xs text-bone-500">
+        <span className="font-mono text-xs text-bone-500">
           {exercises.length} {exercises.length === 1 ? "exercise" : "exercises"}
+        </span>
+        <span className="font-mono text-xs text-bone-500">
+          {`${stats.totalVolume.toLocaleString()} lbs lifted`}
         </span>
       </Card>
 

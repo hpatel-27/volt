@@ -21,6 +21,27 @@ export function daysAgoLocalIso(n: number) {
   return formatLocalIso(d);
 }
 
+/**
+ * The current local week as a Monday -> Sunday ISO range. Used by the dashboard
+ * volume card, whose 7 bars are fixed weekday slots (M T W T F S S).
+ */
+export function currentWeekRange() {
+  const now = new Date();
+  const mondayOffset = (now.getDay() + 6) % 7; // getDay: 0=Sun..6=Sat → days since Mon
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - mondayOffset);
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  return { from: formatLocalIso(monday), to: formatLocalIso(sunday) };
+}
+
+/** Weekday index of a YYYY-MM-DD date, Monday=0 ... Sunday=6, parsed in local time. */
+export function dayIndexMon0(iso: string) {
+  const [year, month, day] = iso.slice(0, 10).split("-").map(Number);
+  const local = new Date(year, month - 1, day); // multi-arg form = local time
+  return (local.getDay() + 6) % 7;
+}
+
 export function filterToRange(filter: WeightFilter) {
   const to = todayLocalIso();
   let from;

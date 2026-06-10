@@ -107,6 +107,51 @@ describe("WorkoutLog Controller getTodayWorkoutLogs", () => {
   });
 });
 
+describe("WorkoutLog Controller getWorkoutLogsByRange", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  // parseDateRange has already validated the window and set fromDate/toDate on
+  // res.locals; the controller just reads them and delegates.
+  it("passes the parsed from/to dates from res.locals and returns the summaries", async () => {
+    const fromDate = new Date("2026-06-01T00:00:00.000Z");
+    const toDate = new Date("2026-06-07T00:00:00.000Z");
+    const mReq = { user: { id: "user-1" } } as unknown as Request;
+    const mRes = mockResponse({ fromDate, toDate });
+
+    const summaries = [
+      { id: "log-1", date: "2026-06-02", exerciseCount: 2, totalVolume: 3590 },
+    ];
+    vi.mocked(workoutLogService.getWorkoutLogsByRange).mockResolvedValueOnce(
+      summaries as any,
+    );
+
+    await workoutLogController.getWorkoutLogsByRange(mReq, mRes);
+
+    expect(workoutLogService.getWorkoutLogsByRange).toHaveBeenCalledWith(
+      "user-1",
+      fromDate,
+      toDate,
+    );
+    expect(mRes.json).toHaveBeenCalledWith(summaries);
+  });
+
+  it("propagates a service error", async () => {
+    const mReq = { user: { id: "user-1" } } as unknown as Request;
+    const mRes = mockResponse({
+      fromDate: new Date("2026-06-01"),
+      toDate: new Date("2026-06-07"),
+    });
+
+    vi.mocked(workoutLogService.getWorkoutLogsByRange).mockRejectedValueOnce(
+      new Error("db down"),
+    );
+
+    await expect(
+      workoutLogController.getWorkoutLogsByRange(mReq, mRes),
+    ).rejects.toThrow("db down");
+  });
+});
+
 describe("WorkoutLog Controller getWorkoutLogById", () => {
   beforeEach(() => vi.clearAllMocks());
 

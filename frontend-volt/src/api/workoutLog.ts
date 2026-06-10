@@ -20,6 +20,9 @@ export const workoutLogKeys = {
   details: () => [...workoutLogKeys.all, "detail"] as const,
   detail: (logId: string) => [...workoutLogKeys.details(), logId] as const,
   today: () => [...workoutLogKeys.all, "today"] as const,
+  ranges: () => [...workoutLogKeys.all, "range"] as const,
+  range: (params: { from: string; to: string }) =>
+    [...workoutLogKeys.ranges(), params] as const,
 };
 
 export function useWorkoutLogsToday(date: string) {
@@ -32,6 +35,20 @@ export function useWorkoutLogsToday(date: string) {
       const url = `${BASE}/today?date=${encodeURIComponent(date)}`;
       // A day can hold multiple sessions, so the server returns an array of
       // summaries (empty when nothing has been logged today).
+      const data = await authedFetch<WorkoutLogSummary[]>(url);
+      return data ?? [];
+    },
+  });
+}
+
+export function useWorkoutLogsRange(params: { from: string; to: string }) {
+  const authedFetch = useFetch();
+  return useQuery({
+    queryKey: workoutLogKeys.range(params),
+    queryFn: async () => {
+      const url = `${BASE}/range?from=${encodeURIComponent(params.from)}&to=${encodeURIComponent(params.to)}`;
+      // The range route returns a bare array of summaries (empty when the window
+      // has no logged sessions).
       const data = await authedFetch<WorkoutLogSummary[]>(url);
       return data ?? [];
     },
@@ -92,6 +109,7 @@ export function useCreateWorkoutLog() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: workoutLogKeys.lists() });
       queryClient.invalidateQueries({ queryKey: workoutLogKeys.today() });
+      queryClient.invalidateQueries({ queryKey: workoutLogKeys.ranges() });
       queryClient.invalidateQueries({
         queryKey: workoutLogKeys.detail(data.id),
       });
@@ -118,6 +136,7 @@ export function useUpdateWorkoutLog() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: workoutLogKeys.lists() });
       queryClient.invalidateQueries({ queryKey: workoutLogKeys.today() });
+      queryClient.invalidateQueries({ queryKey: workoutLogKeys.ranges() });
       queryClient.invalidateQueries({
         queryKey: workoutLogKeys.detail(variables.id),
       });
@@ -139,6 +158,7 @@ export function useDeleteWorkoutLog() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: workoutLogKeys.lists() });
       queryClient.invalidateQueries({ queryKey: workoutLogKeys.today() });
+      queryClient.invalidateQueries({ queryKey: workoutLogKeys.ranges() });
       queryClient.removeQueries({
         queryKey: workoutLogKeys.detail(variables.id),
       });
