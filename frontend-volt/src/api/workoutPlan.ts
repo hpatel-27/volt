@@ -16,19 +16,28 @@ const BASE = `${import.meta.env.VITE_API_BASE_URL}/workout-plans`;
 export const workoutPlanKeys = {
   all: ["workoutPlan"] as const,
   lists: () => [...workoutPlanKeys.all, "list"] as const,
-  list: (params: { page: number; limit: number }) =>
+  list: (params: { page: number; limit: number; type?: string }) =>
     [...workoutPlanKeys.lists(), params] as const,
   active: () => [...workoutPlanKeys.all, "active"] as const,
   details: () => [...workoutPlanKeys.all, "detail"] as const,
   detail: (planId: string) => [...workoutPlanKeys.details(), planId] as const,
 };
 
-export function useWorkoutPlans(params: { page: number; limit: number }) {
+export function useWorkoutPlans(params: {
+  page: number;
+  limit: number;
+  type?: string;
+}) {
   const authedFetch = useFetch();
   return useQuery({
     queryKey: workoutPlanKeys.list(params),
     queryFn: async () => {
-      const url = `${BASE}?page=${params.page}&limit=${params.limit}`;
+      const search = new URLSearchParams({
+        page: String(params.page),
+        limit: String(params.limit),
+      });
+      if (params.type) search.set("type", params.type);
+      const url = `${BASE}?${search}`;
       const data = await authedFetch<WorkoutPlanPage>(url);
       if (!data)
         throw new Error("Expected workout plan list, got empty response");

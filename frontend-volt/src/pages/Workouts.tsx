@@ -9,7 +9,7 @@ import { useActiveWorkoutPlan, useWorkoutPlans } from "@/api/workoutPlan";
 import { LIMIT } from "@/types/shared";
 import { Spinner } from "@/components/ui/Spinner";
 import WorkoutPlanEntrySheet from "@/components/workout/WorkoutPlanEntrySheet";
-import { formatPlanType } from "@/lib/plan";
+import { formatPlanType, planFilterToType } from "@/lib/plan";
 
 export default function Workouts() {
   const planFilters: PlanFilter[] = [
@@ -22,7 +22,12 @@ export default function Workouts() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sheetKey, setSheetKey] = useState(0);
   const [page, setPage] = useState(1);
-  const planQuery = useWorkoutPlans({ page, limit: LIMIT });
+  const isFiltered = filter !== "All";
+  const planQuery = useWorkoutPlans({
+    page,
+    limit: LIMIT,
+    type: planFilterToType(filter),
+  });
   const activePlanQuery = useActiveWorkoutPlan();
   const totalPages =
     planQuery.data?.total !== undefined &&
@@ -30,16 +35,20 @@ export default function Workouts() {
     planQuery.data?.total !== 0
       ? Math.ceil(planQuery.data?.total / planQuery.data?.limit)
       : 1;
+  // The list is now filtered server-side, so this is already the matching set.
   const otherPlans = planQuery.data?.workoutPlans ?? [];
-  const filteredOthers =
-    filter !== "All"
-      ? otherPlans.filter((p) => p.type === filter.toUpperCase())
-      : otherPlans;
   const activePlan = activePlanQuery.data ?? null;
-  // The list endpoint already excludes the active plan, so "no plans at all"
-  // means both queries returned nothing.
-  const hasNoPlans = !activePlan && otherPlans.length === 0;
+  // Onboarding only when the user genuinely has no plans — an active filter that
+  // matches nothing is "no matches", not "no plans at all".
+  const hasNoPlans = !activePlan && otherPlans.length === 0 && !isFiltered;
   const isLoading = planQuery.isLoading || activePlanQuery.isLoading;
+
+  // Re-filtering changes which plans exist and how many pages there are, so jump
+  // back to the first page to avoid landing on a now-out-of-range page.
+  const selectFilter = (next: PlanFilter) => {
+    setFilter(next);
+    setPage(1);
+  };
 
   // No argument = log a new workout plan.
   // Bumping the key remounts the sheet so its fields re-initialize.
@@ -80,9 +89,7 @@ export default function Workouts() {
                 ? "bg-ink-800 text-bone-300 font-semibold"
                 : "text-bone-500 font-medium",
             )}
-            onClick={() => {
-              setFilter(r);
-            }}
+            onClick={() => selectFilter(r)}
           >
             {r}
           </button>
@@ -139,10 +146,10 @@ export default function Workouts() {
             </Link>
           )}
 
-          {otherPlans.length > 0 && (
+          {(otherPlans.length > 0 || isFiltered) && (
             <div>
               <div className="mb-3 text-caption text-bone-500">Other plans</div>
-              {filteredOthers.length === 0 ? (
+              {otherPlans.length === 0 ? (
                 <div className="flex flex-col items-center gap-3 py-10 text-center">
                   <p className="font-display text-lg font-semibold text-bone-50">
                     No matches
@@ -153,7 +160,7 @@ export default function Workouts() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {filteredOthers.map((plan) => (
+                  {otherPlans.map((plan) => (
                     <Link key={plan.id} to={`/plans/${plan.id}`}>
                       <Card interactive>
                         <div className="text-caption mb-3 text-bone-500">
