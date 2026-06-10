@@ -82,6 +82,7 @@
     color-scheme: dark;
     -webkit-font-smoothing: antialiased;
     font-family: var(--font-sans);
+    scrollbar-gutter: stable;
     @apply font-sans;
   }
 
