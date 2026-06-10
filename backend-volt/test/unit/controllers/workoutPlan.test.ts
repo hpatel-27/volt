@@ -26,6 +26,7 @@ describe("WorkoutPlan Controller getAllWorkoutPlans", () => {
     const mReq = {
       user: { id: "user-1" },
       pagination: { page: 2, limit: 5 },
+      query: {},
     } as unknown as Request;
     const mRes = mockResponse();
 
@@ -40,14 +41,53 @@ describe("WorkoutPlan Controller getAllWorkoutPlans", () => {
       "user-1",
       2,
       5,
+      undefined,
     );
     expect(mRes.json).toHaveBeenCalledWith(payload);
+  });
+
+  it("forwards a valid type filter to the service", async () => {
+    const mReq = {
+      user: { id: "user-1" },
+      pagination: { page: 1, limit: 10 },
+      query: { type: "STRENGTH" },
+    } as unknown as Request;
+    const mRes = mockResponse();
+
+    const payload = { workoutPlans: [], total: 0, page: 1, limit: 10 };
+    vi.mocked(workoutPlanService.getAllWorkoutPlans).mockResolvedValueOnce(
+      payload as any,
+    );
+
+    await workoutPlanController.getAllWorkoutPlans(mReq, mRes);
+
+    expect(workoutPlanService.getAllWorkoutPlans).toHaveBeenCalledWith(
+      "user-1",
+      1,
+      10,
+      "STRENGTH",
+    );
+  });
+
+  it("rejects an invalid type filter with a 400 and never calls the service", async () => {
+    const mReq = {
+      user: { id: "user-1" },
+      pagination: { page: 1, limit: 10 },
+      query: { type: "CARDIO" },
+    } as unknown as Request;
+    const mRes = mockResponse();
+
+    await workoutPlanController.getAllWorkoutPlans(mReq, mRes);
+
+    expect(mRes.status).toHaveBeenCalledWith(400);
+    expect(workoutPlanService.getAllWorkoutPlans).not.toHaveBeenCalled();
   });
 
   it("propagates a service error to the error middleware", async () => {
     const mReq = {
       user: { id: "user-1" },
       pagination: { page: 1, limit: 10 },
+      query: {},
     } as unknown as Request;
     const mRes = mockResponse();
 

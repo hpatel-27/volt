@@ -10,11 +10,25 @@ async function getAllWorkoutPlans(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
   const { page, limit } = req.pagination!;
+  const type = req.query.type;
+
+  if (type !== undefined) {
+    if (
+      typeof type !== "string" ||
+      !Object.values(PlanType).includes(type as PlanType)
+    ) {
+      return res.status(400).json({
+        error:
+          "Invalid type was provided. STRENGTH, HYPERTROPHY, and WEIGHT_LOSS are the only types currently supported.",
+      });
+    }
+  }
 
   const workoutPlans = await workoutPlanService.getAllWorkoutPlans(
     userId,
     page,
     limit,
+    type as PlanType | undefined,
   );
   res.json(workoutPlans);
 }

@@ -1,5 +1,5 @@
 import { prisma } from "../db.js";
-import { Prisma } from "../generated/prisma/client.js";
+import { Prisma, PlanType } from "../generated/prisma/client.js";
 import { EXERCISE_REF_SELECT } from "../prisma/selects.js";
 import { BadRequestError, NotFoundError } from "../errors.js";
 import type {
@@ -24,7 +24,12 @@ const planDetailInclude = {
 } satisfies Prisma.WorkoutPlanInclude;
 
 // When listing the plans we don't need the nested workout day exercises
-async function getAllWorkoutPlans(userId: string, page: number, limit: number) {
+async function getAllWorkoutPlans(
+  userId: string,
+  page: number,
+  limit: number,
+  type?: PlanType,
+) {
   const [rawPlans, total] = await prisma.$transaction(async (tx) => {
     const user = await tx.user.findUnique({
       where: { id: userId },
@@ -36,16 +41,22 @@ async function getAllWorkoutPlans(userId: string, page: number, limit: number) {
     // If there's no active plan, it won't match to any existing plan to exclude anyway
     const activePlanId = user.activePlanId;
 
+    // Shared filter for both the page query and the count so pagination math
+    // reflects only the plans that match the active type filter.
+    const where: Prisma.WorkoutPlanWhereInput = {
+      userId,
+      ...(activePlanId && { id: { not: activePlanId } }),
+      ...(type && { type }),
+    };
+
     const rawPlans = await tx.workoutPlan.findMany({
-      where: { userId, ...(activePlanId && { id: { not: activePlanId } }) },
+      where,
       skip: (page - 1) * limit,
       take: limit,
       orderBy: { updatedAt: "desc" },
       include: { _count: { select: { workoutDays: true } } },
     });
-    const total = await tx.workoutPlan.count({
-      where: { userId, ...(activePlanId && { id: { not: activePlanId } }) },
-    });
+    const total = await tx.workoutPlan.count({ where });
 
     return [rawPlans, total];
   });

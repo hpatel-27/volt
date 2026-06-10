@@ -1,11 +1,26 @@
 import type { WorkoutDay } from "@/types/workoutDay";
 import type { WorkoutLogSummary } from "@/types/workoutLog";
+import type { PlanFilter } from "@/types/workoutPlan";
 
 export function formatPlanType(type: string) {
   return type
     .toLowerCase()
     .replace(/_/g, " ")
     .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+/**
+ * Translate a UI filter label into the PlanType enum value the API expects.
+ * Returns undefined for "All" so the caller omits the `type` query param.
+ */
+export function planFilterToType(filter: PlanFilter): string | undefined {
+  const lookup: Record<PlanFilter, string | undefined> = {
+    Strength: "STRENGTH",
+    Hypertrophy: "HYPERTROPHY",
+    "Weight Loss": "WEIGHT_LOSS",
+    All: undefined,
+  };
+  return lookup[filter];
 }
 
 /**
