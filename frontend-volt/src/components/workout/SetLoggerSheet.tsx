@@ -8,6 +8,8 @@ import {
   useDeleteSetLog,
 } from "@/api/setLog";
 import type { SetLog } from "@/types/setLog";
+import { parseNonNegativeNumber, parsePositiveInt } from "@/lib/validate";
+import { LIMITS } from "@/lib/limits";
 
 interface SetLoggerSheetProps {
   open: boolean;
@@ -42,21 +44,21 @@ export function SetLoggerSheet({
   const deleteSet = useDeleteSetLog();
   const isPending = createSet.isPending || updateSet.isPending;
 
-  function parsePositive(value: string): number | null {
-    if (value === "") return null;
-    const n = Number(value);
-    if (isNaN(n) || n < 0) return null;
-    return n;
-  }
-
   function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    const weightNum = parsePositive(weight);
-    const repsNum = parsePositive(reps);
+    const weightNum = parseNonNegativeNumber(weight, LIMITS.LIFT_WEIGHT_MAX);
+    const repsNum = parsePositiveInt(reps, LIMITS.REPS_MAX);
 
-    if (weightNum === null || repsNum === null) {
-      toast.error("Weight and reps are required and must be non-negative.");
+    if (weightNum === false || weightNum === null) {
+      toast.error(
+        `Weight must be non-negative and at most ${LIMITS.LIFT_WEIGHT_MAX}.`,
+      );
+      return;
+    }
+
+    if (!repsNum) {
+      toast.error(`Reps must be positive and at most ${LIMITS.REPS_MAX}.`);
       return;
     }
 
@@ -126,12 +128,14 @@ export function SetLoggerSheet({
             label="Weight"
             unit="lbs"
             value={weight}
+            max={LIMITS.LIFT_WEIGHT_MAX}
             onChange={setWeight}
           />
           <NumberField
             label="Reps"
             unit="reps"
             value={reps}
+            max={LIMITS.REPS_MAX}
             onChange={setReps}
           />
         </div>
@@ -190,6 +194,7 @@ interface NumberFieldProps {
   label: string;
   unit: string;
   value: string;
+  max: number;
   onChange: (v: string) => void;
   inputRef?: React.Ref<HTMLInputElement>;
 }
@@ -200,6 +205,7 @@ function NumberField({
   value,
   onChange,
   inputRef,
+  max,
 }: NumberFieldProps) {
   return (
     <div>
@@ -213,6 +219,7 @@ function NumberField({
           min="0"
           placeholder="0"
           value={value}
+          max={max}
           onChange={(e) => onChange(e.target.value)}
           className="
             flex-1 min-w-0 bg-transparent border-0 outline-none

@@ -14,6 +14,9 @@ import type {
   WorkoutDayExercises,
 } from "@/types/workoutDayExercise";
 import type { ExerciseRef } from "@/types/exercise";
+import { parsePositiveInt } from "@/lib/validate";
+import { LIMITS } from "@/lib/limits";
+import { OptionalTag } from "../ui/OptionalTag";
 
 interface WorkoutExerciseEntrySheetProps {
   open: boolean;
@@ -68,15 +71,6 @@ export function WorkoutExerciseEntrySheet({
   const isPending =
     createWorkoutExercise.isPending || updateWorkoutExercise.isPending;
 
-  // Parses an optional positive-integer numeric input from a controlled string
-  // Returns null when blank (omit from payload), the integer when valid,
-  // or NaN when present-but-invalid so the caller can flag it
-  function parseOptionalInt(raw: string): number | null | typeof NaN {
-    if (raw.trim() === "") return null;
-    const n = Number(raw);
-    return Number.isInteger(n) && n >= 1 ? n : NaN;
-  }
-
   function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
 
@@ -85,21 +79,39 @@ export function WorkoutExerciseEntrySheet({
       return;
     }
 
-    const parsed = {
-      sets: parseOptionalInt(sets),
-      repsMin: parseOptionalInt(repsMin),
-      repsMax: parseOptionalInt(repsMax),
-      rest: parseOptionalInt(rest),
-    };
-    if (Object.values(parsed).some((v) => Number.isNaN(v))) {
-      toast.error("Sets, reps, and rest must be positive whole numbers.");
+    const parsedSets = parsePositiveInt(sets, LIMITS.SETS_MAX, {
+      allowEmpty: true,
+    });
+    const parsedRepsMin = parsePositiveInt(repsMin, LIMITS.REPS_MAX, {
+      allowEmpty: true,
+    });
+    const parsedRepsMax = parsePositiveInt(repsMax, LIMITS.REPS_MAX, {
+      allowEmpty: true,
+    });
+    const parsedRest = parsePositiveInt(rest, LIMITS.REST_MAX, {
+      allowEmpty: true,
+    });
+
+    // Could be null (empty) since field is optional
+    // False means fields provided but bad
+    if (parsedSets === false) {
+      toast.error("Sets value must be a positive integer.");
       return;
     }
-    if (
-      typeof parsed.repsMin === "number" &&
-      typeof parsed.repsMax === "number" &&
-      parsed.repsMin > parsed.repsMax
-    ) {
+    if (parsedRepsMin === false) {
+      toast.error("Minimum reps value must be a positive integer.");
+      return;
+    }
+    if (parsedRepsMax === false) {
+      toast.error("Maximum reps value must be a positive integer.");
+      return;
+    }
+    if (parsedRest === false) {
+      toast.error("Rest seconds value must be a positive integer.");
+      return;
+    }
+
+    if (parsedRepsMin && parsedRepsMax && parsedRepsMin > parsedRepsMax) {
       toast.error("Minimum reps cannot exceed maximum reps.");
       return;
     }
@@ -108,10 +120,10 @@ export function WorkoutExerciseEntrySheet({
       exerciseId: selectedExercise.id,
     };
 
-    if (parsed.sets !== null) fields.targetSets = parsed.sets;
-    if (parsed.repsMin !== null) fields.targetRepsMin = parsed.repsMin;
-    if (parsed.repsMax !== null) fields.targetRepsMax = parsed.repsMax;
-    if (parsed.rest !== null) fields.restSeconds = parsed.rest;
+    if (parsedSets) fields.targetSets = parsedSets;
+    if (parsedRepsMin) fields.targetRepsMin = parsedRepsMin;
+    if (parsedRepsMax) fields.targetRepsMax = parsedRepsMax;
+    if (parsedRest) fields.restSeconds = parsedRest;
 
     if (isEdit && dayExercise) {
       updateWorkoutExercise.mutate(
@@ -136,10 +148,10 @@ export function WorkoutExerciseEntrySheet({
     const input: CreateWorkoutExerciseInput = {
       exerciseId: selectedExercise.id,
     };
-    if (parsed.sets !== null) input.targetSets = parsed.sets;
-    if (parsed.repsMin !== null) input.targetRepsMin = parsed.repsMin;
-    if (parsed.repsMax !== null) input.targetRepsMax = parsed.repsMax;
-    if (parsed.rest !== null) input.restSeconds = parsed.rest;
+    if (parsedSets) input.targetSets = parsedSets;
+    if (parsedRepsMin) input.targetRepsMin = parsedRepsMin;
+    if (parsedRepsMax) input.targetRepsMax = parsedRepsMax;
+    if (parsedRest) input.restSeconds = parsedRest;
 
     createWorkoutExercise.mutate(
       { planId, dayId, input },
@@ -202,26 +214,34 @@ export function WorkoutExerciseEntrySheet({
           <NumberField
             label="Sets"
             value={sets}
+            max={LIMITS.SETS_MAX}
             onChange={setSets}
             placeholder="3"
+            optional
           />
           <NumberField
             label="Rest (s)"
             value={rest}
+            max={LIMITS.REST_MAX}
             onChange={setRest}
             placeholder="90"
+            optional
           />
           <NumberField
             label="Reps min"
             value={repsMin}
+            max={LIMITS.REPS_MAX}
             onChange={setRepsMin}
             placeholder="8"
+            optional
           />
           <NumberField
             label="Reps max"
             value={repsMax}
+            max={LIMITS.REPS_MAX}
             onChange={setRepsMax}
             placeholder="12"
+            optional
           />
         </div>
 
@@ -291,15 +311,22 @@ function NumberField({
   value,
   onChange,
   placeholder,
+  max,
+  optional,
 }: {
   label: string;
   value: string;
+  max: number;
   onChange: (v: string) => void;
   placeholder?: string;
+  optional?: boolean;
 }) {
   return (
     <label className="block">
-      <div className="text-caption mb-2">{label}</div>
+      <div className="text-caption mb-2">
+        {label}
+        {optional && <OptionalTag />}
+      </div>
       <input
         type="number"
         inputMode="numeric"
@@ -307,6 +334,7 @@ function NumberField({
         step={1}
         placeholder={placeholder}
         value={value}
+        max={max}
         onChange={(e) => onChange(e.target.value)}
         className="
           w-full bg-ink-850 border border-white/5 rounded-xl

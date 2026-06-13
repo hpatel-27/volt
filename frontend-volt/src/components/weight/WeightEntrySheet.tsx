@@ -10,6 +10,8 @@ import {
 import type { CreateWeightInput, Weight } from "../../types/weight";
 import { todayLocalIso } from "../../lib/date";
 import { DATE_REGEX } from "@/types/shared";
+import { parsePositiveNumber } from "@/lib/validate";
+import { LIMITS } from "@/lib/limits";
 
 interface WeightEntrySheetProps {
   open: boolean;
@@ -43,20 +45,21 @@ export function WeightEntrySheet({
 
   function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0.0) {
+    const parsedWeight = parsePositiveNumber(amount, LIMITS.BODY_WEIGHT_MAX);
+    if (!parsedWeight) {
       toast.error(
-        "Please enter a valid weight. Weights should be positive numbers, and can include decimals.",
+        `Please enter a valid weight. Weights should be positive numbers, up to at most ${LIMITS.BODY_WEIGHT_MAX}.`,
       );
       return;
-    } else if (Number(amount) >= 1000.0) {
-      toast.error("That weight looks too high, please double-check the value.");
-      return;
-    } else if (!date || !DATE_REGEX.test(date) || todayLocalIso() < date) {
+    }
+
+    // Test iso data and prevent future dates
+    if (!date || !DATE_REGEX.test(date) || todayLocalIso() < date) {
       toast.error("Please select a valid date for this weight entry.");
       return;
     }
 
-    const fields = { amount: Number(amount), date };
+    const fields = { amount: parsedWeight, date };
 
     if (isEdit && weight) {
       updateWeight.mutate(
@@ -116,6 +119,7 @@ export function WeightEntrySheet({
               step="0.1"
               placeholder="0.0"
               value={amount}
+              max={LIMITS.BODY_WEIGHT_MAX}
               onChange={(e) => setAmount(e.target.value)}
               className="
                 flex-1 min-w-0 bg-transparent border-0 outline-none
@@ -137,6 +141,7 @@ export function WeightEntrySheet({
           <input
             type="date"
             value={date}
+            max={todayLocalIso()}
             onChange={(e) => setDate(e.target.value)}
             className="
               bg-ink-850 border border-white/5 rounded-xl

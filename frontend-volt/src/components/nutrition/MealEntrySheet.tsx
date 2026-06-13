@@ -10,6 +10,8 @@ import type {
 } from "@/types/meal";
 import { todayLocalIso } from "@/lib/date";
 import { DATE_REGEX } from "@/types/shared";
+import { parseNonNegativeNumber, parseBoundedString } from "@/lib/validate";
+import { LIMITS } from "@/lib/limits";
 
 interface MealEntrySheetProps {
   open: boolean;
@@ -46,17 +48,13 @@ export function MealEntrySheet({
   const deleteMeal = useMealDelete();
   const isPending = createMeal.isPending || updateMeal.isPending;
 
-  function parseNonNegative(value: string): number | null {
-    if (value === "") return null;
-    const n = Number(value);
-    if (isNaN(n) || n < 0) return null;
-    return n;
-  }
-
   function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    if (!name.trim()) {
+    const mealName = parseBoundedString(name, {
+      maxLen: LIMITS.NAME_MAX,
+    });
+    if (mealName === false) {
       toast.error("Please give this meal a name.");
       return;
     }
@@ -65,25 +63,32 @@ export function MealEntrySheet({
       return;
     }
 
-    const caloriesNum = parseNonNegative(calories);
-    const proteinNum = parseNonNegative(protein);
-    const carbsNum = parseNonNegative(carbs);
-    const fatNum = parseNonNegative(fat);
-
+    const caloriesNum = parseNonNegativeNumber(calories, LIMITS.CALORIES_MAX);
+    const proteinNum = parseNonNegativeNumber(protein, LIMITS.MACRO_MAX);
+    const carbsNum = parseNonNegativeNumber(carbs, LIMITS.MACRO_MAX);
+    const fatNum = parseNonNegativeNumber(fat, LIMITS.MACRO_MAX);
+    if (caloriesNum === false || caloriesNum === null) {
+      toast.error(
+        `Calories must be non-negative numbers up to at most ${LIMITS.CALORIES_MAX}.`,
+      );
+      return;
+    }
     if (
-      caloriesNum === null ||
+      proteinNum === false ||
       proteinNum === null ||
+      carbsNum === false ||
       carbsNum === null ||
+      fatNum === false ||
       fatNum === null
     ) {
       toast.error(
-        "Calories, protein, carbs, and fat are required and must be non-negative numbers.",
+        `Macros must be non-negative numbers up to at most ${LIMITS.MACRO_MAX}.`,
       );
       return;
     }
 
     const fields = {
-      name: name.trim(),
+      name: mealName,
       calories: caloriesNum,
       protein: proteinNum,
       carbs: carbsNum,
@@ -145,6 +150,7 @@ export function MealEntrySheet({
             type="text"
             placeholder="e.g. Chicken, rice, broccoli"
             value={name}
+            maxLength={LIMITS.NAME_MAX}
             onChange={(e) => setName(e.target.value)}
             className="
               w-full bg-transparent border-0 outline-none
@@ -160,21 +166,30 @@ export function MealEntrySheet({
             label="Calories"
             unit="kcal"
             value={calories}
+            max={LIMITS.CALORIES_MAX}
             onChange={setCalories}
           />
           <MacroInput
             label="Protein"
             unit="g"
             value={protein}
+            max={LIMITS.MACRO_MAX}
             onChange={setProtein}
           />
           <MacroInput
             label="Carbs"
             unit="g"
             value={carbs}
+            max={LIMITS.MACRO_MAX}
             onChange={setCarbs}
           />
-          <MacroInput label="Fat" unit="g" value={fat} onChange={setFat} />
+          <MacroInput
+            label="Fat"
+            unit="g"
+            value={fat}
+            max={LIMITS.MACRO_MAX}
+            onChange={setFat}
+          />
         </div>
 
         <Button
@@ -232,10 +247,11 @@ interface MacroInputProps {
   label: string;
   unit: string;
   value: string;
+  max: number;
   onChange: (v: string) => void;
 }
 
-function MacroInput({ label, unit, value, onChange }: MacroInputProps) {
+function MacroInput({ label, unit, value, onChange, max }: MacroInputProps) {
   return (
     <div>
       <div className="text-caption mb-2">{label}</div>
@@ -243,10 +259,11 @@ function MacroInput({ label, unit, value, onChange }: MacroInputProps) {
         <input
           type="number"
           inputMode="decimal"
-          step="1"
+          step="0.1"
           min="0"
           placeholder="0"
           value={value}
+          max={max}
           onChange={(e) => onChange(e.target.value)}
           className="
             flex-1 min-w-0 bg-transparent border-0 outline-none

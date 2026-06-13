@@ -5,6 +5,8 @@ import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
 import { useUpdateProfile } from "../../api/user";
 import type { UpdateUserInput, User } from "../../types/user";
+import { parseBoundedString, parsePositiveNumber } from "@/lib/validate";
+import { LIMITS } from "@/lib/limits";
 
 interface ProfileEntrySheetProps {
   open: boolean;
@@ -27,18 +29,29 @@ function buildUpdatePayload(
   // Don't add empty string or invalid values to the payload
   // Empty strings and falsy values will throw an error on the backend
   const payload: UpdateUserInput = {};
-  const firstName = form.firstName.trim();
-  const lastName = form.lastName.trim();
-  const height = form.height.trim();
+  const firstName = parseBoundedString(form.firstName, {
+    maxLen: LIMITS.PERSON_NAME_MAX,
+    allowEmpty: true,
+  });
+  const lastName = parseBoundedString(form.lastName, {
+    maxLen: LIMITS.PERSON_NAME_MAX,
+    allowEmpty: true,
+  });
+
+  const height = parsePositiveNumber(form.height, LIMITS.HEIGHT_MAX, {
+    allowEmpty: true,
+  });
 
   if (firstName && firstName !== original.firstName)
     payload.firstName = firstName;
   if (lastName && lastName !== original.lastName) payload.lastName = lastName;
 
+  // Height string or null (indicates a empty string)
   if (height) {
-    const heightNum = Number(height);
-    if (isNaN(heightNum) || heightNum < 1) return null;
-    if (heightNum !== original.height) payload.height = heightNum;
+    if (height !== original.height) payload.height = height;
+  } else if (height === false) {
+    // Could be false (invalid height)
+    return null;
   }
 
   return payload;
@@ -67,6 +80,7 @@ export function ProfileEntrySheet({
       toast.error("Please check your details - those values look off.");
       return;
     }
+
     if (Object.keys(payload).length === 0) {
       toast("Nothing to update - make a change first.");
       return;
@@ -87,13 +101,17 @@ export function ProfileEntrySheet({
         <div className="grid grid-cols-2 gap-3">
           <Input
             label="First name"
+            optional
             value={firstName}
+            maxLength={LIMITS.PERSON_NAME_MAX}
             onChange={(e) => setFirstName(e.target.value)}
             placeholder="John"
           />
           <Input
             label="Last name"
+            optional
             value={lastName}
+            maxLength={LIMITS.PERSON_NAME_MAX}
             onChange={(e) => setLastName(e.target.value)}
             placeholder="Doe"
           />
@@ -101,10 +119,12 @@ export function ProfileEntrySheet({
 
         <Input
           label="Height (cm)"
+          optional
           type="number"
           inputMode="decimal"
           step="0.1"
           value={height}
+          max={LIMITS.HEIGHT_MAX}
           onChange={(e) => setHeight(e.target.value)}
           placeholder="165"
         />

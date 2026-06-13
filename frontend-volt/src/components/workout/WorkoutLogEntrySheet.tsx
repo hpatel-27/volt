@@ -11,6 +11,7 @@ import {
 import { useActiveWorkoutPlan, useWorkoutPlanDetail } from "@/api/workoutPlan";
 import { formatRelativeDate, todayLocalIso } from "@/lib/date";
 import { DATE_REGEX } from "@/types/shared";
+import { OptionalTag } from "../ui/OptionalTag";
 import type {
   CreateWorkoutLogInput,
   UpdateWorkoutLogInput,
@@ -165,6 +166,7 @@ export function WorkoutLogEntrySheet({
           <div>
             <label htmlFor="workout-day" className="text-caption mb-2 block">
               Workout day
+              <OptionalTag />
             </label>
             <div className="relative">
               <select

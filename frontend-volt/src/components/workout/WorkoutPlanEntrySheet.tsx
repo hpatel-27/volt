@@ -14,6 +14,9 @@ import {
 import { Button } from "../ui/Button";
 import { useNavigate } from "react-router";
 import { cn } from "@/lib/cn";
+import { parseBoundedString } from "@/lib/validate";
+import { LIMITS } from "@/lib/limits";
+import { OptionalTag } from "../ui/OptionalTag";
 
 interface WorkoutPlanEntrySheetProps {
   open: boolean;
@@ -45,18 +48,26 @@ export function WorkoutPlanEntrySheet({
 
   function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!name.trim()) {
+
+    const trimmedName = parseBoundedString(name, { maxLen: LIMITS.NAME_MAX });
+    if (!trimmedName) {
       toast.error("Please enter a valid name for this workout plan.");
       return;
-    } else if (type && !WORKOUT_TYPES.includes(type)) {
+    }
+
+    const trimmedType = parseBoundedString(type, {
+      maxLen: LIMITS.NAME_MAX,
+      allowEmpty: true,
+    });
+    if (trimmedType && !WORKOUT_TYPES.includes(trimmedType)) {
       toast.error(
         "Invalid plan type provided. Please select one of the valid options.",
       );
       return;
     }
 
-    const fields: { name: string; type?: string } = { name: name.trim() };
-    if (type.trim()) fields.type = type.trim();
+    const fields: { name: string; type?: string } = { name: trimmedName };
+    if (trimmedType) fields.type = trimmedType;
 
     if (isEdit && plan) {
       updateWorkoutPlan.mutate(
@@ -116,6 +127,7 @@ export function WorkoutPlanEntrySheet({
             type="text"
             placeholder="Push, Pull, Legs"
             value={name}
+            maxLength={LIMITS.NAME_MAX}
             onChange={(e) => setName(e.target.value)}
             className="
               w-full bg-transparent border-0 outline-none
@@ -129,6 +141,7 @@ export function WorkoutPlanEntrySheet({
         <div>
           <label htmlFor="plan-types" className="text-caption mb-2 block">
             Plan Type
+            <OptionalTag />
           </label>
           <div className="relative">
             <select
