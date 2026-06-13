@@ -4,7 +4,11 @@ import type {
   CreateWorkoutDayExerciseInput,
   UpdateWorkoutDayExerciseInput,
 } from "../types/workoutDayExercise.dto.js";
-import { validatePositiveInt } from "../helpers/validators.js";
+import {
+  validateBoundedString,
+  validatePositiveInt,
+} from "../helpers/validators.js";
+import { LIMITS } from "../helpers/limits.js";
 
 async function getAllWorkoutDayExercises(req: Request, res: Response) {
   const user = req.user!;
@@ -41,48 +45,40 @@ async function createWorkoutDayExercise(req: Request, res: Response) {
   const userId = user.id;
   const planId = res.locals.planId as string;
   const dayId = res.locals.dayId as string;
-  const exerciseId = req.body?.exerciseId;
+  const { exerciseId, targetSets, targetRepsMin, targetRepsMax, restSeconds } =
+    req.body ?? {};
 
-  const targetSets = req.body?.targetSets;
-  const targetRepsMin = req.body?.targetRepsMin;
-  const targetRepsMax = req.body?.targetRepsMax;
-  const restSeconds = req.body?.restSeconds;
-
-  if (
-    exerciseId === undefined ||
-    typeof exerciseId !== "string" ||
-    exerciseId.length < 1
-  ) {
-    return res
-      .status(400)
-      .json({ error: "exerciseId is required and cannot be empty." });
-  }
+  const trimmedExerciseId = validateBoundedString(
+    "exerciseId",
+    exerciseId,
+    LIMITS.ID_MAX,
+  );
 
   // Initially build data with required fields
   const data: CreateWorkoutDayExerciseInput = {
     workoutDayId: dayId,
-    exerciseId,
+    exerciseId: trimmedExerciseId,
     order: -1,
   };
 
   // Add optional fields after sanitization
   if (targetSets !== undefined) {
-    validatePositiveInt("targetSets", targetSets);
+    validatePositiveInt("targetSets", targetSets, LIMITS.SETS_MAX);
     data.targetSets = targetSets;
   }
 
   if (targetRepsMin !== undefined) {
-    validatePositiveInt("targetRepsMin", targetRepsMin);
+    validatePositiveInt("targetRepsMin", targetRepsMin, LIMITS.REPS_MAX);
     data.targetRepsMin = targetRepsMin;
   }
 
   if (targetRepsMax !== undefined) {
-    validatePositiveInt("targetRepsMax", targetRepsMax);
+    validatePositiveInt("targetRepsMax", targetRepsMax, LIMITS.REPS_MAX);
     data.targetRepsMax = targetRepsMax;
   }
 
   if (restSeconds !== undefined) {
-    validatePositiveInt("restSeconds", restSeconds);
+    validatePositiveInt("restSeconds", restSeconds, LIMITS.REST_MAX);
     data.restSeconds = restSeconds;
   }
 
@@ -102,40 +98,37 @@ async function updateWorkoutDayExercise(req: Request, res: Response) {
   const dayId = res.locals.dayId as string;
   const dayExerciseId = res.locals.dayExerciseId as string;
 
-  const exerciseId = req.body?.exerciseId;
-  const targetSets = req.body?.targetSets;
-  const targetRepsMin = req.body?.targetRepsMin;
-  const targetRepsMax = req.body?.targetRepsMax;
-  const restSeconds = req.body?.restSeconds;
+  const { exerciseId, targetSets, targetRepsMin, targetRepsMax, restSeconds } =
+    req.body ?? {};
 
   const data: UpdateWorkoutDayExerciseInput = {};
 
   if (exerciseId !== undefined) {
-    if (typeof exerciseId !== "string" || exerciseId.trim() === "") {
-      return res
-        .status(400)
-        .json({ error: "Exercise id must be a non-empty string." });
-    }
-    data.exerciseId = exerciseId;
+    const trimmedExerciseId = validateBoundedString(
+      "exerciseId",
+      exerciseId,
+      LIMITS.ID_MAX,
+    );
+    data.exerciseId = trimmedExerciseId;
   }
 
   if (targetSets !== undefined) {
-    validatePositiveInt("targetSets", targetSets);
+    validatePositiveInt("targetSets", targetSets, LIMITS.SETS_MAX);
     data.targetSets = targetSets;
   }
 
   if (targetRepsMin !== undefined) {
-    validatePositiveInt("targetRepsMin", targetRepsMin);
+    validatePositiveInt("targetRepsMin", targetRepsMin, LIMITS.REPS_MAX);
     data.targetRepsMin = targetRepsMin;
   }
 
   if (targetRepsMax !== undefined) {
-    validatePositiveInt("targetRepsMax", targetRepsMax);
+    validatePositiveInt("targetRepsMax", targetRepsMax, LIMITS.REPS_MAX);
     data.targetRepsMax = targetRepsMax;
   }
 
   if (restSeconds !== undefined) {
-    validatePositiveInt("restSeconds", restSeconds);
+    validatePositiveInt("restSeconds", restSeconds, LIMITS.REST_MAX);
     data.restSeconds = restSeconds;
   }
 

@@ -5,6 +5,7 @@ import type {
   UpdateWeightInput,
 } from "../types/weight.dto.js";
 import { validatePositiveNumber } from "../helpers/validators.js";
+import { LIMITS } from "../helpers/limits.js";
 
 async function getAllWeights(req: Request, res: Response) {
   const user = req.user!;
@@ -46,11 +47,11 @@ async function getWeightById(req: Request, res: Response) {
 async function createWeight(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
-  const { amount } = req.body;
+  const { amount } = req.body ?? {};
   // The date middleware guarantees the date is valid if it exists
   const isoDate = res.locals.date;
 
-  validatePositiveNumber("amount", amount);
+  validatePositiveNumber("amount", amount, LIMITS.BODY_WEIGHT_MAX);
 
   const weightData: CreateWeightInput = {
     userId,
@@ -66,7 +67,7 @@ async function updateWeight(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
   const weightId = res.locals.weightId as string;
-  const { amount } = req.body;
+  const { amount } = req.body ?? {};
 
   // The date middleware guarantees the date is valid if it exists
   const isoDate = res.locals.date;
@@ -74,7 +75,7 @@ async function updateWeight(req: Request, res: Response) {
   // Validate weightAmount and date if they are present and add them to the data object
   const weightData: UpdateWeightInput = {};
   if (amount !== undefined) {
-    validatePositiveNumber("amount", amount);
+    validatePositiveNumber("amount", amount, LIMITS.BODY_WEIGHT_MAX);
     weightData.amount = amount;
   }
 

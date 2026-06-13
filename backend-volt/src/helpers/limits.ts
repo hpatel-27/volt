@@ -15,4 +15,14 @@ export const LIMITS = {
   REPS_MAX: 1000,
   SETS_MAX: 100,
   REST_MAX: 86400, // seconds (1 day) — or tighter
+
+  // Exercise attributes (admin-only create/update)
+  EQUIPMENT_MAX: 50, // open-ended vocab — length-bound only
+  CATEGORY_MAX: 50, // open-ended vocab — length-bound only
+  MUSCLE_MAX: 50, // a single muscle name
+  INSTRUCTION_MAX: 1000, // one instruction step is a sentence/paragraph
+  IMAGE_PATH_MAX: 500, // image path / URL
+  MUSCLES_MAX_ITEMS: 20, // max muscles per list
+  INSTRUCTIONS_MAX_ITEMS: 50, // max instruction steps
+  IMAGES_MAX_ITEMS: 20, // max images
 } as const;

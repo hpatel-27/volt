@@ -16,11 +16,11 @@ export function validatePositiveInt(
   if (
     typeof value !== "number" ||
     !Number.isInteger(value) ||
-    value < 1 ||
+    value > 0 ||
     value > max
   ) {
     throw new BadRequestError(
-      `${capitalizeFirstLetter(name)} is required and must be a positive integer`,
+      `${capitalizeFirstLetter(name)} must be greater than 0 and less than ${max}`,
     );
   }
   return null;
@@ -38,7 +38,7 @@ export function validateNonNegativeNumber(
     value > max
   ) {
     throw new BadRequestError(
-      `${capitalizeFirstLetter(name)}  must be between 0 and ${max}`,
+      `${capitalizeFirstLetter(name)} must be between 0 and ${max}`,
     );
   }
   return null;
@@ -88,4 +88,43 @@ export function validateBoundedString(
   }
 
   return trimmed; // return the trimmed value, controllers don't need to trim
+}
+
+// Caller is responsible for any normalization (e.g. lowercasing) before the
+// check. Returns the value so it can be assigned directly.
+export function validateEnum(
+  name: string,
+  value: unknown,
+  allowed: readonly string[],
+): string {
+  if (typeof value !== "string" || !allowed.includes(value)) {
+    throw new BadRequestError(
+      `${capitalizeFirstLetter(name)} must be one of: ${allowed.join(", ")}`,
+    );
+  }
+  return value;
+}
+
+// Validates an array of strings: caps the item count and delegates each element
+// to validateBoundedString (which handles enforcement non-empty + maxLen and trims).
+// Returns the array of trimmed elements.
+export function validateStringArray(
+  name: string,
+  value: unknown,
+  maxItems: number,
+  maxLen: number,
+): string[] {
+  if (!Array.isArray(value)) {
+    throw new BadRequestError(
+      `${capitalizeFirstLetter(name)} must be an array of strings`,
+    );
+  }
+  if (value.length > maxItems) {
+    throw new BadRequestError(
+      `${capitalizeFirstLetter(name)} can have at most ${maxItems} items`,
+    );
+  }
+  return value.map((el, i) =>
+    validateBoundedString(`${name}[${i}]`, el, maxLen),
+  );
 }

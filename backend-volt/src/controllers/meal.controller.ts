@@ -2,7 +2,11 @@ import type { Request, Response } from "express";
 import * as mealService from "../services/meal.service.js";
 import * as nutritionService from "../services/nutrition.service.js";
 import type { CreateMealInput, UpdateMealInput } from "../types/meal.dto.js";
-import { validateNonNegativeNumber } from "../helpers/validators.js";
+import {
+  validateBoundedString,
+  validateNonNegativeNumber,
+} from "../helpers/validators.js";
+import { LIMITS } from "../helpers/limits.js";
 
 // Resolve the nutrition log UUID from the merged :date param.
 // Meal routes are nested under /nutrition/:date/meals, so req.params.date is the
@@ -40,19 +44,14 @@ async function createMeal(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
   const date = res.locals.date as string;
-  const { name, calories, protein, carbs, fat } = req.body;
+  const { name, calories, protein, carbs, fat } = req.body ?? {};
 
   // Validate all the meal data
-  if (name === undefined || typeof name !== "string" || name.length < 1) {
-    return res.status(400).json({
-      error: "Name is a required parameter and cannot be an empty string.",
-    });
-  }
-
-  validateNonNegativeNumber("calories", calories);
-  validateNonNegativeNumber("protein", protein);
-  validateNonNegativeNumber("carbs", carbs);
-  validateNonNegativeNumber("fat", fat);
+  const trimmedMealName = validateBoundedString("name", name, LIMITS.NAME_MAX);
+  validateNonNegativeNumber("calories", calories, LIMITS.CALORIES_MAX);
+  validateNonNegativeNumber("protein", protein, LIMITS.MACRO_MAX);
+  validateNonNegativeNumber("carbs", carbs, LIMITS.MACRO_MAX);
+  validateNonNegativeNumber("fat", fat, LIMITS.MACRO_MAX);
 
   const log = await nutritionService.findOrCreateNutritionLogByDate(
     userId,
@@ -61,7 +60,7 @@ async function createMeal(req: Request, res: Response) {
 
   const mealData: CreateMealInput = {
     nutritionLogId: log.id,
-    name,
+    name: trimmedMealName,
     calories,
     protein,
     carbs,
@@ -79,38 +78,38 @@ async function updateMeal(req: Request, res: Response) {
   const date = res.locals.date as string;
   const mealId = res.locals.mealId as string;
 
-  const { name, calories, carbs, protein, fat } = req.body;
+  const { name, calories, carbs, protein, fat } = req.body ?? {};
 
   // validate any provided data to update
   const mealData: UpdateMealInput = {};
 
   // Validate allowed fields
   if (name !== undefined) {
-    if (typeof name !== "string" || name.length < 1) {
-      return res
-        .status(400)
-        .json({ error: "Meal name cannot be an empty string." });
-    }
-    mealData.name = name;
+    const trimmedMealName = validateBoundedString(
+      "name",
+      name,
+      LIMITS.NAME_MAX,
+    );
+    mealData.name = trimmedMealName;
   }
 
   if (calories !== undefined) {
-    validateNonNegativeNumber("calories", calories);
+    validateNonNegativeNumber("calories", calories, LIMITS.CALORIES_MAX);
     mealData.calories = calories;
   }
 
   if (carbs !== undefined) {
-    validateNonNegativeNumber("carbs", carbs);
+    validateNonNegativeNumber("carbs", carbs, LIMITS.MACRO_MAX);
     mealData.carbs = carbs;
   }
 
   if (protein !== undefined) {
-    validateNonNegativeNumber("protein", protein);
+    validateNonNegativeNumber("protein", protein, LIMITS.MACRO_MAX);
     mealData.protein = protein;
   }
 
   if (fat !== undefined) {
-    validateNonNegativeNumber("fat", fat);
+    validateNonNegativeNumber("fat", fat, LIMITS.MACRO_MAX);
     mealData.fat = fat;
   }
 

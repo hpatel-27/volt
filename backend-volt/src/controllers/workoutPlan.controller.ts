@@ -5,6 +5,8 @@ import {
   type UpdateWorkoutPlanInput,
 } from "../types/workoutPlan.dto.js";
 import { PlanType } from "../generated/prisma/enums.js";
+import { validateBoundedString } from "../helpers/validators.js";
+import { LIMITS } from "../helpers/limits.js";
 
 async function getAllWorkoutPlans(req: Request, res: Response) {
   const user = req.user!;
@@ -56,14 +58,9 @@ async function getWorkoutPlanById(req: Request, res: Response) {
 async function createWorkoutPlan(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
-  const name = req.body?.name;
-  const type = req.body?.type;
+  const { name, type } = req.body ?? {};
 
-  if (name === undefined || typeof name !== "string" || name.length < 1) {
-    return res
-      .status(400)
-      .json({ error: "Name is required and cannot be empty." });
-  }
+  const trimmedName = validateBoundedString("name", name, LIMITS.NAME_MAX);
 
   if (type !== undefined) {
     if (!Object.values(PlanType).includes(type)) {
@@ -74,7 +71,7 @@ async function createWorkoutPlan(req: Request, res: Response) {
     }
   }
 
-  const data: CreateWorkoutPlanInput = { userId, name, type };
+  const data: CreateWorkoutPlanInput = { userId, name: trimmedName, type };
   const newPlan = await workoutPlanService.createWorkoutPlan(data);
   res.status(201).json(newPlan);
 }
@@ -83,16 +80,13 @@ async function updateWorkoutPlan(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
   const planId = res.locals.planId as string;
-  const name = req.body?.name;
-  const type = req.body?.type;
+  const { name, type } = req.body ?? {};
 
   const data: UpdateWorkoutPlanInput = {};
 
   if (name !== undefined) {
-    if (typeof name !== "string" || name.length < 1) {
-      return res.status(400).json({ error: "Name cannot be an empty string." });
-    }
-    data.name = name;
+    const trimmedName = validateBoundedString("name", name, LIMITS.NAME_MAX);
+    data.name = trimmedName;
   }
 
   if (type !== undefined) {

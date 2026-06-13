@@ -4,6 +4,8 @@ import type {
   CreateExerciseLogInput,
   UpdateExerciseLogInput,
 } from "../types/exerciseLog.dto.js";
+import { validateBoundedString } from "../helpers/validators.js";
+import { LIMITS } from "../helpers/limits.js";
 
 async function getAllExerciseLogs(req: Request, res: Response) {
   const user = req.user!;
@@ -35,28 +37,26 @@ async function createExerciseLog(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
   const logId = res.locals.logId as string;
-  const { exerciseId, notes } = req.body;
+  const { exerciseId, notes } = req.body ?? {};
 
-  if (
-    exerciseId === undefined ||
-    typeof exerciseId !== "string" ||
-    exerciseId.length < 1
-  ) {
-    return res
-      .status(400)
-      .json({ error: "exerciseId is required and cannot be empty." });
-  }
+  const trimmedExerciseId = validateBoundedString(
+    "exerciseId",
+    exerciseId,
+    LIMITS.ID_MAX,
+  );
 
   const data: CreateExerciseLogInput = {
     workoutLogId: logId,
-    exerciseId,
+    exerciseId: trimmedExerciseId,
   };
 
   if (notes !== undefined) {
-    if (typeof notes !== "string") {
-      return res.status(400).json({ error: "Notes must be a string." });
-    }
-    data.notes = notes;
+    const trimmedNotes = validateBoundedString(
+      "notes",
+      notes,
+      LIMITS.NOTES_MAX,
+    );
+    data.notes = trimmedNotes;
   }
 
   const newExerciseLog = await exerciseLogService.createExerciseLog(
@@ -72,24 +72,30 @@ async function updateExerciseLog(req: Request, res: Response) {
   const userId = user.id;
   const logId = res.locals.logId as string;
   const exerciseLogId = res.locals.exerciseLogId as string;
-  const exerciseId = req.body?.exerciseId;
-  const notes = req.body?.notes;
+  const { exerciseId, notes } = req.body ?? {};
 
   const data: UpdateExerciseLogInput = {};
 
   if (exerciseId !== undefined) {
-    if (typeof exerciseId !== "string" || exerciseId.length < 1)
-      return res
-        .status(400)
-        .json({ error: "exerciseId is required and cannot be empty." });
-    data.exerciseId = exerciseId;
+    const trimmedExerciseId = validateBoundedString(
+      "exerciseId",
+      exerciseId,
+      LIMITS.ID_MAX,
+    );
+    data.exerciseId = trimmedExerciseId;
   }
 
   if (notes !== undefined) {
-    if (notes !== null && typeof notes !== "string") {
-      return res.status(400).json({ error: "Notes must be a string or null." });
+    if (notes === null) {
+      data.notes = notes;
+    } else {
+      const trimmedNotes = validateBoundedString(
+        "notes",
+        notes,
+        LIMITS.NOTES_MAX,
+      );
+      data.notes = trimmedNotes;
     }
-    data.notes = notes;
   }
 
   if (Object.keys(data).length === 0) {
