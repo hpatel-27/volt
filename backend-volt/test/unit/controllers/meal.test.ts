@@ -147,46 +147,40 @@ describe("Meal Controller getMealById", () => {
 describe("Meal Controller createMeal", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  // --- Name validation: handled inline, returns 400 (does not throw) ---
+  // --- Name validation: delegated to validateBoundedString, which THROWS ---
   it.each([
     ["missing", undefined],
     ["a non-string", 32456],
     ["an empty string", ""],
-  ])("returns 400 when name is %s", async (_label, name) => {
+  ])("throws BadRequestError when name is %s", async (_label, name) => {
     const mRes = mockResponse();
-    await mealController.createMeal(
-      mockRequest({ name, calories: 500, protein: 30, carbs: 60, fat: 15 }),
-      mRes,
-    );
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Name is a required parameter and cannot be an empty string.",
-    });
+    await expect(
+      mealController.createMeal(
+        mockRequest({ name, calories: 500, protein: 30, carbs: 60, fat: 15 }),
+        mRes,
+      ),
+    ).rejects.toThrow(BadRequestError);
   });
 
   // --- Macro validation: delegated to validateNonNegativeNumber, which THROWS ---
-  it.each([
-    ["calories", "Calories"],
-    ["protein", "Protein"],
-    ["carbs", "Carbs"],
-    ["fat", "Fat"],
-  ])("throws BadRequestError when %s is missing", async (field, label) => {
-    const body: Record<string, unknown> = {
-      name: "Breakfast",
-      calories: 500,
-      protein: 30,
-      carbs: 60,
-      fat: 15,
-    };
-    body[field] = undefined;
-    const mRes = mockResponse();
+  it.each(["calories", "protein", "carbs", "fat"])(
+    "throws BadRequestError when %s is missing",
+    async (field) => {
+      const body: Record<string, unknown> = {
+        name: "Breakfast",
+        calories: 500,
+        protein: 30,
+        carbs: 60,
+        fat: 15,
+      };
+      body[field] = undefined;
+      const mRes = mockResponse();
 
-    await expect(
-      mealController.createMeal(mockRequest(body), mRes),
-    ).rejects.toThrow(
-      new BadRequestError(`${label} is required and must be a non-negative number`),
-    );
-  });
+      await expect(
+        mealController.createMeal(mockRequest(body), mRes),
+      ).rejects.toThrow(BadRequestError);
+    },
+  );
 
   it.each(["calories", "protein", "carbs", "fat"])(
     "throws BadRequestError when %s is negative",
@@ -255,22 +249,18 @@ describe("Meal Controller createMeal", () => {
 describe("Meal Controller updateMeal", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("returns 400 when name is an empty string", async () => {
+  it("throws BadRequestError when name is an empty string", async () => {
     const mRes = mockResponse({ date: MOCK_DATE, mealId: "meal-uuid-1" });
-    await mealController.updateMeal(mockRequest({ name: "" }), mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Meal name cannot be an empty string.",
-    });
+    await expect(
+      mealController.updateMeal(mockRequest({ name: "" }), mRes),
+    ).rejects.toThrow(BadRequestError);
   });
 
-  it("returns 400 when name is the wrong type", async () => {
+  it("throws BadRequestError when name is the wrong type", async () => {
     const mRes = mockResponse({ date: MOCK_DATE, mealId: "meal-uuid-1" });
-    await mealController.updateMeal(mockRequest({ name: 123 }), mRes);
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Meal name cannot be an empty string.",
-    });
+    await expect(
+      mealController.updateMeal(mockRequest({ name: 123 }), mRes),
+    ).rejects.toThrow(BadRequestError);
   });
 
   it.each([

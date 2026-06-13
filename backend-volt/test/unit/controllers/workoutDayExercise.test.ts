@@ -103,22 +103,21 @@ describe("WorkoutDayExercise Controller getWorkoutDayExerciseById", () => {
 describe("WorkoutDayExercise Controller createWorkoutDayExercise", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  // exerciseId must be a non-empty string; each invalid form short-circuits 400.
+  // exerciseId must be a non-empty string; validateBoundedString THROWS
+  // (mapped to a 400 by the error middleware) before the service runs.
   it.each([
     ["exerciseId is missing", {}],
     ["exerciseId is undefined", { exerciseId: undefined }],
     ["exerciseId is not a string", { exerciseId: 123 }],
     ["exerciseId is an empty string", { exerciseId: "" }],
-  ])("returns 400 when %s", async (_label, body) => {
+  ])("throws BadRequestError when %s", async (_label, body) => {
     const mReq = { user: { id: "user-1" }, body } as unknown as Request;
     const mRes = mockResponse({ planId: "plan-1", dayId: "day-1" });
 
-    await controller.createWorkoutDayExercise(mReq, mRes);
+    await expect(
+      controller.createWorkoutDayExercise(mReq, mRes),
+    ).rejects.toThrow(BadRequestError);
 
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "exerciseId is required and cannot be empty.",
-    });
     expect(svc.createWorkoutDayExercise).not.toHaveBeenCalled();
   });
 
@@ -220,7 +219,7 @@ describe("WorkoutDayExercise Controller createWorkoutDayExercise", () => {
 describe("WorkoutDayExercise Controller updateWorkoutDayExercise", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("returns 400 when exerciseId is provided but empty", async () => {
+  it("throws BadRequestError when exerciseId is provided but empty", async () => {
     const mReq = {
       user: { id: "user-1" },
       body: { exerciseId: "   " },
@@ -231,12 +230,10 @@ describe("WorkoutDayExercise Controller updateWorkoutDayExercise", () => {
       dayExerciseId: "wde-1",
     });
 
-    await controller.updateWorkoutDayExercise(mReq, mRes);
+    await expect(
+      controller.updateWorkoutDayExercise(mReq, mRes),
+    ).rejects.toThrow(BadRequestError);
 
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Exercise id must be a non-empty string.",
-    });
     expect(svc.updateWorkoutDayExercise).not.toHaveBeenCalled();
   });
 

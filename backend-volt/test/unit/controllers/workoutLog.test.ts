@@ -230,24 +230,23 @@ describe("WorkoutLog Controller createWorkoutLog", () => {
     });
   });
 
-  // workoutDayId is present but not a usable string → inline 400, no service call.
+  // workoutDayId is present but not a usable string → validateBoundedString THROWS,
+  // no service call. (null is not a usable value on create.)
   it.each([
     ["not a string", 123],
     ["an empty string", ""],
     ["null is not a usable value on create", null],
-  ])("returns 400 when workoutDayId is %s", async (_label, workoutDayId) => {
+  ])("throws BadRequestError when workoutDayId is %s", async (_label, workoutDayId) => {
     const mReq = {
       user: { id: "user-1" },
       body: { workoutDayId },
     } as unknown as Request;
     const mRes = mockResponse({ date: "2026-06-07T00:00:00.000Z" });
 
-    await workoutLogController.createWorkoutLog(mReq, mRes);
+    await expect(
+      workoutLogController.createWorkoutLog(mReq, mRes),
+    ).rejects.toThrow(BadRequestError);
 
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "workoutDayId must be a UUID string.",
-    });
     expect(workoutLogService.createWorkoutLog).not.toHaveBeenCalled();
   });
 
@@ -284,19 +283,17 @@ describe("WorkoutLog Controller updateWorkoutLog", () => {
     expect(workoutLogService.updateWorkoutLog).not.toHaveBeenCalled();
   });
 
-  it("returns 400 when workoutDayId is an invalid (non-null) value", async () => {
+  it("throws BadRequestError when workoutDayId is an invalid (non-null) value", async () => {
     const mReq = {
       user: { id: "user-1" },
       body: { workoutDayId: 42 },
     } as unknown as Request;
     const mRes = mockResponse({ logId: "log-1" });
 
-    await workoutLogController.updateWorkoutLog(mReq, mRes);
+    await expect(
+      workoutLogController.updateWorkoutLog(mReq, mRes),
+    ).rejects.toThrow(BadRequestError);
 
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "workoutDayId must be a UUID string or null.",
-    });
     expect(workoutLogService.updateWorkoutLog).not.toHaveBeenCalled();
   });
 
