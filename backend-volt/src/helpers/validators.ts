@@ -16,7 +16,7 @@ export function validatePositiveInt(
   if (
     typeof value !== "number" ||
     !Number.isInteger(value) ||
-    value > 0 ||
+    value <= 0 ||
     value > max
   ) {
     throw new BadRequestError(
