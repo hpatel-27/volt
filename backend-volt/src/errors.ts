@@ -22,4 +22,26 @@ class BadRequestError extends Error {
   }
 }
 
-export { NotFoundError, DuplicateEntryError, BadRequestError };
+class UnauthorizedError extends Error {
+  statusCode: number = 401;
+  constructor(message: string, options?: ErrorOptions) {
+    super(message, options);
+    this.name = "UnauthorizedError";
+  }
+}
+
+class ForbiddenError extends Error {
+  statusCode: number = 403;
+  constructor(message: string, options?: ErrorOptions) {
+    super(message, options);
+    this.name = "ForbiddenError";
+  }
+}
+
+export {
+  NotFoundError,
+  DuplicateEntryError,
+  BadRequestError,
+  UnauthorizedError,
+  ForbiddenError,
+};

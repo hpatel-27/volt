@@ -11,7 +11,7 @@ export async function userMiddleware(
   const { isAuthenticated, userId } = getAuth(req);
   // Handle if the user is not authorized
   if (!isAuthenticated) {
-    return res.status(401).json({ error: "Unauthorized." });
+    throw new UnauthorizedError("Unauthorized.");
   }
 
   // Look up the user
@@ -26,7 +26,6 @@ export async function userMiddleware(
     req.user = user;
     next();
   } catch (error) {
-    console.error("Error in user middleware:", error);
     return res.status(500).json({ error: "Internal Server Error" });
   }
 }

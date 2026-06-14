@@ -1,4 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
+import { ForbiddenError } from "../errors.js";
 
 export const requireAdmin = (
   req: Request,
@@ -6,7 +7,7 @@ export const requireAdmin = (
   next: NextFunction,
 ) => {
   if (!req.user || !req.user.isAdmin) {
-    return res.status(403).json({ error: "Forbidden. Admin access required." });
+    throw new ForbiddenError("Forbidden. Admin access required.");
   }
   next();
 };
