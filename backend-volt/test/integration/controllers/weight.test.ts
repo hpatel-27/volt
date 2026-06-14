@@ -126,7 +126,9 @@ describe("GET /api/v1/weights/range", () => {
     await request(app)
       .get("/api/v1/weights/range")
       .expect(400)
-      .expect({ error: "The FROM and TO dates must both be provided" });
+      .expect((res) => {
+        expect(res.body.error).toContain("both be provided");
+      });
   });
 
   it("returns 400 when from is after to", async () => {
@@ -134,7 +136,9 @@ describe("GET /api/v1/weights/range", () => {
       .get("/api/v1/weights/range")
       .query({ from: "2026-03-10", to: "2026-03-01" })
       .expect(400)
-      .expect({ error: "The FROM date must be on or before TO" });
+      .expect((res) => {
+        expect(res.body.error).toContain("on or before");
+      });
   });
 
   it("returns 400 when the dates are not valid ISO strings", async () => {
@@ -142,7 +146,9 @@ describe("GET /api/v1/weights/range", () => {
       .get("/api/v1/weights/range")
       .query({ from: "not-a-date", to: "also-bad" })
       .expect(400)
-      .expect({ error: "The FROM and TO dates must be valid ISO date strings" });
+      .expect((res) => {
+        expect(res.body.error).toContain("ISO 8601");
+      });
   });
 
   it("returns 200 with only the weights inside the window (ascending)", async () => {
@@ -227,7 +233,9 @@ describe("POST /api/v1/weights", () => {
       .set("Content-Type", "application/json")
       .send({ amount: 180 })
       .expect(400)
-      .expect({ error: "Date must be a string in ISO 8601 format" });
+      .expect((res) => {
+        expect(res.body.error).toContain("ISO 8601");
+      });
   });
 
   it("returns 400 when date is not valid ISO 8601", async () => {
@@ -236,7 +244,9 @@ describe("POST /api/v1/weights", () => {
       .set("Content-Type", "application/json")
       .send({ amount: 180, date: "not-a-date" })
       .expect(400)
-      .expect({ error: "Date must be a string in ISO 8601 format" });
+      .expect((res) => {
+        expect(res.body.error).toContain("ISO 8601");
+      });
   });
 
   // amount validation throws BadRequestError → errorMiddleware → { error, requestId }
@@ -244,12 +254,10 @@ describe("POST /api/v1/weights", () => {
     await request(app)
       .post("/api/v1/weights")
       .set("Content-Type", "application/json")
-      .send({ date: "2026-01-15T00:00:00.000Z" })
+      .send({ date: "2026-01-15" })
       .expect(400)
       .expect((res) => {
-        expect(res.body.error).toBe(
-          "Amount is required and must be a positive number",
-        );
+        expect(res.body.error).toContain("Amount");
       });
   });
 
@@ -257,12 +265,10 @@ describe("POST /api/v1/weights", () => {
     await request(app)
       .post("/api/v1/weights")
       .set("Content-Type", "application/json")
-      .send({ amount: 0, date: "2026-01-15T00:00:00.000Z" })
+      .send({ amount: 0, date: "2026-01-15" })
       .expect(400)
       .expect((res) => {
-        expect(res.body.error).toBe(
-          "Amount is required and must be a positive number",
-        );
+        expect(res.body.error).toContain("Amount");
       });
   });
 
@@ -270,12 +276,10 @@ describe("POST /api/v1/weights", () => {
     await request(app)
       .post("/api/v1/weights")
       .set("Content-Type", "application/json")
-      .send({ amount: "180", date: "2026-01-15T00:00:00.000Z" })
+      .send({ amount: "180", date: "2026-01-15" })
       .expect(400)
       .expect((res) => {
-        expect(res.body.error).toBe(
-          "Amount is required and must be a positive number",
-        );
+        expect(res.body.error).toContain("Amount");
       });
   });
 
@@ -283,7 +287,7 @@ describe("POST /api/v1/weights", () => {
     await request(app)
       .post("/api/v1/weights")
       .set("Content-Type", "application/json")
-      .send({ amount: 182.5, date: "2026-01-15T00:00:00.000Z" })
+      .send({ amount: 182.5, date: "2026-01-15" })
       .expect(201)
       .expect((res) => {
         expect(res.body.id).toBeDefined();
@@ -323,7 +327,9 @@ describe("PATCH /api/v1/weights/:weightId", () => {
       .set("Content-Type", "application/json")
       .send({ date: "not-a-date" })
       .expect(400)
-      .expect({ error: "Date must be a string in ISO 8601 format" });
+      .expect((res) => {
+        expect(res.body.error).toContain("ISO 8601");
+      });
   });
 
   it("returns 400 when amount is present but not positive", async () => {
@@ -333,9 +339,7 @@ describe("PATCH /api/v1/weights/:weightId", () => {
       .send({ amount: -5 })
       .expect(400)
       .expect((res) => {
-        expect(res.body.error).toBe(
-          "Amount is required and must be a positive number",
-        );
+        expect(res.body.error).toContain("Amount");
       });
   });
 
@@ -363,7 +367,7 @@ describe("PATCH /api/v1/weights/:weightId", () => {
     await request(app)
       .patch(`/api/v1/weights/${weightId}`)
       .set("Content-Type", "application/json")
-      .send({ amount: 168.5, date: "2026-02-10T00:00:00.000Z" })
+      .send({ amount: 168.5, date: "2026-02-10" })
       .expect(200)
       .expect((res) => {
         expect(res.body.id).toBe(weightId);

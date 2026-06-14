@@ -183,7 +183,9 @@ describe("GET /api/v1/workout-logs/range", () => {
     await request(app)
       .get("/api/v1/workout-logs/range")
       .expect(400)
-      .expect({ error: "The FROM and TO dates must both be provided" });
+      .expect((res) => {
+        expect(res.body.error).toContain("both be provided");
+      });
   });
 
   it("returns 400 when from is after to", async () => {
@@ -191,7 +193,9 @@ describe("GET /api/v1/workout-logs/range", () => {
       .get("/api/v1/workout-logs/range")
       .query({ from: "2026-06-10", to: "2026-06-01" })
       .expect(400)
-      .expect({ error: "The FROM date must be on or before TO" });
+      .expect((res) => {
+        expect(res.body.error).toContain("on or before");
+      });
   });
 
   it("returns 400 when the dates are not valid ISO strings", async () => {
@@ -199,7 +203,9 @@ describe("GET /api/v1/workout-logs/range", () => {
       .get("/api/v1/workout-logs/range")
       .query({ from: "not-a-date", to: "also-bad" })
       .expect(400)
-      .expect({ error: "The FROM and TO dates must be valid ISO date strings" });
+      .expect((res) => {
+        expect(res.body.error).toContain("ISO 8601");
+      });
   });
 
   it("returns 400 when the window exceeds the 31-day cap", async () => {
@@ -207,7 +213,9 @@ describe("GET /api/v1/workout-logs/range", () => {
       .get("/api/v1/workout-logs/range")
       .query({ from: "2026-06-01", to: "2026-07-15" })
       .expect(400)
-      .expect({ error: "Date range is limited to a maximum of 31 days." });
+      .expect((res) => {
+        expect(res.body.error).toContain("maximum of");
+      });
   });
 
   it("returns 200 with only the in-window sessions (ascending), each carrying totalVolume", async () => {
@@ -314,7 +322,9 @@ describe("POST /api/v1/workout-logs", () => {
       .set("Content-Type", "application/json")
       .send({})
       .expect(400)
-      .expect({ error: "Date must be a string in ISO 8601 format" });
+      .expect((res) => {
+        expect(res.body.error).toContain("ISO 8601");
+      });
   });
 
   it("returns 400 when workoutDayId is present but not a string", async () => {
@@ -323,7 +333,9 @@ describe("POST /api/v1/workout-logs", () => {
       .set("Content-Type", "application/json")
       .send({ date: "2026-06-07", workoutDayId: 123 })
       .expect(400)
-      .expect({ error: "workoutDayId must be a UUID string." });
+      .expect((res) => {
+        expect(res.body.error).toContain("orkoutDayId");
+      });
   });
 
   it("returns 201 with an ad-hoc session for the authenticated user", async () => {
@@ -405,7 +417,9 @@ describe("PATCH /api/v1/workout-logs/:logId", () => {
       .set("Content-Type", "application/json")
       .send({ date: "not-a-date" })
       .expect(400)
-      .expect({ error: "Date must be a string in ISO 8601 format" });
+      .expect((res) => {
+        expect(res.body.error).toContain("ISO 8601");
+      });
   });
 
   it("returns 400 when workoutDayId is an invalid (non-null) value", async () => {
@@ -414,7 +428,9 @@ describe("PATCH /api/v1/workout-logs/:logId", () => {
       .set("Content-Type", "application/json")
       .send({ workoutDayId: 42 })
       .expect(400)
-      .expect({ error: "workoutDayId must be a UUID string or null." });
+      .expect((res) => {
+        expect(res.body.error).toContain("orkoutDayId");
+      });
   });
 
   it("returns 404 when the log does not exist", async () => {

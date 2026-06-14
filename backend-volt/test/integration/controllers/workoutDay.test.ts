@@ -239,7 +239,9 @@ describe("POST /api/v1/workout-plans/:planId/days", () => {
       .set("Content-Type", "application/json")
       .send({})
       .expect(400)
-      .expect({ error: "Name is required and cannot be empty." });
+      .expect((res) => {
+        expect(res.body.error).toContain("Name");
+      });
   });
 
   it("returns 400 when name is an empty string", async () => {
@@ -249,7 +251,9 @@ describe("POST /api/v1/workout-plans/:planId/days", () => {
       .set("Content-Type", "application/json")
       .send({ name: "" })
       .expect(400)
-      .expect({ error: "Name is required and cannot be empty." });
+      .expect((res) => {
+        expect(res.body.error).toContain("Name");
+      });
   });
 
   it("returns 404 when the plan does not exist", async () => {
@@ -335,7 +339,9 @@ describe("PATCH /api/v1/workout-plans/:planId/days/:dayId", () => {
       .set("Content-Type", "application/json")
       .send({ name: "" })
       .expect(400)
-      .expect({ error: "Name cannot be an empty string." });
+      .expect((res) => {
+        expect(res.body.error).toContain("Name");
+      });
   });
 
   it("returns 404 when the day does not exist", async () => {

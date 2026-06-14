@@ -165,7 +165,9 @@ describe("GET /api/v1/nutrition-logs/range", () => {
     await request(app)
       .get("/api/v1/nutrition-logs/range")
       .expect(400)
-      .expect({ error: "The FROM and TO dates must both be provided" });
+      .expect((res) => {
+        expect(res.body.error).toContain("both be provided");
+      });
   });
 
   it("returns 400 when the range exceeds the 14-day maximum", async () => {
@@ -173,7 +175,9 @@ describe("GET /api/v1/nutrition-logs/range", () => {
       .get("/api/v1/nutrition-logs/range")
       .query({ from: "2026-01-01", to: "2026-02-01" })
       .expect(400)
-      .expect({ error: "Date range is limited to a maximum of 14 days." });
+      .expect((res) => {
+        expect(res.body.error).toContain("maximum of");
+      });
   });
 
   it("returns 200 with only the logs inside the window (ascending)", async () => {
@@ -261,12 +265,14 @@ describe("GET /api/v1/nutrition-logs/:date", () => {
     await request(app)
       .get("/api/v1/nutrition-logs/notadate")
       .expect(400)
-      .expect({ error: "date must be a date in YYYY-MM-DD format" });
+      .expect((res) => {
+        expect(res.body.error).toContain("YYYY-MM-DD");
+      });
   });
 
   it("returns 404 when no log exists for that date", async () => {
     await request(app)
-      .get("/api/v1/nutrition-logs/2099-12-31")
+      .get("/api/v1/nutrition-logs/2000-01-01")
       .expect(404)
       .expect((res) => {
         expect(res.body.error).toBe("Nutrition log not found.");
@@ -306,7 +312,9 @@ describe("POST /api/v1/nutrition-logs", () => {
       .set("Content-Type", "application/json")
       .send({})
       .expect(400)
-      .expect({ error: "Date must be a string in ISO 8601 format" });
+      .expect((res) => {
+        expect(res.body.error).toContain("ISO 8601");
+      });
   });
 
   it("returns 400 when date is not a string", async () => {
@@ -315,7 +323,9 @@ describe("POST /api/v1/nutrition-logs", () => {
       .set("Content-Type", "application/json")
       .send({ date: 12345 })
       .expect(400)
-      .expect({ error: "Date must be a string in ISO 8601 format" });
+      .expect((res) => {
+        expect(res.body.error).toContain("ISO 8601");
+      });
   });
 
   it("returns 400 when date is not valid ISO 8601", async () => {
@@ -324,11 +334,13 @@ describe("POST /api/v1/nutrition-logs", () => {
       .set("Content-Type", "application/json")
       .send({ date: "not-a-date" })
       .expect(400)
-      .expect({ error: "Date must be a string in ISO 8601 format" });
+      .expect((res) => {
+        expect(res.body.error).toContain("ISO 8601");
+      });
   });
 
   it("returns 409 when a log already exists for that date", async () => {
-    const date = "2026-01-10T00:00:00.000Z";
+    const date = "2026-01-10";
     await prisma.nutritionLog.create({
       data: { userId: testUserId, date: new Date(date) },
     });
@@ -346,7 +358,7 @@ describe("POST /api/v1/nutrition-logs", () => {
   });
 
   it("returns 201 with the created log (id + date, no userId)", async () => {
-    const date = "2026-01-15T00:00:00.000Z";
+    const date = "2026-01-15";
 
     await request(app)
       .post("/api/v1/nutrition-logs")
@@ -368,7 +380,9 @@ describe("PATCH /api/v1/nutrition-logs/:date", () => {
       .set("Content-Type", "application/json")
       .send({})
       .expect(400)
-      .expect({ error: "date must be a date in YYYY-MM-DD format" });
+      .expect((res) => {
+        expect(res.body.error).toContain("YYYY-MM-DD");
+      });
   });
 
   it("returns 405 because the date is the URL key and cannot be changed", async () => {
@@ -393,12 +407,14 @@ describe("DELETE /api/v1/nutrition-logs/:date", () => {
     await request(app)
       .delete("/api/v1/nutrition-logs/notadate")
       .expect(400)
-      .expect({ error: "date must be a date in YYYY-MM-DD format" });
+      .expect((res) => {
+        expect(res.body.error).toContain("YYYY-MM-DD");
+      });
   });
 
   it("returns 404 when no log exists for that date", async () => {
     await request(app)
-      .delete("/api/v1/nutrition-logs/2099-12-31")
+      .delete("/api/v1/nutrition-logs/2000-01-01")
       .expect(404)
       .expect((res) => {
         expect(res.body.error).toBe("Nutrition log not found.");

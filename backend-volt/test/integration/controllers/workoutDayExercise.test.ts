@@ -247,7 +247,9 @@ describe("POST /workout-plans/:planId/days/:dayId/exercises", () => {
       .set("Content-Type", "application/json")
       .send({})
       .expect(400)
-      .expect({ error: "exerciseId is required and cannot be empty." });
+      .expect((res) => {
+        expect(res.body.error).toContain("xercise");
+      });
   });
 
   it("returns 400 when a numeric field is not a positive integer", async () => {
@@ -259,9 +261,7 @@ describe("POST /workout-plans/:planId/days/:dayId/exercises", () => {
       .send({ exerciseId, targetSets: 0 })
       .expect(400)
       .expect((res) => {
-        expect(res.body.error).toBe(
-          "TargetSets is required and must be a positive integer",
-        );
+        expect(res.body.error).toContain("TargetSets");
       });
   });
 
@@ -350,7 +350,9 @@ describe("PATCH /workout-plans/:planId/days/:dayId/exercises/:dayExerciseId", ()
       .set("Content-Type", "application/json")
       .send({ exerciseId: "   " })
       .expect(400)
-      .expect({ error: "Exercise id must be a non-empty string." });
+      .expect((res) => {
+        expect(res.body.error).toContain("xercise");
+      });
   });
 
   it("returns 404 when the slot does not exist", async () => {

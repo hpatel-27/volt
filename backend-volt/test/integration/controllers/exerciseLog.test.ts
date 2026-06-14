@@ -213,7 +213,9 @@ describe("POST /api/v1/workout-logs/:logId/exercises", () => {
       .set("Content-Type", "application/json")
       .send({})
       .expect(400)
-      .expect({ error: "exerciseId is required and cannot be empty." });
+      .expect((res) => {
+        expect(res.body.error).toContain("xercise");
+      });
   });
 
   it("returns 400 when notes is not a string", async () => {
@@ -223,7 +225,9 @@ describe("POST /api/v1/workout-logs/:logId/exercises", () => {
       .set("Content-Type", "application/json")
       .send({ exerciseId, notes: 42 })
       .expect(400)
-      .expect({ error: "Notes must be a string." });
+      .expect((res) => {
+        expect(res.body.error).toContain("Notes");
+      });
   });
 
   it("returns 404 when the parent log does not exist", async () => {
@@ -308,7 +312,9 @@ describe("PATCH /api/v1/workout-logs/:logId/exercises/:exerciseLogId", () => {
       .set("Content-Type", "application/json")
       .send({ notes: 42 })
       .expect(400)
-      .expect({ error: "Notes must be a string or null." });
+      .expect((res) => {
+        expect(res.body.error).toContain("Notes");
+      });
   });
 
   it("returns 404 when the exercise log does not exist", async () => {

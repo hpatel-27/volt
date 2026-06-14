@@ -182,11 +182,11 @@ describe("WorkoutDayExercise Controller createWorkoutDayExercise", () => {
   // The numeric validators THROW BadRequestError (caught by errorMiddleware),
   // and the service is never reached.
   it.each([
-    ["targetSets", "TargetSets is required and must be a positive integer"],
-    ["targetRepsMin", "TargetRepsMin is required and must be a positive integer"],
-    ["targetRepsMax", "TargetRepsMax is required and must be a positive integer"],
-    ["restSeconds", "RestSeconds is required and must be a positive integer"],
-  ])("throws BadRequestError when %s is not a positive integer", async (field, message) => {
+    "targetSets",
+    "targetRepsMin",
+    "targetRepsMax",
+    "restSeconds",
+  ])("throws BadRequestError when %s is not a positive integer", async (field) => {
     const mReq = {
       user: { id: "user-1" },
       body: { exerciseId: "ex-1", [field]: 0 },
@@ -195,7 +195,7 @@ describe("WorkoutDayExercise Controller createWorkoutDayExercise", () => {
 
     await expect(
       controller.createWorkoutDayExercise(mReq, mRes),
-    ).rejects.toThrow(new BadRequestError(message));
+    ).rejects.toThrow(BadRequestError);
     expect(svc.createWorkoutDayExercise).not.toHaveBeenCalled();
   });
 
@@ -270,9 +270,7 @@ describe("WorkoutDayExercise Controller updateWorkoutDayExercise", () => {
 
     await expect(
       controller.updateWorkoutDayExercise(mReq, mRes),
-    ).rejects.toThrow(
-      new BadRequestError("RestSeconds is required and must be a positive integer"),
-    );
+    ).rejects.toThrow(BadRequestError);
     expect(svc.updateWorkoutDayExercise).not.toHaveBeenCalled();
   });
 

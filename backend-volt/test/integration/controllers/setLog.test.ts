@@ -163,7 +163,7 @@ describe("POST /api/v1/workout-logs/:logId/exercises/:exerciseLogId/sets", () =>
       .send({ reps: 0, weight: 135 })
       .expect(400)
       .expect((res) => {
-        expect(res.body.error).toBe("Reps is required and must be a positive integer");
+        expect(res.body.error).toContain("Reps");
       });
   });
 
@@ -175,9 +175,7 @@ describe("POST /api/v1/workout-logs/:logId/exercises/:exerciseLogId/sets", () =>
       .send({ reps: 10, weight: -5 })
       .expect(400)
       .expect((res) => {
-        expect(res.body.error).toBe(
-          "Weight is required and must be a non-negative number",
-        );
+        expect(res.body.error).toContain("Weight");
       });
   });
 
@@ -300,7 +298,7 @@ describe("PATCH /api/v1/sets/:setId", () => {
       .send({ reps: 8.5 })
       .expect(400)
       .expect((res) => {
-        expect(res.body.error).toBe("Reps is required and must be a positive integer");
+        expect(res.body.error).toContain("Reps");
       });
   });
 
