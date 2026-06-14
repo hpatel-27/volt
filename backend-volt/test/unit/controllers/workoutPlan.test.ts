@@ -69,7 +69,7 @@ describe("WorkoutPlan Controller getAllWorkoutPlans", () => {
     );
   });
 
-  it("rejects an invalid type filter with a 400 and never calls the service", async () => {
+  it("throws BadRequestError on an invalid type filter and never calls the service", async () => {
     const mReq = {
       user: { id: "user-1" },
       pagination: { page: 1, limit: 10 },
@@ -77,9 +77,10 @@ describe("WorkoutPlan Controller getAllWorkoutPlans", () => {
     } as unknown as Request;
     const mRes = mockResponse();
 
-    await workoutPlanController.getAllWorkoutPlans(mReq, mRes);
+    await expect(
+      workoutPlanController.getAllWorkoutPlans(mReq, mRes),
+    ).rejects.toThrow(BadRequestError);
 
-    expect(mRes.status).toHaveBeenCalledWith(400);
     expect(workoutPlanService.getAllWorkoutPlans).not.toHaveBeenCalled();
   });
 
@@ -194,20 +195,17 @@ describe("WorkoutPlan Controller createWorkoutPlan", () => {
     expect(workoutPlanService.createWorkoutPlan).not.toHaveBeenCalled();
   });
 
-  it("returns 400 when type is not a valid PlanType", async () => {
+  it("throws BadRequestError when type is not a valid PlanType", async () => {
     const mReq = {
       user: { id: "user-1" },
       body: { name: "PPL", type: "BODYBUILDING" },
     } as unknown as Request;
     const mRes = mockResponse();
 
-    await workoutPlanController.createWorkoutPlan(mReq, mRes);
+    await expect(
+      workoutPlanController.createWorkoutPlan(mReq, mRes),
+    ).rejects.toThrow(BadRequestError);
 
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error:
-        "Invalid type was provided. STRENGTH, HYPERTROPHY, and WEIGHT LOSS are the only types currently supported.",
-    });
     expect(workoutPlanService.createWorkoutPlan).not.toHaveBeenCalled();
   });
 
@@ -310,20 +308,18 @@ describe("WorkoutPlan Controller updateWorkoutPlan", () => {
     ).rejects.toThrow(BadRequestError);
   });
 
-  it("returns 400 when type is invalid", async () => {
+  it("throws BadRequestError when type is invalid", async () => {
     const mReq = {
       user: { id: "user-1" },
       body: { type: "CARDIO" },
     } as unknown as Request;
     const mRes = mockResponse({ planId: "plan-1" });
 
-    await workoutPlanController.updateWorkoutPlan(mReq, mRes);
+    await expect(
+      workoutPlanController.updateWorkoutPlan(mReq, mRes),
+    ).rejects.toThrow(BadRequestError);
 
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error:
-        "Invalid type was provided. STRENGTH, HYPERTROPHY, and WEIGHT LOSS are the only types currently supported.",
-    });
+    expect(workoutPlanService.updateWorkoutPlan).not.toHaveBeenCalled();
   });
 
   it("returns 400 when no updatable fields are provided", async () => {

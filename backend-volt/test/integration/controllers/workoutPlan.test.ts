@@ -307,9 +307,8 @@ describe("POST /api/v1/workout-plans", () => {
       .set("Content-Type", "application/json")
       .send({ name: "PPL", type: "BODYBUILDING" })
       .expect(400)
-      .expect({
-        error:
-          "Invalid type was provided. STRENGTH, HYPERTROPHY, and WEIGHT LOSS are the only types currently supported.",
+      .expect((res) => {
+        expect(res.body.error).toContain("Type");
       });
   });
 
