@@ -5,32 +5,31 @@ import {
   type UpdateWorkoutPlanInput,
 } from "../types/workoutPlan.dto.js";
 import { PlanType } from "../generated/prisma/enums.js";
-import { validateBoundedString } from "../helpers/validators.js";
+import { validateBoundedString, validateEnum } from "../helpers/validators.js";
 import { LIMITS } from "../helpers/limits.js";
 
 async function getAllWorkoutPlans(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
   const { page, limit } = req.pagination!;
-  const type = req.query.type;
 
-  if (type !== undefined) {
-    if (
-      typeof type !== "string" ||
-      !Object.values(PlanType).includes(type as PlanType)
-    ) {
-      return res.status(400).json({
-        error:
-          "Invalid type was provided. STRENGTH, HYPERTROPHY, and WEIGHT_LOSS are the only types currently supported.",
-      });
-    }
+  // `type` here is an OPTIONAL query-string filter (unlike create/update where it
+  // is part of the body). When absent, the list shouldn't be filtered
+  let type: PlanType | undefined;
+
+  if (req.query?.type) {
+    type = validateEnum(
+      "type",
+      req.query?.type,
+      Object.values(PlanType),
+    ) as PlanType;
   }
 
   const workoutPlans = await workoutPlanService.getAllWorkoutPlans(
     userId,
     page,
     limit,
-    type as PlanType | undefined,
+    type,
   );
   res.json(workoutPlans);
 }
@@ -62,16 +61,11 @@ async function createWorkoutPlan(req: Request, res: Response) {
 
   const trimmedName = validateBoundedString("name", name, LIMITS.NAME_MAX);
 
-  if (type !== undefined) {
-    if (!Object.values(PlanType).includes(type)) {
-      return res.status(400).json({
-        error:
-          "Invalid type was provided. STRENGTH, HYPERTROPHY, and WEIGHT LOSS are the only types currently supported.",
-      });
-    }
-  }
+  const data: CreateWorkoutPlanInput = { userId, name: trimmedName };
 
-  const data: CreateWorkoutPlanInput = { userId, name: trimmedName, type };
+  if (type) {
+    data.type = validateEnum("type", type, Object.values(PlanType)) as PlanType;
+  }
   const newPlan = await workoutPlanService.createWorkoutPlan(data);
   res.status(201).json(newPlan);
 }
@@ -89,14 +83,8 @@ async function updateWorkoutPlan(req: Request, res: Response) {
     data.name = trimmedName;
   }
 
-  if (type !== undefined) {
-    if (!Object.values(PlanType).includes(type)) {
-      return res.status(400).json({
-        error:
-          "Invalid type was provided. STRENGTH, HYPERTROPHY, and WEIGHT LOSS are the only types currently supported.",
-      });
-    }
-    data.type = type;
+  if (type) {
+    data.type = validateEnum("type", type, Object.values(PlanType)) as PlanType;
   }
 
   if (Object.keys(data).length === 0) {
