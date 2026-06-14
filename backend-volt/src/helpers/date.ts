@@ -36,3 +36,18 @@ export function isValidDateString(value: unknown): value is string {
 
   return true;
 }
+
+/**
+ * Returns true if `value` is in the future. The cutoff is "today in UTC plus
+ * one day of grace" - the grace day covers every timezone (a user's local date
+ * can be at most one calendar day ahead of UTC), so a legitimate local "today"
+ * is never rejected. Assumes `value` has already passed isValidDateString, so
+ * the comparison can be a plain lexicographic string compare on YYYY-MM-DD.
+ */
+export function isFutureDate(value: string): boolean {
+  const cutoff = new Date();
+  // Date object handles date rollover, i.e Jun 30 -> Jul 1
+  cutoff.setUTCDate(cutoff.getUTCDate() + 1);
+  const cutoffIso = cutoff.toISOString().slice(0, 10);
+  return value > cutoffIso;
+}

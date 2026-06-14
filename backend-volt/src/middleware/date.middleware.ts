@@ -1,25 +1,20 @@
 import type { Request, Response, NextFunction } from "express";
-const validateDate = (date: unknown): string | null => {
-  // Check if date is present, a string, and is a valid date
-  if (!date || typeof date !== "string" || Number.isNaN(Date.parse(date))) {
-    return null;
-  }
-
-  return date;
-};
+import { isValidDateString, isFutureDate } from "../helpers/date.js";
+import { BadRequestError } from "../errors.js";
 
 export const parseDate = (req: Request, res: Response, next: NextFunction) => {
-  const { date } = req.body;
+  const { date } = req.body ?? {};
 
-  const validatedDate = validateDate(date);
-  if (!validatedDate) {
-    return res
-      .status(400)
-      .json({ error: "Date must be a string in ISO 8601 format" });
+  if (!isValidDateString(date)) {
+    throw new BadRequestError("Date must be a string in ISO 8601 format");
+  }
+
+  if (isFutureDate(date)) {
+    throw new BadRequestError("Date cannot be in the future");
   }
 
   // Convert date to ISO format and make available for subsequent middleware
-  const isoDate = new Date(validatedDate).toISOString();
+  const isoDate = new Date(date).toISOString();
   res.locals.date = isoDate;
   next();
 };
@@ -32,20 +27,21 @@ export const parseOptionalDate = (
   res: Response,
   next: NextFunction,
 ) => {
-  const { date } = req.body;
+  const { date } = req.body ?? {};
   if (date === undefined) {
     return next();
   }
 
-  const validatedDate = validateDate(date);
-  if (!validatedDate) {
-    return res
-      .status(400)
-      .json({ error: "Date must be a string in ISO 8601 format" });
+  if (!isValidDateString(date)) {
+    throw new BadRequestError("Date must be a string in ISO 8601 format");
+  }
+
+  if (isFutureDate(date)) {
+    throw new BadRequestError("Date cannot be in the future");
   }
 
   // Convert date to ISO format and make available for subsequent middleware
-  const isoDate = new Date(validatedDate).toISOString();
+  const isoDate = new Date(date).toISOString();
   res.locals.date = isoDate;
   next();
 };
@@ -53,39 +49,27 @@ export const parseOptionalDate = (
 export const parseDateRange =
   (maxRange: number | undefined) =>
   (req: Request, res: Response, next: NextFunction) => {
-    const { from, to } = req.query;
+    const { from, to } = req.query ?? {};
     if (from === undefined || to === undefined) {
-      return res
-        .status(400)
-        .json({ error: "The FROM and TO dates must both be provided" });
+      throw new BadRequestError("The FROM and TO dates must both be provided");
     }
 
-    if (typeof from !== "string" || typeof to !== "string") {
-      return res.status(400).json({
-        error: "The FROM and TO dates must both be provided as strings",
-      });
+    if (!isValidDateString(from) || !isValidDateString(to))
+      throw new BadRequestError("Date strings must be in ISO 8601 format");
+
+    if (from > to) {
+      throw new BadRequestError("The FROM date must be on or before TO");
     }
 
     const fromDate = new Date(from);
     const toDate = new Date(to);
-    if (Number.isNaN(fromDate.getTime()) || Number.isNaN(toDate.getTime())) {
-      return res.status(400).json({
-        error: "The FROM and TO dates must be valid ISO date strings",
-      });
-    }
-    if (fromDate > toDate) {
-      return res
-        .status(400)
-        .json({ error: "The FROM date must be on or before TO" });
-    }
-
     if (maxRange !== undefined) {
       const diffMs = toDate.getTime() - fromDate.getTime();
       const maxMs = maxRange * 24 * 60 * 60 * 1000; // maxRange days
       if (diffMs > maxMs) {
-        return res.status(400).json({
-          error: `Date range is limited to a maximum of ${maxRange} days.`,
-        });
+        throw new BadRequestError(
+          `Date range is limited to a maximum of ${maxRange} days.`,
+        );
       }
     }
 

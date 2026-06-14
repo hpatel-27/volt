@@ -1,8 +1,10 @@
 import type { Request, Response, NextFunction } from "express";
+import { BadRequestError } from "../errors.js";
 
 const MAX_PAGE = 100;
 const MAX_LIMIT = 10;
 
+// Returns the value
 const parsePositiveInt = (value: unknown): number | null => {
   if (typeof value !== "string") return null;
 
@@ -21,9 +23,7 @@ export const paginationMiddleware = (
   const limit = parsePositiveInt(req.query.limit);
 
   if (page === null || limit === null) {
-    return res
-      .status(400)
-      .json({ error: "Page and limit must be positive integers" });
+    throw new BadRequestError("Page and limit must be positive integers");
   }
 
   req.pagination = {
