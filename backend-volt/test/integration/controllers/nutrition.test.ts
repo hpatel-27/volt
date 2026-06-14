@@ -43,7 +43,9 @@ describe("GET /api/v1/nutrition-logs", () => {
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
       .expect(400)
-      .expect({ error: "Page and limit must be positive integers" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Page and limit must be positive integers");
+      });
   });
 
   it("returns 400 when page is not numeric", async () => {
@@ -51,7 +53,9 @@ describe("GET /api/v1/nutrition-logs", () => {
       .get("/api/v1/nutrition-logs")
       .query({ page: "notanumber", limit: "5" })
       .expect(400)
-      .expect({ error: "Page and limit must be positive integers" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Page and limit must be positive integers");
+      });
   });
 
   it("returns 400 when page is negative", async () => {
@@ -59,7 +63,9 @@ describe("GET /api/v1/nutrition-logs", () => {
       .get("/api/v1/nutrition-logs")
       .query({ page: "-999", limit: "5" })
       .expect(400)
-      .expect({ error: "Page and limit must be positive integers" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Page and limit must be positive integers");
+      });
   });
 
   it("returns 400 when page is 0 (boundary)", async () => {
@@ -67,7 +73,9 @@ describe("GET /api/v1/nutrition-logs", () => {
       .get("/api/v1/nutrition-logs")
       .query({ page: "0", limit: "5" })
       .expect(400)
-      .expect({ error: "Page and limit must be positive integers" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Page and limit must be positive integers");
+      });
   });
 
   // Limit param validation
@@ -76,7 +84,9 @@ describe("GET /api/v1/nutrition-logs", () => {
       .get("/api/v1/nutrition-logs")
       .query({ page: "2" })
       .expect(400)
-      .expect({ error: "Page and limit must be positive integers" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Page and limit must be positive integers");
+      });
   });
 
   it("returns 400 when limit is not numeric", async () => {
@@ -84,7 +94,9 @@ describe("GET /api/v1/nutrition-logs", () => {
       .get("/api/v1/nutrition-logs")
       .query({ page: "2", limit: "fjklsdjf" })
       .expect(400)
-      .expect({ error: "Page and limit must be positive integers" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Page and limit must be positive integers");
+      });
   });
 
   it("returns 400 when limit is negative", async () => {
@@ -92,7 +104,9 @@ describe("GET /api/v1/nutrition-logs", () => {
       .get("/api/v1/nutrition-logs")
       .query({ page: "2", limit: "-100" })
       .expect(400)
-      .expect({ error: "Page and limit must be positive integers" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Page and limit must be positive integers");
+      });
   });
 
   it("returns 400 when limit is 0 (boundary)", async () => {
@@ -100,7 +114,9 @@ describe("GET /api/v1/nutrition-logs", () => {
       .get("/api/v1/nutrition-logs")
       .query({ page: "2", limit: "0" })
       .expect(400)
-      .expect({ error: "Page and limit must be positive integers" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Page and limit must be positive integers");
+      });
   });
 
   // Success states
@@ -125,7 +141,14 @@ describe("GET /api/v1/nutrition-logs", () => {
       data: { userId: testUserId, date: new Date("2026-04-16T00:00:00.000Z") },
     });
     await prisma.meal.create({
-      data: { nutritionLogId: later.id, name: "Lunch", calories: 700, protein: 40, carbs: 80, fat: 20 },
+      data: {
+        nutritionLogId: later.id,
+        name: "Lunch",
+        calories: 700,
+        protein: 40,
+        carbs: 80,
+        fat: 20,
+      },
     });
 
     await request(app)
@@ -235,7 +258,14 @@ describe("GET /api/v1/nutrition-logs/today", () => {
       data: { userId: testUserId, date: new Date("2026-07-07T00:00:00.000Z") },
     });
     await prisma.meal.create({
-      data: { nutritionLogId: log.id, name: "Snack", calories: 250, protein: 12, carbs: 20, fat: 10 },
+      data: {
+        nutritionLogId: log.id,
+        name: "Snack",
+        calories: 250,
+        protein: 12,
+        carbs: 20,
+        fat: 10,
+      },
     });
 
     await request(app)
@@ -284,7 +314,14 @@ describe("GET /api/v1/nutrition-logs/:date", () => {
       data: { userId: testUserId, date: new Date("2026-01-01T00:00:00.000Z") },
     });
     await prisma.meal.create({
-      data: { nutritionLogId: log.id, name: "Eggs", calories: 150, protein: 13, carbs: 1, fat: 10 },
+      data: {
+        nutritionLogId: log.id,
+        name: "Eggs",
+        calories: 150,
+        protein: 13,
+        carbs: 1,
+        fat: 10,
+      },
     });
 
     await request(app)

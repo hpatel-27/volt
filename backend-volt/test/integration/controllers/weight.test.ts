@@ -45,7 +45,9 @@ describe("GET /api/v1/weights", () => {
       .query({})
       .expect("Content-Type", /json/)
       .expect(400)
-      .expect({ error: "Page and limit must be positive integers" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Page and limit must be positive integers");
+      });
   });
 
   it("returns 400 when page is not numeric", async () => {
@@ -53,7 +55,9 @@ describe("GET /api/v1/weights", () => {
       .get("/api/v1/weights")
       .query({ page: "notanumber", limit: "5" })
       .expect(400)
-      .expect({ error: "Page and limit must be positive integers" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Page and limit must be positive integers");
+      });
   });
 
   it("returns 400 when page is 0 (boundary)", async () => {
@@ -61,7 +65,9 @@ describe("GET /api/v1/weights", () => {
       .get("/api/v1/weights")
       .query({ page: "0", limit: "5" })
       .expect(400)
-      .expect({ error: "Page and limit must be positive integers" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Page and limit must be positive integers");
+      });
   });
 
   it("returns 400 when limit is missing", async () => {
@@ -69,7 +75,9 @@ describe("GET /api/v1/weights", () => {
       .get("/api/v1/weights")
       .query({ page: "2" })
       .expect(400)
-      .expect({ error: "Page and limit must be positive integers" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Page and limit must be positive integers");
+      });
   });
 
   it("returns 400 when limit is negative", async () => {
@@ -77,7 +85,9 @@ describe("GET /api/v1/weights", () => {
       .get("/api/v1/weights")
       .query({ page: "2", limit: "-100" })
       .expect(400)
-      .expect({ error: "Page and limit must be positive integers" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Page and limit must be positive integers");
+      });
   });
 
   it("returns 200 with an empty page shape", async () => {
@@ -97,8 +107,16 @@ describe("GET /api/v1/weights", () => {
   it("returns 200 with weights newest-first (no userId leaked)", async () => {
     await prisma.weight.createMany({
       data: [
-        { userId: testUserId, amount: 181, date: new Date("2026-04-15T00:00:00.000Z") },
-        { userId: testUserId, amount: 180, date: new Date("2026-04-16T00:00:00.000Z") },
+        {
+          userId: testUserId,
+          amount: 181,
+          date: new Date("2026-04-15T00:00:00.000Z"),
+        },
+        {
+          userId: testUserId,
+          amount: 180,
+          date: new Date("2026-04-16T00:00:00.000Z"),
+        },
       ],
     });
 
@@ -154,9 +172,21 @@ describe("GET /api/v1/weights/range", () => {
   it("returns 200 with only the weights inside the window (ascending)", async () => {
     await prisma.weight.createMany({
       data: [
-        { userId: testUserId, amount: 181, date: new Date("2026-03-01T00:00:00.000Z") },
-        { userId: testUserId, amount: 180, date: new Date("2026-03-05T00:00:00.000Z") },
-        { userId: testUserId, amount: 179, date: new Date("2026-03-20T00:00:00.000Z") },
+        {
+          userId: testUserId,
+          amount: 181,
+          date: new Date("2026-03-01T00:00:00.000Z"),
+        },
+        {
+          userId: testUserId,
+          amount: 180,
+          date: new Date("2026-03-05T00:00:00.000Z"),
+        },
+        {
+          userId: testUserId,
+          amount: 179,
+          date: new Date("2026-03-20T00:00:00.000Z"),
+        },
       ],
     });
 
@@ -179,7 +209,11 @@ describe("GET /api/v1/weights/:weightId", () => {
 
   beforeAll(async () => {
     const weight = await prisma.weight.create({
-      data: { userId: testUserId, amount: 175.5, date: new Date("2026-01-01T00:00:00.000Z") },
+      data: {
+        userId: testUserId,
+        amount: 175.5,
+        date: new Date("2026-01-01T00:00:00.000Z"),
+      },
     });
     weightId = weight.id;
   });
@@ -192,7 +226,9 @@ describe("GET /api/v1/weights/:weightId", () => {
     await request(app)
       .get("/api/v1/weights/notauuid")
       .expect(400)
-      .expect({ error: "Invalid weightId" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Invalid weightId");
+      });
   });
 
   it("returns 404 when no weight matches the id", async () => {
@@ -303,7 +339,11 @@ describe("PATCH /api/v1/weights/:weightId", () => {
 
   beforeAll(async () => {
     const weight = await prisma.weight.create({
-      data: { userId: testUserId, amount: 180, date: new Date("2026-02-01T00:00:00.000Z") },
+      data: {
+        userId: testUserId,
+        amount: 180,
+        date: new Date("2026-02-01T00:00:00.000Z"),
+      },
     });
     weightId = weight.id;
   });
@@ -318,7 +358,9 @@ describe("PATCH /api/v1/weights/:weightId", () => {
       .set("Content-Type", "application/json")
       .send({ amount: 170 })
       .expect(400)
-      .expect({ error: "Invalid weightId" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Invalid weightId");
+      });
   });
 
   it("returns 400 when the date is present but invalid", async () => {
@@ -387,7 +429,9 @@ describe("DELETE /api/v1/weights/:weightId", () => {
     await request(app)
       .delete("/api/v1/weights/notauuid")
       .expect(400)
-      .expect({ error: "Invalid weightId" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Invalid weightId");
+      });
   });
 
   it("returns 404 when the weight does not exist", async () => {
@@ -401,7 +445,11 @@ describe("DELETE /api/v1/weights/:weightId", () => {
 
   it("returns 204 and removes the weight", async () => {
     const weight = await prisma.weight.create({
-      data: { userId: testUserId, amount: 180, date: new Date("2026-02-25T00:00:00.000Z") },
+      data: {
+        userId: testUserId,
+        amount: 180,
+        date: new Date("2026-02-25T00:00:00.000Z"),
+      },
     });
 
     await request(app).delete(`/api/v1/weights/${weight.id}`).expect(204);

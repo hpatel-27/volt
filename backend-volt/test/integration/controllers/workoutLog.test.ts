@@ -6,7 +6,15 @@ vi.mock("@clerk/express", async () => {
   return makeClerkMock("integration_test_workoutLog_controller_user");
 });
 
-import { it, describe, vi, beforeAll, afterAll, beforeEach, expect } from "vitest";
+import {
+  it,
+  describe,
+  vi,
+  beforeAll,
+  afterAll,
+  beforeEach,
+  expect,
+} from "vitest";
 import { prisma } from "../../../src/db.js";
 import request from "supertest";
 import { createApp } from "../../../src/app.js";
@@ -67,7 +75,9 @@ async function reset() {
 }
 
 async function createPlanWithDay(userId: string, name = "Push") {
-  const plan = await prisma.workoutPlan.create({ data: { userId, name: "Plan" } });
+  const plan = await prisma.workoutPlan.create({
+    data: { userId, name: "Plan" },
+  });
   const day = await prisma.workoutDay.create({
     data: { workoutPlanId: plan.id, name, order: 1 },
   });
@@ -84,7 +94,9 @@ describe("GET /api/v1/workout-logs", () => {
     await request(app)
       .get("/api/v1/workout-logs")
       .expect(400)
-      .expect({ error: "Page and limit must be positive integers" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Page and limit must be positive integers");
+      });
   });
 
   it("returns 200 with an empty page when the user has no logs", async () => {
@@ -258,7 +270,9 @@ describe("GET /api/v1/workout-logs/:logId", () => {
     await request(app)
       .get("/api/v1/workout-logs/not-a-uuid")
       .expect(400)
-      .expect({ error: "Invalid logId" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Invalid logId");
+      });
   });
 
   it("returns 404 for an unknown log id", async () => {
@@ -285,13 +299,22 @@ describe("GET /api/v1/workout-logs/:logId", () => {
   it("returns 200 with the detail payload (exercises + sets, no FKs)", async () => {
     const { dayId } = await createPlanWithDay(testUserId);
     const log = await prisma.workoutLog.create({
-      data: { userId: testUserId, date: new Date("2026-06-07"), workoutDayId: dayId },
+      data: {
+        userId: testUserId,
+        date: new Date("2026-06-07"),
+        workoutDayId: dayId,
+      },
     });
     const exerciseLog = await prisma.exerciseLog.create({
       data: { workoutLogId: log.id, exerciseId, notes: "felt strong" },
     });
     await prisma.setLog.create({
-      data: { exerciseLogId: exerciseLog.id, setNumber: 1, reps: 10, weight: 135 },
+      data: {
+        exerciseLogId: exerciseLog.id,
+        setNumber: 1,
+        reps: 10,
+        weight: 135,
+      },
     });
 
     await request(app)
@@ -307,7 +330,11 @@ describe("GET /api/v1/workout-logs/:logId", () => {
         expect(ex.notes).toBe("felt strong");
         expect(ex).not.toHaveProperty("workoutLogId");
         expect(ex.sets).toHaveLength(1);
-        expect(ex.sets[0]).toMatchObject({ setNumber: 1, reps: 10, weight: 135 });
+        expect(ex.sets[0]).toMatchObject({
+          setNumber: 1,
+          reps: 10,
+          weight: 135,
+        });
       });
   });
 });
@@ -399,7 +426,9 @@ describe("PATCH /api/v1/workout-logs/:logId", () => {
       .set("Content-Type", "application/json")
       .send({ date: "2026-06-08" })
       .expect(400)
-      .expect({ error: "Invalid logId" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Invalid logId");
+      });
   });
 
   it("returns 400 when no updatable fields are provided", async () => {
@@ -429,7 +458,7 @@ describe("PATCH /api/v1/workout-logs/:logId", () => {
       .send({ workoutDayId: 42 })
       .expect(400)
       .expect((res) => {
-        expect(res.body.error).toContain("orkoutDayId");
+        expect(res.body.error).toContain("WorkoutDayId");
       });
   });
 
@@ -477,7 +506,11 @@ describe("PATCH /api/v1/workout-logs/:logId", () => {
   it("returns 200 and unlinks the day when workoutDayId is null", async () => {
     const { dayId } = await createPlanWithDay(testUserId);
     const log = await prisma.workoutLog.create({
-      data: { userId: testUserId, date: new Date("2026-06-07"), workoutDayId: dayId },
+      data: {
+        userId: testUserId,
+        date: new Date("2026-06-07"),
+        workoutDayId: dayId,
+      },
     });
     await request(app)
       .patch(`/api/v1/workout-logs/${log.id}`)
@@ -503,7 +536,9 @@ describe("DELETE /api/v1/workout-logs/:logId", () => {
     await request(app)
       .delete("/api/v1/workout-logs/not-a-uuid")
       .expect(400)
-      .expect({ error: "Invalid logId" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Invalid logId");
+      });
   });
 
   it("returns 404 for an unknown log id", async () => {

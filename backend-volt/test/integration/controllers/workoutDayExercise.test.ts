@@ -6,7 +6,15 @@ vi.mock("@clerk/express", async () => {
   return makeClerkMock("integration_test_wde_controller_user");
 });
 
-import { it, describe, vi, beforeAll, afterAll, beforeEach, expect } from "vitest";
+import {
+  it,
+  describe,
+  vi,
+  beforeAll,
+  afterAll,
+  beforeEach,
+  expect,
+} from "vitest";
 import { prisma } from "../../../src/db.js";
 import request from "supertest";
 import { createApp } from "../../../src/app.js";
@@ -98,7 +106,9 @@ describe("GET /workout-plans/:planId/days/:dayId/exercises", () => {
     await request(app)
       .get(`/api/v1/workout-plans/not-a-uuid/days/${UUID}/exercises`)
       .expect(400)
-      .expect({ error: "Invalid planId" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Invalid planId");
+      });
   });
 
   it("returns 400 when dayId is not a UUID", async () => {
@@ -106,7 +116,9 @@ describe("GET /workout-plans/:planId/days/:dayId/exercises", () => {
     await request(app)
       .get(`/api/v1/workout-plans/${planId}/days/not-a-uuid/exercises`)
       .expect(400)
-      .expect({ error: "Invalid dayId" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Invalid dayId");
+      });
   });
 
   it("returns 404 when the day does not exist", async () => {
@@ -174,7 +186,9 @@ describe("GET /workout-plans/:planId/days/:dayId/exercises/:dayExerciseId", () =
     await request(app)
       .get(`${base(planId, dayId)}/not-a-uuid`)
       .expect(400)
-      .expect({ error: "Invalid dayExerciseId" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Invalid dayExerciseId");
+      });
   });
 
   it("returns 404 for an unknown slot id", async () => {
@@ -236,7 +250,9 @@ describe("POST /workout-plans/:planId/days/:dayId/exercises", () => {
       .set("Content-Type", "application/json")
       .send({ exerciseId })
       .expect(400)
-      .expect({ error: "Invalid planId" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Invalid planId");
+      });
   });
 
   it("returns 400 when exerciseId is missing", async () => {
@@ -326,7 +342,9 @@ describe("PATCH /workout-plans/:planId/days/:dayId/exercises/:dayExerciseId", ()
       .set("Content-Type", "application/json")
       .send({ targetSets: 5 })
       .expect(400)
-      .expect({ error: "Invalid dayExerciseId" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Invalid dayExerciseId");
+      });
   });
 
   it("returns 400 when no updatable fields are provided", async () => {
@@ -411,7 +429,9 @@ describe("DELETE /workout-plans/:planId/days/:dayId/exercises/:dayExerciseId", (
     await request(app)
       .delete(`${base(planId, dayId)}/not-a-uuid`)
       .expect(400)
-      .expect({ error: "Invalid dayExerciseId" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Invalid dayExerciseId");
+      });
   });
 
   it("returns 404 when the slot does not exist", async () => {

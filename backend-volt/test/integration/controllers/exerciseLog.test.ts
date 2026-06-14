@@ -6,7 +6,15 @@ vi.mock("@clerk/express", async () => {
   return makeClerkMock("integration_test_exerciseLog_controller_user");
 });
 
-import { it, describe, vi, beforeAll, afterAll, beforeEach, expect } from "vitest";
+import {
+  it,
+  describe,
+  vi,
+  beforeAll,
+  afterAll,
+  beforeEach,
+  expect,
+} from "vitest";
 import { prisma } from "../../../src/db.js";
 import request from "supertest";
 import { createApp } from "../../../src/app.js";
@@ -78,7 +86,9 @@ describe("GET /api/v1/workout-logs/:logId/exercises", () => {
     await request(app)
       .get("/api/v1/workout-logs/not-a-uuid/exercises")
       .expect(400)
-      .expect({ error: "Invalid logId" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Invalid logId");
+      });
   });
 
   it("returns 404 when the parent log does not exist", async () => {
@@ -132,7 +142,11 @@ describe("GET /api/v1/workout-logs/:logId/exercises", () => {
           name: "Bench Press",
         });
         expect(dto.sets).toHaveLength(1);
-        expect(dto.sets[0]).toMatchObject({ setNumber: 1, reps: 10, weight: 135 });
+        expect(dto.sets[0]).toMatchObject({
+          setNumber: 1,
+          reps: 10,
+          weight: 135,
+        });
       });
   });
 });
@@ -146,7 +160,9 @@ describe("GET /api/v1/workout-logs/:logId/exercises/:exerciseLogId", () => {
     await request(app)
       .get(`/api/v1/workout-logs/${logId}/exercises/not-a-uuid`)
       .expect(400)
-      .expect({ error: "Invalid exerciseLogId" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Invalid exerciseLogId");
+      });
   });
 
   it("returns 404 for an unknown exercise log id", async () => {
@@ -188,7 +204,11 @@ describe("GET /api/v1/workout-logs/:logId/exercises/:exerciseLogId", () => {
         expect(res.body.id).toBe(el.id);
         expect(res.body).not.toHaveProperty("workoutLogId");
         expect(res.body.sets).toHaveLength(1);
-        expect(res.body.sets[0]).toMatchObject({ setNumber: 1, reps: 5, weight: 200 });
+        expect(res.body.sets[0]).toMatchObject({
+          setNumber: 1,
+          reps: 5,
+          weight: 200,
+        });
       });
   });
 });
@@ -203,7 +223,9 @@ describe("POST /api/v1/workout-logs/:logId/exercises", () => {
       .set("Content-Type", "application/json")
       .send({ exerciseId })
       .expect(400)
-      .expect({ error: "Invalid logId" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Invalid logId");
+      });
   });
 
   it("returns 400 when exerciseId is missing", async () => {
@@ -286,7 +308,9 @@ describe("PATCH /api/v1/workout-logs/:logId/exercises/:exerciseLogId", () => {
       .set("Content-Type", "application/json")
       .send({ notes: "x" })
       .expect(400)
-      .expect({ error: "Invalid exerciseLogId" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Invalid exerciseLogId");
+      });
   });
 
   it("returns 400 when no updatable fields are provided", async () => {
@@ -371,7 +395,9 @@ describe("DELETE /api/v1/workout-logs/:logId/exercises/:exerciseLogId", () => {
     await request(app)
       .delete(`/api/v1/workout-logs/${logId}/exercises/not-a-uuid`)
       .expect(400)
-      .expect({ error: "Invalid exerciseLogId" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Invalid exerciseLogId");
+      });
   });
 
   it("returns 404 for an unknown exercise log id", async () => {

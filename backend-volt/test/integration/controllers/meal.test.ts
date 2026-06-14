@@ -77,7 +77,9 @@ describe("GET /api/v1/nutrition-logs/:date/meals", () => {
 
 describe("GET /api/v1/nutrition-logs/:date/meals/:mealId", () => {
   afterAll(async () => {
-    await prisma.meal.deleteMany({ where: { nutritionLogId: await getLogId() } });
+    await prisma.meal.deleteMany({
+      where: { nutritionLogId: await getLogId() },
+    });
   });
 
   it("returns 400 when the date is not YYYY-MM-DD", async () => {
@@ -93,13 +95,22 @@ describe("GET /api/v1/nutrition-logs/:date/meals/:mealId", () => {
     await request(app)
       .get(`/api/v1/nutrition-logs/${LOG_DATE}/meals/notauuid`)
       .expect(400)
-      .expect({ error: "Invalid mealId" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Invalid mealId");
+      });
   });
 
   it("returns 404 when the date has no log", async () => {
     const logId = await getLogId();
     const meal = await prisma.meal.create({
-      data: { nutritionLogId: logId, name: "Greek Yogurt", calories: 140, protein: 20, carbs: 9, fat: 3 },
+      data: {
+        nutritionLogId: logId,
+        name: "Greek Yogurt",
+        calories: 140,
+        protein: 20,
+        carbs: 9,
+        fat: 3,
+      },
     });
 
     await request(app)
@@ -122,7 +133,14 @@ describe("GET /api/v1/nutrition-logs/:date/meals/:mealId", () => {
   it("returns 200 with the meal (no nutritionLogId leaked)", async () => {
     const logId = await getLogId();
     const meal = await prisma.meal.create({
-      data: { nutritionLogId: logId, name: "Greek Yogurt", calories: 140, protein: 20, carbs: 9, fat: 3 },
+      data: {
+        nutritionLogId: logId,
+        name: "Greek Yogurt",
+        calories: 140,
+        protein: 20,
+        carbs: 9,
+        fat: 3,
+      },
     });
 
     await request(app)
@@ -141,10 +159,18 @@ describe("GET /api/v1/nutrition-logs/:date/meals/:mealId", () => {
 });
 
 describe("POST /api/v1/nutrition-logs/:date/meals", () => {
-  const validMeal = { name: "Oatmeal", calories: 300, protein: 10, carbs: 54, fat: 6 };
+  const validMeal = {
+    name: "Oatmeal",
+    calories: 300,
+    protein: 10,
+    carbs: 54,
+    fat: 6,
+  };
 
   afterAll(async () => {
-    await prisma.meal.deleteMany({ where: { nutritionLogId: await getLogId() } });
+    await prisma.meal.deleteMany({
+      where: { nutritionLogId: await getLogId() },
+    });
   });
 
   it("returns 400 when the date is not YYYY-MM-DD", async () => {
@@ -258,14 +284,23 @@ describe("POST /api/v1/nutrition-logs/:date/meals", () => {
 
 describe("PATCH /api/v1/nutrition-logs/:date/meals/:mealId", () => {
   afterAll(async () => {
-    await prisma.meal.deleteMany({ where: { nutritionLogId: await getLogId() } });
+    await prisma.meal.deleteMany({
+      where: { nutritionLogId: await getLogId() },
+    });
   });
 
   // Helper to seed a meal for the shared log
   async function seedMeal() {
     const logId = await getLogId();
     return prisma.meal.create({
-      data: { nutritionLogId: logId, name: "Banana", calories: 90, protein: 1, carbs: 23, fat: 0 },
+      data: {
+        nutritionLogId: logId,
+        name: "Banana",
+        calories: 90,
+        protein: 1,
+        carbs: 23,
+        fat: 0,
+      },
     });
   }
 
@@ -286,7 +321,9 @@ describe("PATCH /api/v1/nutrition-logs/:date/meals/:mealId", () => {
       .set("Content-Type", "application/json")
       .send({ name: "Updated" })
       .expect(400)
-      .expect({ error: "Invalid mealId" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Invalid mealId");
+      });
   });
 
   it("returns 400 when no valid fields are provided", async () => {
@@ -311,22 +348,20 @@ describe("PATCH /api/v1/nutrition-logs/:date/meals/:mealId", () => {
       });
   });
 
-  it.each([
-    ["calories"],
-    ["protein"],
-    ["carbs"],
-    ["fat"],
-  ])("returns 400 when %s is negative", async (field) => {
-    const meal = await seedMeal();
-    await request(app)
-      .patch(`/api/v1/nutrition-logs/${LOG_DATE}/meals/${meal.id}`)
-      .set("Content-Type", "application/json")
-      .send({ [field]: -1 })
-      .expect(400)
-      .expect((res) => {
-        expect(res.body.error.toLowerCase()).toContain(field);
-      });
-  });
+  it.each([["calories"], ["protein"], ["carbs"], ["fat"]])(
+    "returns 400 when %s is negative",
+    async (field) => {
+      const meal = await seedMeal();
+      await request(app)
+        .patch(`/api/v1/nutrition-logs/${LOG_DATE}/meals/${meal.id}`)
+        .set("Content-Type", "application/json")
+        .send({ [field]: -1 })
+        .expect(400)
+        .expect((res) => {
+          expect(res.body.error.toLowerCase()).toContain(field);
+        });
+    },
+  );
 
   it("returns 404 when the date has no log", async () => {
     const meal = await seedMeal();
@@ -370,13 +405,22 @@ describe("PATCH /api/v1/nutrition-logs/:date/meals/:mealId", () => {
 
 describe("DELETE /api/v1/nutrition-logs/:date/meals/:mealId", () => {
   afterAll(async () => {
-    await prisma.meal.deleteMany({ where: { nutritionLogId: await getLogId() } });
+    await prisma.meal.deleteMany({
+      where: { nutritionLogId: await getLogId() },
+    });
   });
 
   async function seedMeal() {
     const logId = await getLogId();
     return prisma.meal.create({
-      data: { nutritionLogId: logId, name: "Apple", calories: 80, protein: 0, carbs: 21, fat: 0 },
+      data: {
+        nutritionLogId: logId,
+        name: "Apple",
+        calories: 80,
+        protein: 0,
+        carbs: 21,
+        fat: 0,
+      },
     });
   }
 
@@ -393,7 +437,9 @@ describe("DELETE /api/v1/nutrition-logs/:date/meals/:mealId", () => {
     await request(app)
       .delete(`/api/v1/nutrition-logs/${LOG_DATE}/meals/notauuid`)
       .expect(400)
-      .expect({ error: "Invalid mealId" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Invalid mealId");
+      });
   });
 
   it("returns 404 when the date has no log", async () => {
