@@ -12,7 +12,7 @@ const API_BASE = process.env.API_BASE || "/api/v1";
 
 export function createApp(options?: { skipRateLimit?: boolean }) {
   const app = express();
-  app.use(express.json());
+  app.use(express.json({ limit: "100kb" }));
   app.use(requestIdMiddleware);
 
   // CORS configuration
