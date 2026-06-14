@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import { getUser } from "../services/user.service.js";
 import { clerkClient, getAuth } from "@clerk/express";
+import { UnauthorizedError } from "../errors.js";
 
 export async function userMiddleware(
   req: Request,
