@@ -1,8 +1,6 @@
 node_modules
 
-# Prisma
 generated
-migrations
 
 # Claude
 .claude
