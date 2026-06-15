@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import { getUser } from "../services/user.service.js";
 import { clerkClient, getAuth } from "@clerk/express";
+import { UnauthorizedError } from "../errors.js";
 
 export async function userMiddleware(
   req: Request,
@@ -11,7 +12,7 @@ export async function userMiddleware(
   const { isAuthenticated, userId } = getAuth(req);
   // Handle if the user is not authorized
   if (!isAuthenticated) {
-    return res.status(401).json({ error: "Unauthorized." });
+    throw new UnauthorizedError("Unauthorized.");
   }
 
   // Look up the user
@@ -26,7 +27,6 @@ export async function userMiddleware(
     req.user = user;
     next();
   } catch (error) {
-    console.error("Error in user middleware:", error);
     return res.status(500).json({ error: "Internal Server Error" });
   }
 }

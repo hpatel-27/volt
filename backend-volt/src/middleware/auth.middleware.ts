@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import { getAuth } from "@clerk/express";
+import { UnauthorizedError } from "../errors.js";
 
 // Use `getAuth()` to protect a route based on authorization status
 export const hasPermission = (
@@ -10,7 +11,7 @@ export const hasPermission = (
   const { isAuthenticated } = getAuth(req);
   // Handle if the user is not authorized
   if (!isAuthenticated) {
-    return res.status(401).json({ error: "Unauthorized." });
+    throw new UnauthorizedError("Unauthorized.");
   }
 
   return next();

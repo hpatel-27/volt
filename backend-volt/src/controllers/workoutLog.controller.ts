@@ -5,6 +5,8 @@ import type {
   CreateWorkoutLogInput,
   UpdateWorkoutLogInput,
 } from "../types/workoutLog.dto.js";
+import { validateBoundedString } from "../helpers/validators.js";
+import { LIMITS } from "../helpers/limits.js";
 
 // YYYY-MM-DD format check — client sends its local "today" so we respect the
 // user's timezone rather than deriving the date server-side.
@@ -65,17 +67,17 @@ async function createWorkoutLog(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
   const isoDate = res.locals.date;
-  const { workoutDayId } = req.body;
+  const { workoutDayId } = req.body ?? {};
 
   const data: CreateWorkoutLogInput = { userId, date: isoDate };
 
   if (workoutDayId !== undefined) {
-    if (typeof workoutDayId !== "string" || workoutDayId.length < 1) {
-      return res
-        .status(400)
-        .json({ error: "workoutDayId must be a UUID string." });
-    }
-    data.workoutDayId = workoutDayId;
+    const trimmedWorkoutDayId = validateBoundedString(
+      "workoutDayId",
+      workoutDayId,
+      LIMITS.ID_MAX,
+    );
+    data.workoutDayId = trimmedWorkoutDayId;
   }
 
   const newLog = await workoutLogService.createWorkoutLog(userId, data);
@@ -87,7 +89,7 @@ async function updateWorkoutLog(req: Request, res: Response) {
   const userId = user.id;
   const logId = res.locals.logId as string;
   const isoDate = res.locals.date;
-  const { workoutDayId } = req.body;
+  const { workoutDayId } = req.body ?? {};
 
   const data: UpdateWorkoutLogInput = {};
 
@@ -97,13 +99,14 @@ async function updateWorkoutLog(req: Request, res: Response) {
 
   if (workoutDayId !== undefined) {
     if (workoutDayId === null) {
+      // Explicit null = unlink the template day (freestyle session).
       data.workoutDayId = null;
-    } else if (typeof workoutDayId !== "string" || workoutDayId.length < 1) {
-      return res
-        .status(400)
-        .json({ error: "workoutDayId must be a UUID string or null." });
     } else {
-      data.workoutDayId = workoutDayId;
+      data.workoutDayId = validateBoundedString(
+        "workoutDayId",
+        workoutDayId,
+        LIMITS.ID_MAX,
+      );
     }
   }
 

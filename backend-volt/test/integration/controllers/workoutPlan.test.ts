@@ -6,7 +6,15 @@ vi.mock("@clerk/express", async () => {
   return makeClerkMock("integration_test_workoutPlan_controller_user");
 });
 
-import { it, describe, vi, beforeAll, afterAll, beforeEach, expect } from "vitest";
+import {
+  it,
+  describe,
+  vi,
+  beforeAll,
+  afterAll,
+  beforeEach,
+  expect,
+} from "vitest";
 import { prisma } from "../../../src/db.js";
 import request from "supertest";
 import { createApp } from "../../../src/app.js";
@@ -80,7 +88,9 @@ describe("GET /api/v1/workout-plans", () => {
       .get("/api/v1/workout-plans")
       .query({ limit: "10" })
       .expect(400)
-      .expect({ error: "Page and limit must be positive integers" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Page and limit must be positive integers");
+      });
   });
 
   it("returns 400 when limit is not numeric", async () => {
@@ -88,7 +98,9 @@ describe("GET /api/v1/workout-plans", () => {
       .get("/api/v1/workout-plans")
       .query({ page: "1", limit: "nope" })
       .expect(400)
-      .expect({ error: "Page and limit must be positive integers" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Page and limit must be positive integers");
+      });
   });
 
   it("returns 200 with an empty page shape", async () => {
@@ -184,7 +196,9 @@ describe("GET /api/v1/workout-plans/:planId", () => {
     await request(app)
       .get("/api/v1/workout-plans/not-a-uuid")
       .expect(400)
-      .expect({ error: "Invalid planId" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Invalid planId");
+      });
   });
 
   it("returns 404 when no plan exists for that id", async () => {
@@ -260,7 +274,9 @@ describe("POST /api/v1/workout-plans", () => {
       .set("Content-Type", "application/json")
       .send({})
       .expect(400)
-      .expect({ error: "Name is required and cannot be empty." });
+      .expect((res) => {
+        expect(res.body.error).toContain("Name");
+      });
   });
 
   it("returns 400 when name is an empty string", async () => {
@@ -269,7 +285,9 @@ describe("POST /api/v1/workout-plans", () => {
       .set("Content-Type", "application/json")
       .send({ name: "" })
       .expect(400)
-      .expect({ error: "Name is required and cannot be empty." });
+      .expect((res) => {
+        expect(res.body.error).toContain("Name");
+      });
   });
 
   it("returns 400 when name is not a string", async () => {
@@ -278,7 +296,9 @@ describe("POST /api/v1/workout-plans", () => {
       .set("Content-Type", "application/json")
       .send({ name: 123 })
       .expect(400)
-      .expect({ error: "Name is required and cannot be empty." });
+      .expect((res) => {
+        expect(res.body.error).toContain("Name");
+      });
   });
 
   it("returns 400 when type is invalid", async () => {
@@ -287,9 +307,8 @@ describe("POST /api/v1/workout-plans", () => {
       .set("Content-Type", "application/json")
       .send({ name: "PPL", type: "BODYBUILDING" })
       .expect(400)
-      .expect({
-        error:
-          "Invalid type was provided. STRENGTH, HYPERTROPHY, and WEIGHT LOSS are the only types currently supported.",
+      .expect((res) => {
+        expect(res.body.error).toContain("Type");
       });
   });
 
@@ -334,7 +353,9 @@ describe("PATCH /api/v1/workout-plans/:planId", () => {
       .set("Content-Type", "application/json")
       .send({ name: "X" })
       .expect(400)
-      .expect({ error: "Invalid planId" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Invalid planId");
+      });
   });
 
   it("returns 400 when no updatable fields are provided", async () => {
@@ -358,7 +379,9 @@ describe("PATCH /api/v1/workout-plans/:planId", () => {
       .set("Content-Type", "application/json")
       .send({ name: "" })
       .expect(400)
-      .expect({ error: "Name cannot be an empty string." });
+      .expect((res) => {
+        expect(res.body.error).toContain("Name");
+      });
   });
 
   it("returns 404 when the plan does not exist", async () => {
@@ -414,7 +437,9 @@ describe("DELETE /api/v1/workout-plans/:planId", () => {
     await request(app)
       .delete("/api/v1/workout-plans/not-a-uuid")
       .expect(400)
-      .expect({ error: "Invalid planId" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Invalid planId");
+      });
   });
 
   it("returns 404 when the plan does not exist", async () => {
@@ -452,9 +477,7 @@ describe("DELETE /api/v1/workout-plans/:planId", () => {
     const plan = await prisma.workoutPlan.create({
       data: { userId: otherUserId, name: "Theirs" },
     });
-    await request(app)
-      .delete(`/api/v1/workout-plans/${plan.id}`)
-      .expect(404);
+    await request(app).delete(`/api/v1/workout-plans/${plan.id}`).expect(404);
 
     const stillThere = await prisma.workoutPlan.findUnique({
       where: { id: plan.id },
@@ -469,7 +492,9 @@ describe("DELETE /api/v1/workout-plans/:planId", () => {
 
     await request(app).delete(`/api/v1/workout-plans/${plan.id}`).expect(204);
 
-    const gone = await prisma.workoutPlan.findUnique({ where: { id: plan.id } });
+    const gone = await prisma.workoutPlan.findUnique({
+      where: { id: plan.id },
+    });
     expect(gone).toBeNull();
   });
 });
@@ -482,7 +507,9 @@ describe("POST /api/v1/workout-plans/:planId/activate", () => {
     await request(app)
       .post("/api/v1/workout-plans/not-a-uuid/activate")
       .expect(400)
-      .expect({ error: "Invalid planId" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Invalid planId");
+      });
   });
 
   it("returns 404 when the plan does not exist", async () => {

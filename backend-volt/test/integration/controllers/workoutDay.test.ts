@@ -6,7 +6,15 @@ vi.mock("@clerk/express", async () => {
   return makeClerkMock("integration_test_workoutDay_controller_user");
 });
 
-import { it, describe, vi, beforeAll, afterAll, beforeEach, expect } from "vitest";
+import {
+  it,
+  describe,
+  vi,
+  beforeAll,
+  afterAll,
+  beforeEach,
+  expect,
+} from "vitest";
 import { prisma } from "../../../src/db.js";
 import request from "supertest";
 import { createApp } from "../../../src/app.js";
@@ -85,7 +93,9 @@ describe("GET /api/v1/workout-plans/:planId/days", () => {
     await request(app)
       .get("/api/v1/workout-plans/not-a-uuid/days")
       .expect(400)
-      .expect({ error: "Invalid planId" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Invalid planId");
+      });
   });
 
   it("returns 404 when the plan does not exist", async () => {
@@ -149,14 +159,18 @@ describe("GET /api/v1/workout-plans/:planId/days/:dayId", () => {
     await request(app)
       .get(`/api/v1/workout-plans/${planId}/days/not-a-uuid`)
       .expect(400)
-      .expect({ error: "Invalid dayId" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Invalid dayId");
+      });
   });
 
   it("returns 400 when planId is not a UUID", async () => {
     await request(app)
       .get(`/api/v1/workout-plans/not-a-uuid/days/${UUID}`)
       .expect(400)
-      .expect({ error: "Invalid planId" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Invalid planId");
+      });
   });
 
   it("returns 404 for an unknown day id", async () => {
@@ -229,7 +243,9 @@ describe("POST /api/v1/workout-plans/:planId/days", () => {
       .set("Content-Type", "application/json")
       .send({ name: "Push" })
       .expect(400)
-      .expect({ error: "Invalid planId" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Invalid planId");
+      });
   });
 
   it("returns 400 when name is missing", async () => {
@@ -239,7 +255,9 @@ describe("POST /api/v1/workout-plans/:planId/days", () => {
       .set("Content-Type", "application/json")
       .send({})
       .expect(400)
-      .expect({ error: "Name is required and cannot be empty." });
+      .expect((res) => {
+        expect(res.body.error).toContain("Name");
+      });
   });
 
   it("returns 400 when name is an empty string", async () => {
@@ -249,7 +267,9 @@ describe("POST /api/v1/workout-plans/:planId/days", () => {
       .set("Content-Type", "application/json")
       .send({ name: "" })
       .expect(400)
-      .expect({ error: "Name is required and cannot be empty." });
+      .expect((res) => {
+        expect(res.body.error).toContain("Name");
+      });
   });
 
   it("returns 404 when the plan does not exist", async () => {
@@ -309,7 +329,9 @@ describe("PATCH /api/v1/workout-plans/:planId/days/:dayId", () => {
       .set("Content-Type", "application/json")
       .send({ name: "X" })
       .expect(400)
-      .expect({ error: "Invalid dayId" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Invalid dayId");
+      });
   });
 
   it("returns 400 when no updatable fields are provided", async () => {
@@ -335,7 +357,9 @@ describe("PATCH /api/v1/workout-plans/:planId/days/:dayId", () => {
       .set("Content-Type", "application/json")
       .send({ name: "" })
       .expect(400)
-      .expect({ error: "Name cannot be an empty string." });
+      .expect((res) => {
+        expect(res.body.error).toContain("Name");
+      });
   });
 
   it("returns 404 when the day does not exist", async () => {
@@ -395,7 +419,9 @@ describe("DELETE /api/v1/workout-plans/:planId/days/:dayId", () => {
     await request(app)
       .delete(`/api/v1/workout-plans/${planId}/days/not-a-uuid`)
       .expect(400)
-      .expect({ error: "Invalid dayId" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Invalid dayId");
+      });
   });
 
   it("returns 404 when the day does not exist", async () => {

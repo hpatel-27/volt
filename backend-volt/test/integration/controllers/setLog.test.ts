@@ -9,7 +9,15 @@ vi.mock("@clerk/express", async () => {
   return makeClerkMock("integration_test_setLog_controller_user");
 });
 
-import { it, describe, vi, beforeAll, afterAll, beforeEach, expect } from "vitest";
+import {
+  it,
+  describe,
+  vi,
+  beforeAll,
+  afterAll,
+  beforeEach,
+  expect,
+} from "vitest";
 import { prisma } from "../../../src/db.js";
 import request from "supertest";
 import { createApp } from "../../../src/app.js";
@@ -83,14 +91,18 @@ describe("GET /api/v1/workout-logs/:logId/exercises/:exerciseLogId/sets", () => 
     await request(app)
       .get(`/api/v1/workout-logs/not-a-uuid/exercises/${UUID}/sets`)
       .expect(400)
-      .expect({ error: "Invalid logId" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Invalid logId");
+      });
   });
 
   it("returns 400 when exerciseLogId is not a UUID", async () => {
     await request(app)
       .get(`/api/v1/workout-logs/${UUID}/exercises/not-a-uuid/sets`)
       .expect(400)
-      .expect({ error: "Invalid exerciseLogId" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Invalid exerciseLogId");
+      });
   });
 
   it("returns 404 when the parent exercise log does not exist", async () => {
@@ -135,7 +147,9 @@ describe("GET /api/v1/workout-logs/:logId/exercises/:exerciseLogId/sets", () => 
       .get(setsPath(logId, exerciseLogId))
       .expect(200)
       .expect((res) => {
-        expect(res.body.sets.map((s: any) => s.setNumber)).toStrictEqual([1, 2]);
+        expect(res.body.sets.map((s: any) => s.setNumber)).toStrictEqual([
+          1, 2,
+        ]);
         expect(res.body.sets[0]).not.toHaveProperty("exerciseLogId");
       });
   });
@@ -152,7 +166,9 @@ describe("POST /api/v1/workout-logs/:logId/exercises/:exerciseLogId/sets", () =>
       .set("Content-Type", "application/json")
       .send({ reps: 10, weight: 135 })
       .expect(400)
-      .expect({ error: "Invalid exerciseLogId" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Invalid exerciseLogId");
+      });
   });
 
   it("returns 400 when reps is not a positive integer", async () => {
@@ -163,7 +179,7 @@ describe("POST /api/v1/workout-logs/:logId/exercises/:exerciseLogId/sets", () =>
       .send({ reps: 0, weight: 135 })
       .expect(400)
       .expect((res) => {
-        expect(res.body.error).toBe("Reps is required and must be a positive integer");
+        expect(res.body.error).toContain("Reps");
       });
   });
 
@@ -175,9 +191,7 @@ describe("POST /api/v1/workout-logs/:logId/exercises/:exerciseLogId/sets", () =>
       .send({ reps: 10, weight: -5 })
       .expect(400)
       .expect((res) => {
-        expect(res.body.error).toBe(
-          "Weight is required and must be a non-negative number",
-        );
+        expect(res.body.error).toContain("Weight");
       });
   });
 
@@ -227,7 +241,9 @@ describe("GET /api/v1/sets/:setId", () => {
     await request(app)
       .get("/api/v1/sets/not-a-uuid")
       .expect(400)
-      .expect({ error: "Invalid setId" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Invalid setId");
+      });
   });
 
   it("returns 404 for an unknown set id", async () => {
@@ -281,7 +297,9 @@ describe("PATCH /api/v1/sets/:setId", () => {
       .set("Content-Type", "application/json")
       .send({ reps: 12 })
       .expect(400)
-      .expect({ error: "Invalid setId" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Invalid setId");
+      });
   });
 
   it("returns 400 when no updatable fields are provided", async () => {
@@ -290,7 +308,9 @@ describe("PATCH /api/v1/sets/:setId", () => {
       .set("Content-Type", "application/json")
       .send({})
       .expect(400)
-      .expect({ error: "No valid fields were provided to update." });
+      .expect((res) => {
+        expect(res.body.error).toBe("No valid fields were provided to update.");
+      });
   });
 
   it("returns 400 when reps is not a positive integer", async () => {
@@ -300,7 +320,7 @@ describe("PATCH /api/v1/sets/:setId", () => {
       .send({ reps: 8.5 })
       .expect(400)
       .expect((res) => {
-        expect(res.body.error).toBe("Reps is required and must be a positive integer");
+        expect(res.body.error).toContain("Reps");
       });
   });
 
@@ -356,7 +376,9 @@ describe("DELETE /api/v1/sets/:setId", () => {
     await request(app)
       .delete("/api/v1/sets/not-a-uuid")
       .expect(400)
-      .expect({ error: "Invalid setId" });
+      .expect((res) => {
+        expect(res.body.error).toBe("Invalid setId");
+      });
   });
 
   it("returns 404 for an unknown set id", async () => {

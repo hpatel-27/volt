@@ -69,7 +69,7 @@ describe("WorkoutPlan Controller getAllWorkoutPlans", () => {
     );
   });
 
-  it("rejects an invalid type filter with a 400 and never calls the service", async () => {
+  it("throws BadRequestError on an invalid type filter and never calls the service", async () => {
     const mReq = {
       user: { id: "user-1" },
       pagination: { page: 1, limit: 10 },
@@ -77,9 +77,10 @@ describe("WorkoutPlan Controller getAllWorkoutPlans", () => {
     } as unknown as Request;
     const mRes = mockResponse();
 
-    await workoutPlanController.getAllWorkoutPlans(mReq, mRes);
+    await expect(
+      workoutPlanController.getAllWorkoutPlans(mReq, mRes),
+    ).rejects.toThrow(BadRequestError);
 
-    expect(mRes.status).toHaveBeenCalledWith(400);
     expect(workoutPlanService.getAllWorkoutPlans).not.toHaveBeenCalled();
   });
 
@@ -176,39 +177,35 @@ describe("WorkoutPlan Controller getWorkoutPlanById", () => {
 describe("WorkoutPlan Controller createWorkoutPlan", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  // Each invalid name short-circuits with the same inline 400 before the service runs.
+  // Each invalid name short-circuits via validateBoundedString, which THROWS
+  // (mapped to a 400 by the error middleware) before the service runs.
   it.each([
     ["missing name", {}],
     ["name is undefined", { name: undefined }],
     ["name is not a string", { name: 123 }],
     ["name is an empty string", { name: "" }],
-  ])("returns 400 when %s", async (_label, body) => {
+  ])("throws BadRequestError when %s", async (_label, body) => {
     const mReq = { user: { id: "user-1" }, body } as unknown as Request;
     const mRes = mockResponse();
 
-    await workoutPlanController.createWorkoutPlan(mReq, mRes);
+    await expect(
+      workoutPlanController.createWorkoutPlan(mReq, mRes),
+    ).rejects.toThrow(BadRequestError);
 
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Name is required and cannot be empty.",
-    });
     expect(workoutPlanService.createWorkoutPlan).not.toHaveBeenCalled();
   });
 
-  it("returns 400 when type is not a valid PlanType", async () => {
+  it("throws BadRequestError when type is not a valid PlanType", async () => {
     const mReq = {
       user: { id: "user-1" },
       body: { name: "PPL", type: "BODYBUILDING" },
     } as unknown as Request;
     const mRes = mockResponse();
 
-    await workoutPlanController.createWorkoutPlan(mReq, mRes);
+    await expect(
+      workoutPlanController.createWorkoutPlan(mReq, mRes),
+    ).rejects.toThrow(BadRequestError);
 
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error:
-        "Invalid type was provided. STRENGTH, HYPERTROPHY, and WEIGHT LOSS are the only types currently supported.",
-    });
     expect(workoutPlanService.createWorkoutPlan).not.toHaveBeenCalled();
   });
 
@@ -285,51 +282,44 @@ describe("WorkoutPlan Controller createWorkoutPlan", () => {
 describe("WorkoutPlan Controller updateWorkoutPlan", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("returns 400 when name is provided but empty", async () => {
+  it("throws BadRequestError when name is provided but empty", async () => {
     const mReq = {
       user: { id: "user-1" },
       body: { name: "" },
     } as unknown as Request;
     const mRes = mockResponse({ planId: "plan-1" });
 
-    await workoutPlanController.updateWorkoutPlan(mReq, mRes);
+    await expect(
+      workoutPlanController.updateWorkoutPlan(mReq, mRes),
+    ).rejects.toThrow(BadRequestError);
 
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Name cannot be an empty string.",
-    });
     expect(workoutPlanService.updateWorkoutPlan).not.toHaveBeenCalled();
   });
 
-  it("returns 400 when name is provided but not a string", async () => {
+  it("throws BadRequestError when name is provided but not a string", async () => {
     const mReq = {
       user: { id: "user-1" },
       body: { name: 42 },
     } as unknown as Request;
     const mRes = mockResponse({ planId: "plan-1" });
 
-    await workoutPlanController.updateWorkoutPlan(mReq, mRes);
-
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Name cannot be an empty string.",
-    });
+    await expect(
+      workoutPlanController.updateWorkoutPlan(mReq, mRes),
+    ).rejects.toThrow(BadRequestError);
   });
 
-  it("returns 400 when type is invalid", async () => {
+  it("throws BadRequestError when type is invalid", async () => {
     const mReq = {
       user: { id: "user-1" },
       body: { type: "CARDIO" },
     } as unknown as Request;
     const mRes = mockResponse({ planId: "plan-1" });
 
-    await workoutPlanController.updateWorkoutPlan(mReq, mRes);
+    await expect(
+      workoutPlanController.updateWorkoutPlan(mReq, mRes),
+    ).rejects.toThrow(BadRequestError);
 
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error:
-        "Invalid type was provided. STRENGTH, HYPERTROPHY, and WEIGHT LOSS are the only types currently supported.",
-    });
+    expect(workoutPlanService.updateWorkoutPlan).not.toHaveBeenCalled();
   });
 
   it("returns 400 when no updatable fields are provided", async () => {

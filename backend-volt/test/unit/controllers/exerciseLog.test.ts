@@ -7,7 +7,7 @@ import type { Request, Response } from "express";
 import { expect, it, describe, vi, beforeEach } from "vitest";
 import * as exerciseLogService from "../../../src/services/exerciseLog.service.js";
 import * as exerciseLogController from "../../../src/controllers/exerciseLog.controller.js";
-import { NotFoundError } from "../../../src/errors.js";
+import { BadRequestError, NotFoundError } from "../../../src/errors.js";
 
 // Minimal Response double: status/json/send chain via mockReturnThis.
 // `locals` carries the logId/exerciseLogId that param middleware would have set
@@ -95,36 +95,34 @@ describe("ExerciseLog Controller getExerciseLogById", () => {
 describe("ExerciseLog Controller createExerciseLog", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  // exerciseId is required and must be a non-empty string → inline 400.
+  // exerciseId is required and must be a non-empty string → validateBoundedString THROWS.
   it.each([
     ["missing", {}],
     ["undefined", { exerciseId: undefined }],
     ["not a string", { exerciseId: 123 }],
     ["an empty string", { exerciseId: "" }],
-  ])("returns 400 when exerciseId is %s", async (_label, body) => {
+  ])("throws BadRequestError when exerciseId is %s", async (_label, body) => {
     const mReq = { user: { id: "user-1" }, body } as unknown as Request;
     const mRes = mockResponse({ logId: "log-1" });
 
-    await exerciseLogController.createExerciseLog(mReq, mRes);
+    await expect(
+      exerciseLogController.createExerciseLog(mReq, mRes),
+    ).rejects.toThrow(BadRequestError);
 
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "exerciseId is required and cannot be empty.",
-    });
     expect(exerciseLogService.createExerciseLog).not.toHaveBeenCalled();
   });
 
-  it("returns 400 when notes is provided but not a string", async () => {
+  it("throws BadRequestError when notes is provided but not a string", async () => {
     const mReq = {
       user: { id: "user-1" },
       body: { exerciseId: "ex-1", notes: 42 },
     } as unknown as Request;
     const mRes = mockResponse({ logId: "log-1" });
 
-    await exerciseLogController.createExerciseLog(mReq, mRes);
+    await expect(
+      exerciseLogController.createExerciseLog(mReq, mRes),
+    ).rejects.toThrow(BadRequestError);
 
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({ error: "Notes must be a string." });
     expect(exerciseLogService.createExerciseLog).not.toHaveBeenCalled();
   });
 
@@ -204,35 +202,31 @@ describe("ExerciseLog Controller updateExerciseLog", () => {
     expect(exerciseLogService.updateExerciseLog).not.toHaveBeenCalled();
   });
 
-  it("returns 400 when exerciseId is provided but empty", async () => {
+  it("throws BadRequestError when exerciseId is provided but empty", async () => {
     const mReq = {
       user: { id: "user-1" },
       body: { exerciseId: "" },
     } as unknown as Request;
     const mRes = mockResponse({ logId: "log-1", exerciseLogId: "el-1" });
 
-    await exerciseLogController.updateExerciseLog(mReq, mRes);
+    await expect(
+      exerciseLogController.updateExerciseLog(mReq, mRes),
+    ).rejects.toThrow(BadRequestError);
 
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "exerciseId is required and cannot be empty.",
-    });
     expect(exerciseLogService.updateExerciseLog).not.toHaveBeenCalled();
   });
 
-  it("returns 400 when notes is neither a string nor null", async () => {
+  it("throws BadRequestError when notes is neither a string nor null", async () => {
     const mReq = {
       user: { id: "user-1" },
       body: { notes: 42 },
     } as unknown as Request;
     const mRes = mockResponse({ logId: "log-1", exerciseLogId: "el-1" });
 
-    await exerciseLogController.updateExerciseLog(mReq, mRes);
+    await expect(
+      exerciseLogController.updateExerciseLog(mReq, mRes),
+    ).rejects.toThrow(BadRequestError);
 
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Notes must be a string or null.",
-    });
     expect(exerciseLogService.updateExerciseLog).not.toHaveBeenCalled();
   });
 

@@ -8,6 +8,7 @@ import {
   validatePositiveInt,
   validateNonNegativeNumber,
 } from "../helpers/validators.js";
+import { LIMITS } from "../helpers/limits.js";
 
 async function getAllSetLogs(req: Request, res: Response) {
   const user = req.user!;
@@ -33,10 +34,10 @@ async function createSetLog(req: Request, res: Response) {
   const userId = user.id;
   const logId = res.locals.logId as string;
   const exerciseLogId = res.locals.exerciseLogId as string;
-  const { reps, weight } = req.body;
+  const { reps, weight } = req.body ?? {};
 
-  validatePositiveInt("reps", reps);
-  validateNonNegativeNumber("weight", weight);
+  validatePositiveInt("reps", reps, LIMITS.REPS_MAX);
+  validateNonNegativeNumber("weight", weight, LIMITS.LIFT_WEIGHT_MAX);
 
   const data: CreateSetLogInput = {
     exerciseLogId,
@@ -57,17 +58,17 @@ async function updateSetLog(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
   const setId = res.locals.setId as string;
-  const { reps, weight } = req.body;
+  const { reps, weight } = req.body ?? {};
 
   const data: UpdateSetLogInput = {};
 
   if (reps !== undefined) {
-    validatePositiveInt("reps", reps);
+    validatePositiveInt("reps", reps, LIMITS.REPS_MAX);
     data.reps = reps;
   }
 
   if (weight !== undefined) {
-    validateNonNegativeNumber("weight", weight);
+    validateNonNegativeNumber("weight", weight, LIMITS.LIFT_WEIGHT_MAX);
     data.weight = weight;
   }
 

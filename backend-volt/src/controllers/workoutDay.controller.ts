@@ -4,6 +4,8 @@ import type {
   CreateWorkoutDayInput,
   UpdateWorkoutDayInput,
 } from "../types/workoutDay.dto.js";
+import { validateBoundedString } from "../helpers/validators.js";
+import { LIMITS } from "../helpers/limits.js";
 
 async function getAllWorkoutDays(req: Request, res: Response) {
   const user = req.user!;
@@ -28,17 +30,13 @@ async function createWorkoutDay(req: Request, res: Response) {
   const user = req.user!;
   const userId = user.id;
   const planId = res.locals.planId as string;
-  const name = req.body?.name;
+  const { name } = req.body ?? {};
 
-  if (name === undefined || typeof name !== "string" || name.length < 1) {
-    return res
-      .status(400)
-      .json({ error: "Name is required and cannot be empty." });
-  }
+  const trimmedName = validateBoundedString("name", name, LIMITS.NAME_MAX);
 
   const data: CreateWorkoutDayInput = {
     workoutPlanId: planId,
-    name,
+    name: trimmedName,
     order: -1,
   };
   const newDay = await workoutDayService.createWorkoutDay(planId, userId, data);
@@ -50,15 +48,13 @@ async function updateWorkoutDay(req: Request, res: Response) {
   const userId = user.id;
   const planId = res.locals.planId as string;
   const dayId = res.locals.dayId as string;
-  const name = req.body?.name;
+  const { name } = req.body ?? {};
 
   const data: UpdateWorkoutDayInput = {};
 
   if (name !== undefined) {
-    if (typeof name !== "string" || name.length < 1) {
-      return res.status(400).json({ error: "Name cannot be an empty string." });
-    }
-    data.name = name;
+    const trimmedName = validateBoundedString("name", name, LIMITS.NAME_MAX);
+    data.name = trimmedName;
   }
 
   if (Object.keys(data).length === 0) {

@@ -3,6 +3,8 @@ import {
   NotFoundError,
   DuplicateEntryError,
   BadRequestError,
+  UnauthorizedError,
+  ForbiddenError,
 } from "../errors.js";
 
 // Centralized Express error handler. Mounted last in server.ts so it catches
@@ -19,7 +21,13 @@ export function errorMiddleware(
   console.error(`Request ID: ${req.id}`, err);
 
   // Existing custom errors
-  const errors = [NotFoundError, DuplicateEntryError, BadRequestError];
+  const errors = [
+    NotFoundError,
+    DuplicateEntryError,
+    BadRequestError,
+    UnauthorizedError,
+    ForbiddenError,
+  ];
   for (const e of errors) {
     if (err instanceof e) {
       return res

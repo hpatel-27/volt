@@ -7,7 +7,7 @@ import type { Request, Response } from "express";
 import { expect, it, describe, vi, beforeEach } from "vitest";
 import * as workoutDayService from "../../../src/services/workoutDay.service.js";
 import * as workoutDayController from "../../../src/controllers/workoutDay.controller.js";
-import { NotFoundError } from "../../../src/errors.js";
+import { BadRequestError, NotFoundError } from "../../../src/errors.js";
 
 // Minimal Response double: status/json/send all chain via mockReturnThis.
 // `locals` carries the planId/dayId that param middleware would have set.
@@ -94,22 +94,21 @@ describe("WorkoutDay Controller getWorkoutDayById", () => {
 describe("WorkoutDay Controller createWorkoutDay", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  // Each invalid name short-circuits with the same inline 400 before the service runs.
+  // Each invalid name short-circuits via validateBoundedString, which THROWS
+  // (mapped to a 400 by the error middleware) before the service runs.
   it.each([
     ["missing name", {}],
     ["name is undefined", { name: undefined }],
     ["name is not a string", { name: 123 }],
     ["name is an empty string", { name: "" }],
-  ])("returns 400 when %s", async (_label, body) => {
+  ])("throws BadRequestError when %s", async (_label, body) => {
     const mReq = { user: { id: "user-1" }, body } as unknown as Request;
     const mRes = mockResponse({ planId: "plan-1" });
 
-    await workoutDayController.createWorkoutDay(mReq, mRes);
+    await expect(
+      workoutDayController.createWorkoutDay(mReq, mRes),
+    ).rejects.toThrow(BadRequestError);
 
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Name is required and cannot be empty.",
-    });
     expect(workoutDayService.createWorkoutDay).not.toHaveBeenCalled();
   });
 
@@ -157,35 +156,30 @@ describe("WorkoutDay Controller createWorkoutDay", () => {
 describe("WorkoutDay Controller updateWorkoutDay", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("returns 400 when name is provided but empty", async () => {
+  it("throws BadRequestError when name is provided but empty", async () => {
     const mReq = {
       user: { id: "user-1" },
       body: { name: "" },
     } as unknown as Request;
     const mRes = mockResponse({ planId: "plan-1", dayId: "day-1" });
 
-    await workoutDayController.updateWorkoutDay(mReq, mRes);
+    await expect(
+      workoutDayController.updateWorkoutDay(mReq, mRes),
+    ).rejects.toThrow(BadRequestError);
 
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Name cannot be an empty string.",
-    });
     expect(workoutDayService.updateWorkoutDay).not.toHaveBeenCalled();
   });
 
-  it("returns 400 when name is provided but not a string", async () => {
+  it("throws BadRequestError when name is provided but not a string", async () => {
     const mReq = {
       user: { id: "user-1" },
       body: { name: 42 },
     } as unknown as Request;
     const mRes = mockResponse({ planId: "plan-1", dayId: "day-1" });
 
-    await workoutDayController.updateWorkoutDay(mReq, mRes);
-
-    expect(mRes.status).toHaveBeenCalledWith(400);
-    expect(mRes.json).toHaveBeenCalledWith({
-      error: "Name cannot be an empty string.",
-    });
+    await expect(
+      workoutDayController.updateWorkoutDay(mReq, mRes),
+    ).rejects.toThrow(BadRequestError);
   });
 
   it("returns 400 when no updatable fields are provided", async () => {

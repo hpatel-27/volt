@@ -8,6 +8,8 @@ import {
   useUpdateWorkoutDay,
 } from "@/api/workoutDay";
 import type { WorkoutDayEntry } from "@/types/workoutDay";
+import { parseBoundedString } from "@/lib/validate";
+import { LIMITS } from "@/lib/limits";
 
 interface WorkoutDayEntrySheetProps {
   open: boolean;
@@ -38,14 +40,16 @@ export function WorkoutDayEntrySheet({
 
   function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!name.trim()) {
-      toast.error("Please enter a name for this day.");
+
+    const trimmedName = parseBoundedString(name, { maxLen: LIMITS.NAME_MAX });
+    if (!trimmedName) {
+      toast.error("Please enter a non-empty name for this day.");
       return;
     }
 
     if (isEdit && day) {
       updateDay.mutate(
-        { planId, dayId: day.id, input: { name: name.trim() } },
+        { planId, dayId: day.id, input: { name: trimmedName } },
         {
           onSuccess: () => {
             toast.success("Day updated.");
@@ -58,7 +62,7 @@ export function WorkoutDayEntrySheet({
     }
 
     createDay.mutate(
-      { planId, input: { name: name.trim() } },
+      { planId, input: { name: trimmedName } },
       {
         onSuccess: () => {
           toast.success("Day added.");
@@ -98,6 +102,7 @@ export function WorkoutDayEntrySheet({
             type="text"
             placeholder="Push"
             value={name}
+            maxLength={LIMITS.NAME_MAX}
             onChange={(e) => setName(e.target.value)}
             className="
               w-full bg-transparent border-0 outline-none
