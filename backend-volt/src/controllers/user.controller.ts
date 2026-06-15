@@ -57,7 +57,7 @@ async function updateUser(req: Request, res: Response) {
 async function deleteAccount(req: Request, res: Response) {
   const { clerkId } = req.user!;
   await userService.deleteAccount(clerkId);
-  // 204: deletion accepted. DB cleanup happens asynchronously via webhook.
+  // 204: account removed from Clerk and our DB; no content to return.
   res.status(204).send();
 }
 
