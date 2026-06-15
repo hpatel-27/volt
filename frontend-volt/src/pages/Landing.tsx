@@ -210,9 +210,17 @@ const Landing = () => {
           </section>
         </div>
 
-        <footer className="flex items-center justify-between px-6 py-8 font-mono text-[11px] tracking-wider text-bone-600 md:px-12">
+        <footer className="flex flex-wrap items-center justify-between gap-4 px-6 py-8 font-mono text-[11px] tracking-wider text-bone-600 md:px-12">
           <span>VOLT · TRAINING LOG</span>
-          <span>&copy; HARSH PATEL</span>
+          <div className="flex items-center gap-5">
+            <Link to="/privacy" className="hover:text-bone-300">
+              PRIVACY
+            </Link>
+            <Link to="/terms" className="hover:text-bone-300">
+              TERMS
+            </Link>
+            <span>&copy; HARSH PATEL</span>
+          </div>
         </footer>
       </SignedOut>
     </div>
