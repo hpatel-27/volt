@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Pencil } from "lucide-react";
+import { Minus, Pencil } from "lucide-react";
 import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { Spinner } from "../components/ui/Spinner";
@@ -65,7 +65,7 @@ export default function Profile() {
           <div className="flex items-center justify-between bg-ink-850 px-4 py-3">
             <dt className="text-sm text-bone-300">Height</dt>
             <dd className="font-mono text-sm font-medium text-bone-50">
-              {user.height != null ? `${user.height} cm` : "-"}
+              {user.height != null ? `${user.height} cm` : <Minus size={24} />}
             </dd>
           </div>
         </dl>
