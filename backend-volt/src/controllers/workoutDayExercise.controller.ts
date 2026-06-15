@@ -7,6 +7,7 @@ import type {
 import {
   validateBoundedString,
   validatePositiveInt,
+  validateRange,
 } from "../helpers/validators.js";
 import { LIMITS } from "../helpers/limits.js";
 
@@ -77,6 +78,13 @@ async function createWorkoutDayExercise(req: Request, res: Response) {
     data.targetRepsMax = targetRepsMax;
   }
 
+  validateRange(
+    "targetRepsMin",
+    data.targetRepsMin,
+    "targetRepsMax",
+    data.targetRepsMax,
+  );
+
   if (restSeconds !== undefined) {
     validatePositiveInt("restSeconds", restSeconds, LIMITS.REST_MAX);
     data.restSeconds = restSeconds;
@@ -137,6 +145,13 @@ async function updateWorkoutDayExercise(req: Request, res: Response) {
       .status(400)
       .json({ error: "No valid fields were provided to update." });
   }
+
+  validateRange(
+    "targetRepsMin",
+    data.targetRepsMin,
+    "targetRepsMax",
+    data.targetRepsMax,
+  );
 
   const updated = await workoutDayExerciseService.updateWorkoutDayExercise(
     planId,

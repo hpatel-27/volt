@@ -9,6 +9,7 @@ import {
   validateBoundedString,
   validateEnum,
   validateStringArray,
+  validateImageArray,
 } from "../helpers/validators.js";
 import {
   EXERCISE_FORCE,
@@ -95,7 +96,7 @@ function validateExerciseAttributes(
     );
   }
   if (images !== undefined) {
-    data.images = validateStringArray(
+    data.images = validateImageArray(
       "images",
       images,
       LIMITS.IMAGES_MAX_ITEMS,
