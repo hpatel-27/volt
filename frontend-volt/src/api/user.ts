@@ -43,3 +43,14 @@ export function useUpdateProfile() {
     },
   });
 }
+
+export function useDeleteAccount() {
+  const authedFetch = useFetch();
+
+  return useMutation({
+    mutationFn: async () => {
+      // 204 No Content on success — the user and all their data are gone.
+      await authedFetch(`${BASE}/me`, { method: "DELETE" });
+    },
+  });
+}

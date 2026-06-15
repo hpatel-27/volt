@@ -1,10 +1,14 @@
 import { useState } from "react";
-import { Minus, Pencil } from "lucide-react";
+import { useClerk } from "@clerk/clerk-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { Minus, Pencil, Trash2 } from "lucide-react";
 import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { Spinner } from "../components/ui/Spinner";
 import { ProfileEntrySheet } from "../components/profile/ProfileEntrySheet";
-import { useCurrentUser } from "@/api/user";
+import { DeleteAccountSheet } from "../components/profile/DeleteAccountSheet";
+import { useCurrentUser, useDeleteAccount } from "@/api/user";
 
 export default function Profile() {
   const userQuery = useCurrentUser();
@@ -13,9 +17,27 @@ export default function Profile() {
   // latest user data each time it opens (uncontrolled-with-a-key pattern).
   const [sheetKey, setSheetKey] = useState(0);
 
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const { signOut } = useClerk();
+  const queryClient = useQueryClient();
+  const deleteAccount = useDeleteAccount();
+
   const openSheet = () => {
     setSheetKey((k) => k + 1);
     setSheetOpen(true);
+  };
+
+  const handleDeleteAccount = () => {
+    deleteAccount.mutate(undefined, {
+      onSuccess: async () => {
+        setDeleteOpen(false);
+        queryClient.clear();
+        await signOut();
+      },
+      onError: (error) => {
+        toast.error(error.message);
+      },
+    });
   };
 
   if (userQuery.isPending) return <Spinner fullscreen />;
@@ -71,11 +93,32 @@ export default function Profile() {
         </dl>
       </Card>
 
+      <Card>
+        <div className="mb-1 text-caption text-blaze-500">Danger zone</div>
+        <p className="mb-4 text-sm text-bone-300">
+          Permanently delete your account and all of your data.
+        </p>
+        <Button
+          variant="danger"
+          leading={<Trash2 className="h-4 w-4" />}
+          onClick={() => setDeleteOpen(true)}
+        >
+          Delete account
+        </Button>
+      </Card>
+
       <ProfileEntrySheet
         key={sheetKey}
         open={sheetOpen}
         onClose={() => setSheetOpen(false)}
         user={user}
+      />
+
+      <DeleteAccountSheet
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={handleDeleteAccount}
+        pending={deleteAccount.isPending}
       />
     </div>
   );
