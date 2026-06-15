@@ -119,7 +119,7 @@ All routes are mounted under `/api/v1` via `src/routes/index.ts`.
 | PATCH    | `/weights/:id`  | Update a weight entry by ID        |
 | DELETE   | `/weights/:id`  | Delete a weight entry by ID        |
 
-### Exercises — Public GET, `🔒 userMiddleware + requireAdmin` for mutations
+### Exercises — `🔒 userMiddleware + requireAdmin` for mutations
 
 | Method   | Path               | Description                        |
 |----------|--------------------|------------------------------------|
