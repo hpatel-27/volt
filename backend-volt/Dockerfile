@@ -23,11 +23,10 @@ RUN npm ci
 # .dockerignore keeps out node_modules, .env, dist, and src/generated.
 COPY . .
 
-# Regenerate the Prisma client since it isn't in the build context
-RUN npx prisma generate
-
 EXPOSE 8080
 
-# Migrate, then start. The `&&` makes a failed migration abort startup so we
-# never serve traffic against a stale or half-migrated schema.
-CMD ["sh", "-c", "npx prisma migrate deploy && npm start"]
+# Generate the Prisma client, migrate, then start all at runtime, where the
+# DB env vars exist. `generate` is offline but loading prisma.config.ts resolves
+# the datasource env(), which isn't set during `docker build`. The `&&` chain
+# aborts startup if any step fails, so we never serve on a bad client or schema.
+CMD ["sh", "-c", "npx prisma generate && npx prisma migrate deploy && npm start"]
