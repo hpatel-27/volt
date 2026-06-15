@@ -54,4 +54,11 @@ async function updateUser(req: Request, res: Response) {
   res.json(updatedUser);
 }
 
-export { getCurrentUser, updateUser };
+async function deleteAccount(req: Request, res: Response) {
+  const { clerkId } = req.user!;
+  await userService.deleteAccount(clerkId);
+  // 204: deletion accepted. DB cleanup happens asynchronously via webhook.
+  res.status(204).send();
+}
+
+export { getCurrentUser, updateUser, deleteAccount };

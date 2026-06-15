@@ -40,4 +40,10 @@ async function updateUser(userId: string, data: UpdateUserInput) {
   }
 }
 
-export { getUser, updateUser };
+// Delete the user's account. In the hybrid model this triggers Clerk-side
+// deletion only; the resulting `user.deleted` webhook owns DB cleanup.
+async function deleteAccount(clerkId: string) {
+  // TODO later
+}
+
+export { getUser, updateUser, deleteAccount };
