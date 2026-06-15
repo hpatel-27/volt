@@ -21,8 +21,8 @@ export function createApp(options?: { skipRateLimit?: boolean }) {
       origin:
         process.env.NODE_ENV === "development"
           ? ["http://localhost:3000", "http://localhost:5173"]
-          : process.env.ALLOWED_ORIGINS?.split(",") || [
-              "https://my-domain.com",
+          : process.env.ALLOWED_ORIGINS?.split(",").map((s) => s.trim()) || [
+              "",
             ],
       credentials: true,
       methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
