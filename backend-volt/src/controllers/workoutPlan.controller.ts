@@ -63,7 +63,7 @@ async function createWorkoutPlan(req: Request, res: Response) {
 
   const data: CreateWorkoutPlanInput = { userId, name: trimmedName };
 
-  if (type) {
+  if (type !== undefined) {
     data.type = validateEnum("type", type, Object.values(PlanType)) as PlanType;
   }
   const newPlan = await workoutPlanService.createWorkoutPlan(data);
@@ -83,7 +83,7 @@ async function updateWorkoutPlan(req: Request, res: Response) {
     data.name = trimmedName;
   }
 
-  if (type) {
+  if (type !== undefined) {
     data.type = validateEnum("type", type, Object.values(PlanType)) as PlanType;
   }
 
