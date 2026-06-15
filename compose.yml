@@ -1,4 +1,5 @@
 services:
+  # Local dev + test database. Always starts with `docker compose up`.
   postgres:
     image: postgres:16
     container_name: volt-postgres
@@ -17,36 +18,31 @@ services:
       timeout: 5s
       retries: 10
 
+  # Prod-parity run: builds the exact image Railway deploys and boots it
+  # (migrate deploy + npm start) against local Postgres. Behind the `parity`
+  # profile so it does NOT run during normal dev work. Run the
+  # backend natively with `npm run dev`. Start parity explicitly with:
+  #   docker compose --profile parity up backend
   backend:
+    profiles: ["parity"]
     build:
-      context: ./backend-volt
+      context: ./backend-volt # uses ./backend-volt/Dockerfile (the prod image)
     container_name: volt-backend
     restart: unless-stopped
     env_file:
-      - ./backend-volt/.env
+      - ./backend-volt/.env # CLERK_SECRET_KEY etc.
     environment:
-      NODE_ENV: development
+      NODE_ENV: production
+      # db.ts requires DATABASE_URL when NODE_ENV=production. Point it at the
+      # compose Postgres — `postgres` resolves on the compose network.
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      SERVER_PORT: 8080
+      ALLOWED_ORIGINS: http://localhost:5173
     depends_on:
       postgres:
         condition: service_healthy
-    volumes:
-      - ./backend-volt:/app
-      - /app/node_modules
     ports:
       - "8080:8080"
-
-  frontend:
-    build:
-      context: ./frontend-volt
-    container_name: volt-frontend
-    restart: unless-stopped
-    depends_on:
-      - backend
-    volumes:
-      - ./frontend-volt:/app
-      - /app/node_modules
-    ports:
-      - "5173:5173"
 
 volumes:
   pgdata:
