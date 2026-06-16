@@ -48,6 +48,17 @@ export default function Register() {
                 Create account
               </Button>
             </SignUpButton>
+            <span className="text-xs text-center text-bone-500">
+              By creating an account, you agree to our{" "}
+              <Link to="/privacy" className="text-volt-500">
+                Privacy Policy
+              </Link>{" "}
+              and{" "}
+              <Link to="/terms" className="text-volt-500">
+                Terms of Use
+              </Link>
+              .
+            </span>
           </div>
 
           <p className="text-xs text-bone-500 mt-10 text-center">
