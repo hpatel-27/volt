@@ -1,12 +1,11 @@
 import { LegalLayout, Section, List } from "../components/layout/LegalLayout";
 
-// Fill these in before publishing.
 const CONTACT_EMAIL = "harshpxv@gmail.com";
 const JURISDICTION = "the State of North Carolina, United States";
 
 export default function Terms() {
   return (
-    <LegalLayout title="Terms of Use" lastUpdated="June 14, 2026">
+    <LegalLayout title="Terms of Use" lastUpdated="June 16, 2026">
       <Section heading="Acceptance">
         <p>
           By creating an account or using Volt, you agree to these terms. If you

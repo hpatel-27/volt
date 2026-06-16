@@ -5,7 +5,7 @@ const HOSTING_REGION = "the United States";
 
 export default function Privacy() {
   return (
-    <LegalLayout title="Privacy Policy" lastUpdated="June 14, 2026">
+    <LegalLayout title="Privacy Policy" lastUpdated="June 16, 2026">
       <Section heading="Who runs Volt">
         <p>
           Volt is a personal, non-commercial fitness-tracking project operated
@@ -40,6 +40,12 @@ export default function Privacy() {
         <p>
           We do <strong>not</strong> use third-party advertising or analytics
           trackers, and we do not collect data about you from other sources.
+        </p>
+        <p>
+          We use a single strictly necessary cookie, set by Clerk, to keep you
+          signed in. We do not set advertising or analytics cookies. Signing in
+          with a third party such as Google shares your basic profile details
+          from that provider with Clerk so it can create your account.
         </p>
       </Section>
 
@@ -133,9 +139,10 @@ export default function Privacy() {
         <p>
           Volt is operated from the United States and is intended for users in
           the United States. Your data is stored and processed in{" "}
-          {HOSTING_REGION}. If you access the app from outside the United States,
-          understand that your data will be processed in the United States, which
-          may have different data-protection rules than your location.
+          {HOSTING_REGION}. If you access the app from outside the United
+          States, understand that your data will be processed in the United
+          States, which may have different data-protection rules than your
+          location.
         </p>
       </Section>
 
