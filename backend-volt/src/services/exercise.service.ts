@@ -7,12 +7,21 @@ import type {
 } from "../types/exercise.dto.js";
 
 // Get a paginated list of exercises, optionally filtered by a name search query
-// When `q` is provided, results are narrowed to exercises whose name matches `q`
-// (case-insensitive) before pagination is applied
+// When `q` is provided, results are narrowed to exercises whose name matches every
+// whitespace-separated token in `q` (case-insensitive) before pagination is applied
+function buildSearchWhere(q?: string): Prisma.ExerciseWhereInput {
+  const tokens = q?.trim().split(/\s+/).filter(Boolean) ?? [];
+  if (tokens.length === 0) return {};
+
+  return {
+    AND: tokens.map((token): Prisma.ExerciseWhereInput => {
+      return { name: { contains: token, mode: "insensitive" } };
+    }),
+  };
+}
+
 async function getExercises(page: number, limit: number, q?: string) {
-  const where: Prisma.ExerciseWhereInput = q
-    ? { name: { contains: q, mode: "insensitive" } }
-    : {};
+  const where = buildSearchWhere(q);
 
   const [exercises, total] = await prisma.$transaction([
     prisma.exercise.findMany({
