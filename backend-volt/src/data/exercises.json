@@ -8868,7 +8868,7 @@
     ]
   },
   {
-    "name": "Incline Cable Flye",
+    "name": "Incline Cable Fly",
     "force": "push",
     "level": "intermediate",
     "mechanic": "isolation",
@@ -8888,14 +8888,14 @@
       "Repeat the movement for the prescribed amount of repetitions."
     ],
     "category": "strength",
-    "slug": "Incline_Cable_Flye",
+    "slug": "Incline_Cable_Fly",
     "images": [
       "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Incline_Cable_Flye/0.jpg",
       "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Incline_Cable_Flye/1.jpg"
     ]
   },
   {
-    "name": "Incline Dumbbell Bench With Palms Facing In",
+    "name": "Incline Dumbbell Bench",
     "force": "push",
     "level": "beginner",
     "mechanic": "compound",
@@ -8910,14 +8910,14 @@
     "instructions": [
       "Lie back on an incline bench with a dumbbell on each hand on top of your thighs. The palms of your hand will be facing each other.",
       "By using your thighs to help you get the dumbbells up, clean the dumbbells one arm at a time so that you can hold them at shoulder width.",
-      "Once at shoulder width, keep the palms of your hands with a neutral grip (palms facing each other). Keep your elbows flared out with the upper arms in line with the shoulders (perpendicular to the torso) and the elbows bent creating a 90-degree angle between the upper arm and the forearm. This will be your starting position.",
+      "Once at shoulder width, keep the palms of your hands with a 45 degree angle grip. Keep your elbows tucking in. This will be your starting position.",
       "Now bring down the weights slowly to your side as you breathe in. Keep full control of the dumbbells at all times.",
       "As you breathe out, push the dumbbells up using your pectoral muscles. Lock your arms in the contracted position, hold for a second and then start coming down slowly. Tip: It should take at least twice as long to go down than to come up.",
       "Repeat the movement for the prescribed amount of repetitions.",
       "When you are done, place the dumbbells back in your thighs and then on the floor. This is the safest manner to dispose of the dumbbells."
     ],
     "category": "strength",
-    "slug": "Incline_Dumbbell_Bench_With_Palms_Facing_In",
+    "slug": "Incline_Dumbbell_Bench",
     "images": [
       "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Incline_Dumbbell_Bench_With_Palms_Facing_In/0.jpg",
       "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Incline_Dumbbell_Bench_With_Palms_Facing_In/1.jpg"
@@ -18157,7 +18157,7 @@
     ]
   },
   {
-    "name": "Sled Reverse Flye",
+    "name": "Sled Reverse Fly",
     "force": "pull",
     "level": "beginner",
     "mechanic": "isolation",
@@ -18173,7 +18173,7 @@
       "Return to the starting position, taking a couple steps back to take the slack out of the line."
     ],
     "category": "strength",
-    "slug": "Sled_Reverse_Flye",
+    "slug": "Sled_Reverse_Fly",
     "images": [
       "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Sled_Reverse_Flye/0.jpg",
       "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Sled_Reverse_Flye/1.jpg"

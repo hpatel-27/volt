@@ -129,6 +129,7 @@ export function SetLoggerSheet({
             unit="lbs"
             value={weight}
             max={LIMITS.LIFT_WEIGHT_MAX}
+            step="0.5"
             onChange={setWeight}
           />
           <NumberField
@@ -197,6 +198,7 @@ interface NumberFieldProps {
   max: number;
   onChange: (v: string) => void;
   inputRef?: React.Ref<HTMLInputElement>;
+  step?: string;
 }
 
 function NumberField({
@@ -206,6 +208,7 @@ function NumberField({
   onChange,
   inputRef,
   max,
+  step = "1",
 }: NumberFieldProps) {
   return (
     <div>
@@ -215,7 +218,7 @@ function NumberField({
           ref={inputRef}
           type="number"
           inputMode="decimal"
-          step="1"
+          step={step}
           min="0"
           placeholder="0"
           value={value}

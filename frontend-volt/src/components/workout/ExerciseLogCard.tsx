@@ -36,7 +36,7 @@ export function ExerciseLogCard({
             setConfirmingDelete(false);
             setExpanded((v) => !v);
           }}
-          className="flex flex-1 items-center gap-3 px-4 py-3.5 text-left transition-colors focus-visible:outline-none cursor-pointer rounded-2xl"
+          className="flex flex-1 min-w-0 items-center gap-3 px-4 py-3.5 text-left transition-colors focus-visible:outline-none cursor-pointer rounded-2xl"
         >
           <div className="min-w-0 flex-1">
             <div className="truncate text-sm font-semibold text-bone-50">
@@ -48,7 +48,7 @@ export function ExerciseLogCard({
           </div>
           <ChevronDown
             className={cn(
-              "h-4 w-4 shrink-0 text-bone-500 transition-transform",
+              "h-4 w-4 shrink-0 text-bone-500 transition-transform duration-300 ease-in-out",
               expanded && "rotate-180",
             )}
           />
