@@ -14,6 +14,11 @@ enum PlanType {
   OTHER
 }
 
+enum GoalType {
+  CUT
+  BULK
+  MAINTAIN
+}
 
 model User {
   id            String     @id @default(uuid())
@@ -27,12 +32,30 @@ model User {
   createdAt     DateTime   @default(now())
   updatedAt     DateTime?  @updatedAt
   
+  goals         Goal?
   weights       Weight[]
   workoutPlans  WorkoutPlan[]
   workoutLogs   WorkoutLog[]
   nutritionLogs NutritionLog[]
 
   @@map("users")
+}
+
+model Goal {
+  id           String    @id @default(uuid())
+  userId       String    @unique          // <- enforces one-per-user
+  targetWeight Float                       // lbs, like Weight.amount
+  calorieGoal  Float                       // stored independently of macros
+  proteinGoal  Float                       // grams
+  carbGoal     Float                       // grams
+  fatGoal      Float                       // grams
+  goalType     GoalType  @default(MAINTAIN)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime? @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("goals")
 }
 
 model Exercise {
