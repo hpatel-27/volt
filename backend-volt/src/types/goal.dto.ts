@@ -27,4 +27,6 @@ export interface Goal {
   carbGoal: number; // float grams
   fatGoal: number; // float grams
   goalType: GoalType; // CUT, BULK, MAINTAIN
+  createdAt: string | null;
+  updatedAt: string | null;
 }
