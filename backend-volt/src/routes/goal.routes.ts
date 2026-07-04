@@ -7,3 +7,5 @@ import { userMiddleware } from "../middleware/user.middleware.js";
 router.get("/", userMiddleware, goalController.getGoal);
 router.post("/", userMiddleware, goalController.createGoal);
 router.patch("/", userMiddleware, goalController.updateGoal);
+
+export default router;
