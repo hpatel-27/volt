@@ -4,6 +4,7 @@ import { PlanDayCard } from "../components/dashboard/PlanDayCard";
 import { CalorieCard } from "../components/dashboard/CalorieCard";
 import { WeightCard } from "../components/dashboard/WeightCard";
 import { VolumeCard } from "../components/dashboard/VolumeCard";
+import { GoalsPromptCard } from "../components/dashboard/GoalsPromptCard";
 import { MIN_H } from "@/types/shared";
 
 export default function Dashboard() {
@@ -27,6 +28,8 @@ export default function Dashboard() {
           {firstName ? `Hey, ${firstName}` : `Let's get to work`}
         </h1>
       </header>
+
+      <GoalsPromptCard />
 
       <PlanDayCard />
 
