@@ -2,9 +2,10 @@ import { useState } from "react";
 import { useClerk } from "@clerk/clerk-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Minus, Pencil, Target, Trash2 } from "lucide-react";
+import { Minus, Pencil, Trash2 } from "lucide-react";
 import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
+import { Badge } from "../components/ui/Badge";
 import { Spinner } from "../components/ui/Spinner";
 import { ProfileEntrySheet } from "../components/profile/ProfileEntrySheet";
 import { GoalEntrySheet } from "../components/profile/GoalEntrySheet";
@@ -116,7 +117,10 @@ export default function Profile() {
 
       <Card>
         <div className="mb-4 flex items-center justify-between">
-          <div className="text-caption">Goals</div>
+          <div className="flex items-center gap-2.5">
+            <div className="text-caption">Goals</div>
+            {goals && <Badge>{goalTypeLabel(goals.goalType)}</Badge>}
+          </div>
           {goals && (
             <Button
               size="sm"
@@ -157,22 +161,22 @@ export default function Profile() {
                 </dd>
               </div>
             ))}
-            <div className="flex items-center justify-between bg-ink-850 px-4 py-3">
-              <dt className="text-sm text-bone-300">Goal type</dt>
-              <dd className="text-sm font-medium text-bone-50">
-                {goalTypeLabel(goals.goalType)}
-              </dd>
-            </div>
           </dl>
         ) : (
-          <div className="flex flex-col items-center gap-3 py-6 text-center">
-            <div className="grid h-12 w-12 place-items-center rounded-2xl bg-volt-500/10">
-              <Target className="h-5 w-5 text-volt-500" />
-            </div>
-            <p className="max-w-60 text-sm text-bone-300">
-              Set your weight and nutrition goals to personalize your targets.
+          <div className="flex flex-col items-center gap-3 py-8 text-center">
+            <p className="font-display text-base font-semibold text-bone-50">
+              No goals set
             </p>
-            <Button size="sm" variant="primary" onClick={openGoalSheet}>
+            <p className="text-caption max-w-60 text-bone-500 normal-case tracking-normal">
+              Set your weight and nutrition targets to personalize your
+              dashboard.
+            </p>
+            <Button
+              size="sm"
+              variant="primary"
+              onClick={openGoalSheet}
+              className="mt-1"
+            >
               Set goals
             </Button>
           </div>
