@@ -4,12 +4,11 @@ import type { NutritionOutletContext } from "@/components/layout/NutritionLayout
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { useNutritionLogs, useNutritionToday } from "@/api/nutrition";
+import { useGoals } from "@/api/goal";
 import { formatRelativeDate, todayLocalIso } from "@/lib/date";
 import { ChevronLeft, ChevronRight, Plus, Utensils } from "lucide-react";
 import { Spinner } from "@/components/ui/Spinner";
-import { CALORIE_GOAL, LIMIT } from "@/types/shared";
-
-// TODO: lift to user goals
+import { LIMIT, resolveGoals } from "@/types/shared";
 
 export default function Nutrition() {
   const [page, setPage] = useState(1);
@@ -25,8 +24,10 @@ export default function Nutrition() {
   const todayQuery = useNutritionToday(todayIso);
   const { openMealSheet } = useOutletContext<NutritionOutletContext>();
 
+  const goalsQuery = useGoals();
+  const calorieGoal = resolveGoals(goalsQuery.data).calories;
   const todayCalories = todayQuery.data?.totals.calories ?? 0;
-  const todayPct = Math.min((todayCalories / CALORIE_GOAL) * 100, 100);
+  const todayPct = Math.min((todayCalories / calorieGoal) * 100, 100);
   const logs = pageQuery.data?.nutritionLogs ?? [];
 
   return (
@@ -58,7 +59,7 @@ export default function Nutrition() {
               {todayCalories.toLocaleString()}
             </span>
             <span className="font-mono text-sm text-bone-500">
-              / {CALORIE_GOAL.toLocaleString()} kcal
+              / {calorieGoal.toLocaleString()} kcal
             </span>
           </div>
           <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-ink-800">
