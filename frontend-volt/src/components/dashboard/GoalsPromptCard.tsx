@@ -25,7 +25,7 @@ export function GoalsPromptCard() {
   };
 
   return (
-    <Card accent="volt" className="flex items-center gap-3">
+    <Card className="flex items-center gap-3">
       <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-volt-500/10">
         <Target className="h-5 w-5 text-volt-500" />
       </div>
@@ -33,14 +33,14 @@ export function GoalsPromptCard() {
       <Link to="/profile" className="min-w-0 flex-1">
         <div className="text-sm font-semibold text-bone-50">Set your goals</div>
         <div className="text-caption text-bone-500 normal-case tracking-normal">
-          Personalize your calorie and macro targets.
+          Personalize your weight, calorie, and macro targets.
         </div>
       </Link>
       <button
         type="button"
         onClick={dismiss}
         aria-label="Dismiss"
-        className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-bone-500 transition-colors hover:bg-ink-800 hover:text-bone-100"
+        className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-bone-500 transition-colors hover:bg-ink-800 hover:text-bone-100 cursor-pointer"
       >
         <X className="h-4 w-4" />
       </button>
