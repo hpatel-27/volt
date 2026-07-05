@@ -2,13 +2,20 @@ import { useState } from "react";
 import { useClerk } from "@clerk/clerk-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Minus, Pencil, Trash2 } from "lucide-react";
+import { Minus, Pencil, Target, Trash2 } from "lucide-react";
 import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { Spinner } from "../components/ui/Spinner";
 import { ProfileEntrySheet } from "../components/profile/ProfileEntrySheet";
+import { GoalEntrySheet } from "../components/profile/GoalEntrySheet";
 import { DeleteAccountSheet } from "../components/profile/DeleteAccountSheet";
 import { useCurrentUser, useDeleteAccount } from "@/api/user";
+import { useGoals } from "@/api/goal";
+
+// "MAINTAIN" -> "Maintain". Goal types are stored uppercase (backend enum).
+function goalTypeLabel(type: string) {
+  return type.charAt(0) + type.slice(1).toLowerCase();
+}
 
 export default function Profile() {
   const userQuery = useCurrentUser();
@@ -22,9 +29,23 @@ export default function Profile() {
   const queryClient = useQueryClient();
   const deleteAccount = useDeleteAccount();
 
+  // Goals
+  const goalsQuery = useGoals();
+  const goals = goalsQuery?.data;
+
+  // Separate sheet for goals; same remount-on-open key pattern as the profile
+  // sheet so it re-seeds from the latest goals (or defaults) each time.
+  const [goalSheetOpen, setGoalSheetOpen] = useState(false);
+  const [goalSheetKey, setGoalSheetKey] = useState(0);
+
   const openSheet = () => {
     setSheetKey((k) => k + 1);
     setSheetOpen(true);
+  };
+
+  const openGoalSheet = () => {
+    setGoalSheetKey((k) => k + 1);
+    setGoalSheetOpen(true);
   };
 
   const handleDeleteAccount = () => {
@@ -94,6 +115,71 @@ export default function Profile() {
       </Card>
 
       <Card>
+        <div className="mb-4 flex items-center justify-between">
+          <div className="text-caption">Goals</div>
+          {goals && (
+            <Button
+              size="sm"
+              variant="ghost"
+              leading={<Pencil className="h-3.5 w-3.5" />}
+              onClick={openGoalSheet}
+            >
+              Edit
+            </Button>
+          )}
+        </div>
+
+        {goalsQuery.isPending ? (
+          <div className="h-32 animate-pulse rounded-2xl bg-ink-850" />
+        ) : goalsQuery.isError ? (
+          <p className="text-sm text-bone-300">
+            We couldn't load your goals. Please try again.
+          </p>
+        ) : goals ? (
+          <dl className="space-y-px overflow-hidden rounded-2xl border border-white/5">
+            {[
+              { label: "Target weight", value: `${goals.targetWeight} lbs` },
+              {
+                label: "Daily calories",
+                value: `${goals.calorieGoal.toLocaleString()} kcal`,
+              },
+              { label: "Protein", value: `${goals.proteinGoal} g` },
+              { label: "Carbs", value: `${goals.carbGoal} g` },
+              { label: "Fat", value: `${goals.fatGoal} g` },
+            ].map((row) => (
+              <div
+                key={row.label}
+                className="flex items-center justify-between bg-ink-850 px-4 py-3"
+              >
+                <dt className="text-sm text-bone-300">{row.label}</dt>
+                <dd className="font-mono text-sm font-medium text-bone-50">
+                  {row.value}
+                </dd>
+              </div>
+            ))}
+            <div className="flex items-center justify-between bg-ink-850 px-4 py-3">
+              <dt className="text-sm text-bone-300">Goal type</dt>
+              <dd className="text-sm font-medium text-bone-50">
+                {goalTypeLabel(goals.goalType)}
+              </dd>
+            </div>
+          </dl>
+        ) : (
+          <div className="flex flex-col items-center gap-3 py-6 text-center">
+            <div className="grid h-12 w-12 place-items-center rounded-2xl bg-volt-500/10">
+              <Target className="h-5 w-5 text-volt-500" />
+            </div>
+            <p className="max-w-60 text-sm text-bone-300">
+              Set your weight and nutrition goals to personalize your targets.
+            </p>
+            <Button size="sm" variant="primary" onClick={openGoalSheet}>
+              Set goals
+            </Button>
+          </div>
+        )}
+      </Card>
+
+      <Card>
         <div className="mb-1 text-caption text-blaze-500">Danger zone</div>
         <p className="mb-4 text-sm text-bone-300">
           Permanently delete your account and all of your data.
@@ -112,6 +198,13 @@ export default function Profile() {
         open={sheetOpen}
         onClose={() => setSheetOpen(false)}
         user={user}
+      />
+
+      <GoalEntrySheet
+        key={`goal-${goalSheetKey}`}
+        open={goalSheetOpen}
+        onClose={() => setGoalSheetOpen(false)}
+        goal={goals ?? null}
       />
 
       <DeleteAccountSheet
