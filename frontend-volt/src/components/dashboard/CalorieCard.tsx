@@ -1,8 +1,9 @@
 import { Link } from "react-router";
 import { Card } from "../ui/Card";
 import { useNutritionToday } from "@/api/nutrition";
+import { useGoals } from "@/api/goal";
 import { todayLocalIso } from "@/lib/date";
-import { GOALS, MIN_H } from "@/types/shared";
+import { MIN_H, resolveGoals } from "@/types/shared";
 
 /**
  * Calories-remaining card for today. The headline number is what's left
@@ -11,8 +12,9 @@ import { GOALS, MIN_H } from "@/types/shared";
  */
 export function CalorieCard() {
   const { data, isLoading: todayLoading } = useNutritionToday(todayLocalIso());
+  const goalsQuery = useGoals();
 
-  const goal = GOALS.calories;
+  const goal = resolveGoals(goalsQuery.data).calories;
   const consumed = data?.totals.calories ?? 0;
   // Clamp so going over goal reads 0 left / 100% bar rather than inverting.
   const remaining = Math.max(0, goal - consumed);

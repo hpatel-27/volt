@@ -5,14 +5,13 @@ import { Card } from "../components/ui/Card";
 import { Spinner } from "../components/ui/Spinner";
 import { ProgressRing } from "../components/ui/ProgressRing";
 import { useNutritionDetail } from "@/api/nutrition";
+import { useGoals } from "@/api/goal";
 import type { NutritionOutletContext } from "@/components/layout/NutritionLayout";
 import { formatRelativeDate } from "@/lib/date";
 import { ArrowLeft, ChevronRight, Plus } from "lucide-react";
 import type { Meal } from "@/types/meal";
 import { cn } from "@/lib/cn";
-import { GOALS } from "@/types/shared";
-
-// TODO: lift to user settings / shared nutrition config — duplicated in Nutrition.tsx
+import { resolveGoals } from "@/types/shared";
 
 function totalsFromMeals(meals: Meal[]) {
   return meals.reduce(
@@ -41,6 +40,7 @@ export default function NutritionLog() {
   const { date } = useParams<{ date: string }>();
   const { openMealSheet } = useOutletContext<NutritionOutletContext>();
   const detailQuery = useNutritionDetail(date!);
+  const goalsQuery = useGoals();
 
   // Bars/ring render at 0, then ease to their real
   // value on the next frame. Key off loaded log to replay per day.
@@ -63,8 +63,9 @@ export default function NutritionLog() {
   const log = detailQuery.data;
   const meals = log?.meals ?? [];
   const totals = totalsFromMeals(meals);
-  const remaining = Math.max(GOALS.calories - totals.calories, 0);
-  const over = totals.calories > GOALS.calories;
+  const goals = resolveGoals(goalsQuery.data);
+  const remaining = Math.max(goals.calories - totals.calories, 0);
+  const over = totals.calories > goals.calories;
 
   return (
     <div className="space-y-6 pt-4">
@@ -95,7 +96,7 @@ export default function NutritionLog() {
       <Card className="flex flex-col items-center gap-6 m-4 py-8">
         <ProgressRing
           value={mounted ? totals.calories : 0}
-          max={GOALS.calories}
+          max={goals.calories}
           size={196}
           stroke={14}
           color={over ? "blaze" : "sky"}
@@ -109,18 +110,18 @@ export default function NutritionLog() {
               over ? "text-blaze-500" : "text-bone-50",
             )}
           >
-            {over ? totals.calories - GOALS.calories : remaining}
+            {over ? totals.calories - goals.calories : remaining}
           </span>
           <span className="font-mono text-xs text-bone-500 pt-2">
             {totals.calories.toLocaleString()} /{" "}
-            {GOALS.calories.toLocaleString()} kcal
+            {goals.calories.toLocaleString()} kcal
           </span>
         </ProgressRing>
 
         <div className="grid w-full grid-cols-3 gap-3">
           {MACROS.map((m) => {
             const value = totals[m.key];
-            const goal = GOALS[m.key];
+            const goal = goals[m.key];
             const pct = goal > 0 ? Math.min((value / goal) * 100, 100) : 0;
             return (
               <div key={m.key} className="space-y-2">
