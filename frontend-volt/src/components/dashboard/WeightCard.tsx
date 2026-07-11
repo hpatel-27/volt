@@ -22,7 +22,7 @@ function computeSevenDayDelta(weights: Weight[]): WeightDelta | null {
   const oldest = weights.at(0);
   const newest = weights.at(-1);
   const delta = (newest?.amount ?? 0) - (oldest?.amount ?? 0);
-  const absDelta = Math.abs(delta).toString();
+  const absDelta = Math.abs(delta).toFixed(1).toString();
 
   if (delta < 0) {
     return { value: absDelta, direction: "down" };
